@@ -4,7 +4,15 @@
   "description": "Concept Operating System for Electronic Music Labels (Fan Project)",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "NODE_ENV=development node server.js",
+    "test": "node --test --test-force-exit tests/regression/*.test.js",
+    "test:units": "node --test --test-force-exit tests/regression/units.test.js",
+    "test:routes": "node --test --test-force-exit tests/regression/routes.test.js",
+    "test:services": "node --test --test-force-exit tests/regression/services.test.js",
+    "test:snapshot": "node --test --test-force-exit tests/regression/snapshot.test.js",
+    "verify": "node tests/support/verify_phase2.js",
+    "snapshot:baseline": "node tests/support/probe.js server.js tests/snapshots/phase2_baseline.json"
   },
   "dependencies": {
     "axios": "^1.13.2",

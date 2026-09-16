@@ -1,0 +1,1729 @@
+{
+  "health": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "status": "operational",
+      "timestamp": "<VOLATILE>",
+      "version": "3.0-production"
+    }
+  },
+  "unknown_route_404": {
+    "status": 404,
+    "contentType": "application/json",
+    "body": {
+      "error": "Endpoint not found",
+      "path": "/v3/definitely-not-a-route"
+    }
+  },
+  "artists_no_token": {
+    "status": 401,
+    "contentType": "application/json",
+    "body": {
+      "error": "Authentication required"
+    }
+  },
+  "artists_bad_token": {
+    "status": 403,
+    "contentType": "application/json",
+    "body": {
+      "error": "Invalid or expired token"
+    }
+  },
+  "login_empty_body": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "token": "<JWT>",
+      "user": {
+        "name": "Admin",
+        "pageAccess": [
+          "all"
+        ],
+        "role": "admin"
+      }
+    }
+  },
+  "login_nulls": {
+    "status": 401,
+    "contentType": "application/json",
+    "body": {
+      "error": "Invalid credentials"
+    }
+  },
+  "login_bad_creds": {
+    "status": 401,
+    "contentType": "application/json",
+    "body": {
+      "error": "Invalid credentials"
+    }
+  },
+  "login_admin_seeded": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "token": "<JWT>",
+      "user": {
+        "artistAccess": "all",
+        "email": "admin@mau5trap.com",
+        "name": "Admin User",
+        "role": "admin"
+      }
+    }
+  },
+  "login_artist_seeded": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "token": "<JWT>",
+      "user": {
+        "artistAccess": "art_rezz",
+        "email": "tours@rezz.com",
+        "name": "Isabelle Rezazadeh",
+        "role": "artist"
+      }
+    }
+  },
+  "artists_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "artists": [
+        {
+          "brandDeals": [],
+          "collaborations": [],
+          "crm": {
+            "emailCount": 398040,
+            "presaleSignups": 42610,
+            "smsCount": 15420
+          },
+          "displayName": "ATTLAS (Core)",
+          "forecast": {
+            "nextMonth": 88408,
+            "threeMonth": 265226,
+            "trend": "up"
+          },
+          "genreHybrids": "Techno/Progressive",
+          "growthRate": 20.7,
+          "id": "art_attlas",
+          "influences": [
+            "Mau5trap Sound",
+            "Techno",
+            "Prog House"
+          ],
+          "merch": {
+            "margin": 0.6,
+            "onlineSales": 36845,
+            "topItems": [
+              "T-Shirt",
+              "Hoodie",
+              "Stickers"
+            ],
+            "tourSales": 24563
+          },
+          "meta": {
+            "dataSource": "generated_mock",
+            "lastUpdated": "<VOLATILE>"
+          },
+          "monthlyListeners": 558138,
+          "name": "ATTLAS",
+          "priority": 2,
+          "revenue": {
+            "branding": 143741,
+            "merch": 61409,
+            "streaming": 280790,
+            "streamingBreakdown": {
+              "byLocation": [
+                {
+                  "percent": 15,
+                  "region": "Los Angeles, US",
+                  "value": 42000
+                },
+                {
+                  "percent": 12.5,
+                  "region": "Toronto, CA",
+                  "value": 35000
+                },
+                {
+                  "percent": 10,
+                  "region": "London, UK",
+                  "value": 28000
+                },
+                {
+                  "percent": 7.8,
+                  "region": "Berlin, DE",
+                  "value": 22000
+                },
+                {
+                  "percent": 6.4,
+                  "region": "Amsterdam, NL",
+                  "value": 18000
+                },
+                {
+                  "percent": 5.3,
+                  "region": "New York, US",
+                  "value": 15000
+                },
+                {
+                  "percent": 5,
+                  "region": "Sydney, AU",
+                  "value": 14000
+                },
+                {
+                  "percent": 4.3,
+                  "region": "Tokyo, JP",
+                  "value": 12000
+                },
+                {
+                  "percent": 3.9,
+                  "region": "Mexico City, MX",
+                  "value": 11000
+                },
+                {
+                  "percent": 3.2,
+                  "region": "Paris, FR",
+                  "value": 9000
+                }
+              ],
+              "total": 280790
+            },
+            "sync": 28079,
+            "touring": 718706,
+            "youtube": 14039
+          },
+          "roi": 7.4,
+          "social": {
+            "engagementRate": 7.6,
+            "instagram": 9779623,
+            "tiktok": 7823698,
+            "twitter": 3911849
+          },
+          "sustainability": {
+            "burnoutRisk": "Low",
+            "diversificationRatio": {},
+            "legacyImpact": 84,
+            "longevityScore": 8.4,
+            "progressionMilestones": [],
+            "revenueStability": "84%"
+          },
+          "tier": "core",
+          "totalStreams": 27906900,
+          "touring": {
+            "avgAttendance": 448,
+            "avgTicketPrice": 24,
+            "carbonOffset": 32207,
+            "merchPerHead": 24.3,
+            "shows": [],
+            "sustainabilityScore": "A",
+            "upcomingShows": 2
+          }
+        },
+        {
+          "brandDeals": [],
+          "collaborations": [],
+          "crm": {
+            "emailCount": 452170,
+            "presaleSignups": 36420,
+            "smsCount": 21130
+          },
+          "displayName": "BlackGummy (Core)",
+          "forecast": {
+            "nextMonth": 100894,
+            "threeMonth": 302684,
+            "trend": "up"
+          },
+          "genreHybrids": "Techno/Progressive",
+          "growthRate": 9.7,
+          "id": "art_blackgummy",
+          "influences": [
+            "Mau5trap Sound",
+            "Techno",
+            "Prog House"
+          ],
+          "merch": {
+            "margin": 0.6,
+            "onlineSales": 78535,
+            "topItems": [
+              "T-Shirt",
+              "Hoodie",
+              "Stickers"
+            ],
+            "tourSales": 52357
+          },
+          "meta": {
+            "dataSource": "generated_mock",
+            "lastUpdated": "<VOLATILE>"
+          },
+          "monthlyListeners": 113289,
+          "name": "BlackGummy",
+          "priority": 2,
+          "revenue": {
+            "branding": 163646,
+            "merch": 130893,
+            "streaming": 261612,
+            "streamingBreakdown": {
+              "byLocation": [
+                {
+                  "percent": 17.2,
+                  "region": "Berlin, DE",
+                  "value": 45000
+                },
+                {
+                  "percent": 14.5,
+                  "region": "Chicago, US",
+                  "value": 38000
+                },
+                {
+                  "percent": 12.2,
+                  "region": "Detroit, US",
+                  "value": 32000
+                },
+                {
+                  "percent": 10.7,
+                  "region": "Los Angeles, US",
+                  "value": 28000
+                },
+                {
+                  "percent": 9.5,
+                  "region": "London, UK",
+                  "value": 25000
+                },
+                {
+                  "percent": 7.6,
+                  "region": "Amsterdam, NL",
+                  "value": 20000
+                },
+                {
+                  "percent": 6.9,
+                  "region": "Miami, US",
+                  "value": 18000
+                },
+                {
+                  "percent": 5.7,
+                  "region": "Ibiza, ES",
+                  "value": 15000
+                }
+              ],
+              "total": 261612
+            },
+            "sync": 26161,
+            "touring": 818233,
+            "youtube": 13080
+          },
+          "roi": 8.8,
+          "social": {
+            "engagementRate": 3.7,
+            "instagram": 2901538,
+            "tiktok": 2321230,
+            "twitter": 1160615
+          },
+          "sustainability": {
+            "burnoutRisk": "Low",
+            "diversificationRatio": {},
+            "legacyImpact": 83,
+            "longevityScore": 7.2,
+            "progressionMilestones": [],
+            "revenueStability": "61%"
+          },
+          "tier": "core",
+          "totalStreams": 7590363,
+          "touring": {
+            "avgAttendance": 952,
+            "avgTicketPrice": 28,
+            "carbonOffset": 34491,
+            "merchPerHead": 18.7,
+            "shows": [],
+            "sustainabilityScore": "A",
+            "upcomingShows": 17
+          }
+        },
+        {
+          "brandDeals": [],
+          "collaborations": [],
+          "crm": {
+            "emailCount": 28461,
+            "presaleSignups": 7344,
+            "smsCount": 426
+          },
+          "displayName": "Blue Mora (Developing)",
+          "forecast": {
+            "nextMonth": 8000,
+            "threeMonth": 24002,
+            "trend": "up"
+          },
+          "genreHybrids": "Techno/Progressive",
+          "growthRate": 20.7,
+          "id": "art_bluemora",
+          "influences": [
+            "Mau5trap Sound",
+            "Techno",
+            "Prog House"
+          ],
+          "merch": {
+            "margin": 0.6,
+            "onlineSales": 8548,
+            "topItems": [
+              "T-Shirt",
+              "Hoodie",
+              "Stickers"
+            ],
+            "tourSales": 5699
+          },
+          "meta": {
+            "dataSource": "generated_mock",
+            "lastUpdated": "<VOLATILE>"
+          },
+          "monthlyListeners": 99777,
+          "name": "Blue Mora",
+          "priority": 3,
+          "revenue": {
+            "branding": 7141,
+            "merch": 14248,
+            "streaming": 46056,
+            "streamingBreakdown": {
+              "byLocation": [
+                {
+                  "percent": 17.4,
+                  "region": "San Francisco, US",
+                  "value": 8000
+                },
+                {
+                  "percent": 14.1,
+                  "region": "Austin, US",
+                  "value": 6500
+                },
+                {
+                  "percent": 10.8,
+                  "region": "Toronto, CA",
+                  "value": 5000
+                },
+                {
+                  "percent": 9.7,
+                  "region": "Vancouver, CA",
+                  "value": 4500
+                },
+                {
+                  "percent": 8.7,
+                  "region": "Seattle, US",
+                  "value": 4000
+                },
+                {
+                  "percent": 7.6,
+                  "region": "London, UK",
+                  "value": 3500
+                }
+              ],
+              "total": 46056
+            },
+            "sync": 4605,
+            "touring": 35705,
+            "youtube": 2302
+          },
+          "roi": 8.6,
+          "social": {
+            "engagementRate": 7.2,
+            "instagram": 907351,
+            "tiktok": 725880,
+            "twitter": 362940
+          },
+          "sustainability": {
+            "burnoutRisk": "Low",
+            "diversificationRatio": {},
+            "legacyImpact": 55,
+            "longevityScore": 8.5,
+            "progressionMilestones": [],
+            "revenueStability": "85%"
+          },
+          "tier": "developing",
+          "totalStreams": 14168334,
+          "touring": {
+            "avgAttendance": 529,
+            "avgTicketPrice": 25,
+            "carbonOffset": 39206,
+            "merchPerHead": 26.9,
+            "shows": [],
+            "sustainabilityScore": "A",
+            "upcomingShows": 19
+          }
+        }
+      ],
+      "limit": 3,
+      "offset": 0,
+      "total": 29
+    }
+  },
+  "artist_detail_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "brandDeals": [],
+      "collaborations": [],
+      "crm": {
+        "emailCount": 1195600,
+        "presaleSignups": 139800,
+        "smsCount": 25700
+      },
+      "displayName": "deadmau5 (Flagship)",
+      "forecast": {
+        "nextMonth": 881096,
+        "threeMonth": 2643289,
+        "trend": "up"
+      },
+      "genreHybrids": "Electro House",
+      "growthRate": 0.8,
+      "id": "art_deadmau5",
+      "influences": [
+        "Mau5trap Sound",
+        "Techno",
+        "Prog House"
+      ],
+      "merch": {
+        "margin": 0.6,
+        "onlineSales": 257215,
+        "topItems": [
+          "T-Shirt",
+          "Hoodie",
+          "Stickers"
+        ],
+        "tourSales": 171477
+      },
+      "meta": {
+        "dataSource": "generated_mock",
+        "lastUpdated": "<VOLATILE>"
+      },
+      "monthlyListeners": 2842204,
+      "name": "deadmau5",
+      "priority": 1,
+      "projectedAnnual": 150368760,
+      "revenue": {
+        "branding": 1743619,
+        "merch": 428693,
+        "streaming": 1426368,
+        "streamingBreakdown": {
+          "byLocation": [
+            {
+              "percent": 7.7,
+              "region": "Space, Ibiza",
+              "value": 110000
+            },
+            {
+              "percent": 7.4,
+              "region": "Guvernment, Toronto",
+              "value": 105000
+            },
+            {
+              "percent": 6.7,
+              "region": "Ministry of Sound, London",
+              "value": 95000
+            },
+            {
+              "percent": 6,
+              "region": "Womb, Tokyo",
+              "value": 85000
+            },
+            {
+              "percent": 5.8,
+              "region": "New York, US",
+              "value": 82000
+            },
+            {
+              "percent": 5.6,
+              "region": "Chicago, US",
+              "value": 80000
+            },
+            {
+              "percent": 5.6,
+              "region": "Zouk, Singapore",
+              "value": 80000
+            },
+            {
+              "percent": 5.5,
+              "region": "Sao Paulo, BR",
+              "value": 78000
+            },
+            {
+              "percent": 5.4,
+              "region": "Warung, Brazil",
+              "value": 76000
+            },
+            {
+              "percent": 5.3,
+              "region": "Buenos Aires, AR",
+              "value": 75000
+            },
+            {
+              "percent": 5.1,
+              "region": "D-Edge, Sao Paulo",
+              "value": 72000
+            },
+            {
+              "percent": 4.9,
+              "region": "Palladium, Los Angeles",
+              "value": 70000
+            },
+            {
+              "percent": 4.8,
+              "region": "Miami, US",
+              "value": 68000
+            },
+            {
+              "percent": 4.6,
+              "region": "Berghain, Berlin",
+              "value": 65000
+            },
+            {
+              "percent": 4.3,
+              "region": "San Francisco, US",
+              "value": 62000
+            },
+            {
+              "percent": 4.2,
+              "region": "Seoul, KR",
+              "value": 60000
+            },
+            {
+              "percent": 4.2,
+              "region": "Amsterdam, NL",
+              "value": 59000
+            },
+            {
+              "percent": 4.1,
+              "region": "Sydney, AU",
+              "value": 58000
+            },
+            {
+              "percent": 4,
+              "region": "Mexico City, MX",
+              "value": 56000
+            },
+            {
+              "percent": 3.9,
+              "region": "Mumbai, IN",
+              "value": 55000
+            },
+            {
+              "percent": 3.7,
+              "region": "Dubai, AE",
+              "value": 52000
+            },
+            {
+              "percent": 3.5,
+              "region": "Red Rocks, Denver",
+              "value": 50000
+            },
+            {
+              "percent": 3.4,
+              "region": "Fabric, London",
+              "value": 48000
+            },
+            {
+              "percent": 3.2,
+              "region": "Paris, FR",
+              "value": 45000
+            },
+            {
+              "percent": 2.8,
+              "region": "Montreal, CA",
+              "value": 40000
+            },
+            {
+              "percent": 9.8,
+              "region": "Oceania",
+              "value": 140000
+            },
+            {
+              "percent": 15.4,
+              "region": "South America",
+              "value": 220000
+            }
+          ],
+          "total": 1426368
+        },
+        "sync": 142636,
+        "touring": 8718096,
+        "youtube": 71318
+      },
+      "roi": 6.5,
+      "social": {
+        "engagementRate": 5.6,
+        "instagram": 58753998,
+        "tiktok": 47003198,
+        "twitter": 23501599
+      },
+      "sustainability": {
+        "burnoutRisk": "Low",
+        "diversificationRatio": {},
+        "legacyImpact": 74,
+        "longevityScore": 8.6,
+        "progressionMilestones": [],
+        "revenueStability": "84%"
+      },
+      "tier": "flagship",
+      "totalRevenue": 12530730,
+      "totalStreams": 244429544,
+      "touring": {
+        "avgAttendance": 13438,
+        "avgTicketPrice": 65,
+        "carbonOffset": 25602,
+        "merchPerHead": 22.4,
+        "shows": [],
+        "sustainabilityScore": "B",
+        "upcomingShows": 9
+      },
+      "wikipedia": {
+        "summary": "Joel Thomas Zimmerman, known professionally as Deadmau5, is a Canadian electronic music producer and DJ. His musical style mostly includes progressive house and electro house genres, though he also produces and DJs other genres of electronic music, including techno under the alias Testpilot. Zimmerman mostly appears and performs with a custom helmet called the \"mau5head\". He has received seven Grammy Award nominations and won four Juno Awards for his songs.",
+        "thumbnail": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/Deadmau5_Belknap_Park_2023_%28cropped%29.jpg/330px-Deadmau5_Belknap_Park_2023_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+        "wikiUrl": "https://en.wikipedia.org/wiki/Deadmau5"
+      }
+    }
+  },
+  "artist_detail_missing": {
+    "status": 404,
+    "contentType": "application/json",
+    "body": {
+      "error": "Artist not found"
+    }
+  },
+  "label_overview_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "activeArtists": 29,
+      "annualProjection": 539092320,
+      "monthlyRevenue": 3202870,
+      "quarterlyProjection": 134773080,
+      "timestamp": "<VOLATILE>",
+      "topArtists": [
+        {
+          "name": "Feed Me",
+          "revenue": 16384705,
+          "roi": 2.7
+        },
+        {
+          "name": "deadmau5",
+          "revenue": 12530730,
+          "roi": 6.5
+        },
+        {
+          "name": "REZZ",
+          "revenue": 8464217,
+          "roi": 8.7
+        },
+        {
+          "name": "BlackGummy",
+          "revenue": 1413625,
+          "roi": 8.8
+        },
+        {
+          "name": "ATTLAS",
+          "revenue": 1246764,
+          "roi": 7.4
+        }
+      ]
+    }
+  },
+  "tours_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "tours": []
+    }
+  },
+  "monthly_sales_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "artistId": "art_deadmau5",
+      "artistName": "deadmau5",
+      "tourRevenue": []
+    }
+  },
+  "fans_demographics_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "demographics": {
+        "age": [
+          {
+            "range": "18-24",
+            "value": 35
+          },
+          {
+            "range": "25-34",
+            "value": 45
+          },
+          {
+            "range": "35-44",
+            "value": 15
+          },
+          {
+            "range": "45+",
+            "value": 5
+          }
+        ],
+        "gender": [
+          {
+            "label": "Male",
+            "value": 55
+          },
+          {
+            "label": "Female",
+            "value": 42
+          },
+          {
+            "label": "Other",
+            "value": 3
+          }
+        ],
+        "locations": [
+          {
+            "city": "Los Angeles",
+            "country": "USA",
+            "value": 120000
+          },
+          {
+            "city": "London",
+            "country": "UK",
+            "value": 85000
+          },
+          {
+            "city": "Toronto",
+            "country": "Canada",
+            "value": 60000
+          },
+          {
+            "city": "Berlin",
+            "country": "Germany",
+            "value": 45000
+          },
+          {
+            "city": "Sydney",
+            "country": "Australia",
+            "value": 30000
+          }
+        ],
+        "platformGrowth": [
+          {
+            "growth": 12.5,
+            "platform": "Spotify"
+          },
+          {
+            "growth": 28.4,
+            "platform": "TikTok"
+          },
+          {
+            "growth": 5.2,
+            "platform": "Instagram"
+          },
+          {
+            "growth": 8.1,
+            "platform": "YouTube"
+          }
+        ]
+      },
+      "topMovers": [
+        {
+          "engagement": 2.2,
+          "growth": 24.3,
+          "id": "art_mattlange",
+          "name": "Matt Lange"
+        },
+        {
+          "engagement": 7.4,
+          "growth": 23.8,
+          "id": "art_tommylee",
+          "name": "Tommy Lee"
+        },
+        {
+          "engagement": 5.9,
+          "growth": 23.5,
+          "id": "art_shottyhorroh",
+          "name": "Shotty Horroh"
+        },
+        {
+          "engagement": 4,
+          "growth": 21.6,
+          "id": "art_fehrplay",
+          "name": "Fehrplay"
+        },
+        {
+          "engagement": 7.6,
+          "growth": 20.7,
+          "id": "art_attlas",
+          "name": "ATTLAS"
+        }
+      ]
+    }
+  },
+  "campaigns_stats_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "history": [
+        {
+          "email": 7853236,
+          "month": "Jul",
+          "sms": 606178
+        },
+        {
+          "email": 8414182,
+          "month": "Aug",
+          "sms": 707207
+        },
+        {
+          "email": 8975128,
+          "month": "Sep",
+          "sms": 808237
+        },
+        {
+          "email": 9536073,
+          "month": "Oct",
+          "sms": 858752
+        },
+        {
+          "email": 10097019,
+          "month": "Nov",
+          "sms": 909267
+        },
+        {
+          "email": 11218910,
+          "month": "Dec",
+          "sms": 1010297
+        }
+      ],
+      "stats": {
+        "presaleSignups": 1782772,
+        "totalEmails": 11218910,
+        "totalSMS": 1010297
+      }
+    }
+  },
+  "integrations_status_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "services": [
+        {
+          "connected": false,
+          "id": "spotify",
+          "lastSync": "<VOLATILE>",
+          "name": "Spotify Web API",
+          "quotaUsed": 5
+        },
+        {
+          "connected": false,
+          "id": "youtube",
+          "lastSync": "<VOLATILE>",
+          "name": "YouTube Analytics",
+          "quotaUsed": 1
+        },
+        {
+          "connected": false,
+          "id": "tiktok",
+          "lastSync": "<VOLATILE>",
+          "name": "TikTok API",
+          "quotaUsed": 78
+        },
+        {
+          "connected": false,
+          "id": "instagram",
+          "lastSync": "<VOLATILE>",
+          "name": "Instagram Graph",
+          "quotaUsed": 23
+        },
+        {
+          "connected": false,
+          "id": "shopify",
+          "lastSync": "<VOLATILE>",
+          "name": "Shopify API",
+          "quotaUsed": 73
+        },
+        {
+          "connected": false,
+          "id": "ticketmaster",
+          "lastSync": "<VOLATILE>",
+          "name": "Ticketmaster Discovery",
+          "quotaUsed": 78
+        },
+        {
+          "connected": false,
+          "id": "bandsintown",
+          "lastSync": "<VOLATILE>",
+          "name": "Bandsintown API",
+          "quotaUsed": 65
+        },
+        {
+          "connected": false,
+          "id": "chartmetric",
+          "lastSync": "<VOLATILE>",
+          "name": "Chartmetric API",
+          "quotaUsed": 68
+        },
+        {
+          "connected": false,
+          "id": "revelator",
+          "lastSync": "<VOLATILE>",
+          "name": "Revelator API",
+          "quotaUsed": 50
+        }
+      ]
+    }
+  },
+  "anr_submissions_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "submissions": [
+        {
+          "artist": "Ghost Data",
+          "genre": "Synthwave",
+          "id": "sub_1",
+          "status": "pending",
+          "submittedAt": "<VOLATILE>",
+          "track": "Void Walker",
+          "url": "https://soundcloud.com/ghost-data/void-walker",
+          "votes": 15
+        },
+        {
+          "artist": "Testpilot",
+          "genre": "Techno",
+          "id": "sub_2",
+          "status": "shortlisted",
+          "submittedAt": "<VOLATILE>",
+          "track": "Sunspot",
+          "url": "https://open.spotify.com/track/0abcdef123456",
+          "votes": 42
+        }
+      ]
+    }
+  },
+  "anr_state_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "demos": [
+        {
+          "artist": "Unknown Producer",
+          "hasVoted": false,
+          "id": "demo1",
+          "status": "reviewing",
+          "submittedBy": "admin",
+          "title": "Analog Dreams"
+        },
+        {
+          "artist": "Neon Glitch",
+          "hasVoted": false,
+          "id": "demo2",
+          "status": "high-priority",
+          "submittedBy": "rezz",
+          "title": "Cyberpunk Bass"
+        },
+        {
+          "artist": "Void Walker",
+          "hasVoted": false,
+          "id": "demo3",
+          "status": "new",
+          "submittedBy": "admin",
+          "title": "Deep Space"
+        }
+      ],
+      "nowListening": {
+        "timestamp": "<VOLATILE>",
+        "updatedBy": "deadmau5",
+        "url": "https://soundcloud.com/mau5trap/example-demo"
+      },
+      "whiteboard": "Currently Reviewing: Q1 2026 Compilation Submissions.\nFocus: Tech House / Minimal."
+    }
+  },
+  "ops_logistics_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "logistics": [
+        {
+          "eta": "2025-12-18",
+          "id": 1,
+          "item": "Mau5head Replica (Gen 4)",
+          "location": "Los Angeles Warehouse",
+          "quantity": 150,
+          "status": "In Transit",
+          "tracking": "FW123456789",
+          "vendor": "Fourthwall"
+        },
+        {
+          "eta": null,
+          "id": 2,
+          "item": "Tour Tee (BlackGummy)",
+          "location": "EU Fulfillment Center",
+          "quantity": 800,
+          "status": "Stocked",
+          "tracking": "PF987654321",
+          "vendor": "Printful"
+        },
+        {
+          "eta": null,
+          "id": 3,
+          "item": "REZZ Goggles Replica",
+          "location": "Toronto Warehouse",
+          "quantity": 45,
+          "status": "Low Stock",
+          "tracking": "MB456789123",
+          "vendor": "Merchbar"
+        }
+      ]
+    }
+  },
+  "ops_assets_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "assets": [
+        {
+          "artist": "deadmau5",
+          "id": 1,
+          "size": "248 MB",
+          "status": "Approved",
+          "title": "deadmau5 - Strobe (Master WAV)",
+          "type": "Audio Master",
+          "uploaded": "2024-03-15"
+        },
+        {
+          "artist": "REZZ",
+          "id": 2,
+          "size": "1.8 GB",
+          "status": "Processing",
+          "title": "REZZ - Edge (Official Video)",
+          "type": "Video",
+          "uploaded": "2025-01-10"
+        },
+        {
+          "artist": "BlackGummy",
+          "id": 3,
+          "size": "89 MB",
+          "status": "Approved",
+          "title": "BlackGummy - Album Artwork Pack",
+          "type": "Artwork",
+          "uploaded": "2025-02-20"
+        }
+      ]
+    }
+  },
+  "ops_contracts_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "contracts": [
+        {
+          "advance": "$0",
+          "artist": "deadmau5",
+          "id": 1,
+          "nextMilestone": null,
+          "recoupable": null,
+          "royaltyRate": "50%",
+          "signedDate": "2018-06-01",
+          "status": "Active",
+          "term": "Perpetuity",
+          "type": "Master Recording"
+        },
+        {
+          "advance": "$150k",
+          "artist": "REZZ",
+          "id": 2,
+          "nextMilestone": "Album 3 Q2 2026",
+          "recoupable": "$120k remaining",
+          "royaltyRate": "Standard",
+          "signedDate": "2022-11-15",
+          "status": "Active",
+          "term": "3 Albums",
+          "type": "Exclusive Recording"
+        },
+        {
+          "advance": "$40k",
+          "artist": "BlackGummy",
+          "id": 3,
+          "nextMilestone": "Option Mar 2026",
+          "recoupable": "Fully Recouped",
+          "royaltyRate": "18%",
+          "signedDate": "2024-08-20",
+          "status": "Active",
+          "term": "2+2",
+          "type": "Single Deal + Option"
+        }
+      ]
+    }
+  },
+  "rights_contracts_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "downloadUrl": "/v3/reports/contracts/art_deadmau5.pdf",
+      "message": "Contract generated for deadmau5",
+      "status": "draft",
+      "success": true,
+      "terms": {
+        "royaltyRate": "70% Net Receipts",
+        "term": "3 Years",
+        "territory": "World"
+      }
+    }
+  },
+  "auth_me_admin": {
+    "status": 404,
+    "contentType": "application/json",
+    "body": {
+      "error": "User not found"
+    }
+  },
+  "users_list_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": [
+      {
+        "artistAccess": "all",
+        "createdAt": "<VOLATILE>",
+        "email": "admin@mau5trap.com",
+        "id": 1,
+        "integrationCount": 10,
+        "name": "Admin User",
+        "pageAccess": [
+          "all"
+        ],
+        "role": "admin",
+        "updatedAt": "<VOLATILE>"
+      },
+      {
+        "artistAccess": "art_rezz",
+        "createdAt": "<VOLATILE>",
+        "email": "tours@rezz.com",
+        "id": 2,
+        "integrationCount": 5,
+        "name": "Isabelle Rezazadeh",
+        "pageAccess": [
+          "overview",
+          "roster"
+        ],
+        "role": "artist",
+        "updatedAt": "<VOLATILE>"
+      }
+    ]
+  },
+  "ai_analyze_roi": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "confidence": 0.98,
+      "query": "who has the best roi",
+      "response": "Based on current data, HolyU has the highest ROI at 8.9x. Rezz is second at 6.5x.",
+      "timestamp": "<VOLATILE>"
+    }
+  },
+  "ai_analyze_tour": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "confidence": 0.98,
+      "query": "tour revenue",
+      "response": "Feed Me is leading touring revenue with $9,801,091. Suggest increasing ticket prices for deadmau5 to match demand.",
+      "timestamp": "<VOLATILE>"
+    }
+  },
+  "ai_analyze_growth": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "confidence": 0.98,
+      "query": "growth trend",
+      "response": "Matt Lange is the fastest growing artist (24.3%). This aligns with the viral TikTok trend observed last week.",
+      "timestamp": "<VOLATILE>"
+    }
+  },
+  "ai_analyze_other": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "confidence": 0.98,
+      "query": "something unrelated",
+      "response": "I've analyzed the label metrics. Overall revenue is up 15% YoY. Would you like a breakdown by genre?",
+      "timestamp": "<VOLATILE>"
+    }
+  },
+  "ai_analyze_no_query": {
+    "status": 400,
+    "contentType": "application/json",
+    "body": {
+      "error": "Query required"
+    }
+  },
+  "royalties_calc": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "artistName": "deadmau5",
+      "breakdown": {
+        "merch": 428693,
+        "streaming": 1426368,
+        "touring": 8718096
+      },
+      "payout": {
+        "artist": 7401209.899999999,
+        "label": 3171947.1
+      },
+      "splits": {
+        "artist": 0.7,
+        "label": 0.3
+      },
+      "totalRevenue": 10573157
+    }
+  },
+  "artist_development": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "artist": "deadmau5",
+      "focusAreas": [
+        "TikTok Content",
+        "LATAM Tour",
+        "Limited Merch"
+      ],
+      "insights": [
+        "deadmau5's streaming growth is outpacing the genre average by 15%.",
+        "Strong engagement in South America suggests potential for a Q3 tour leg.",
+        "Merch sales per listener are lower than expected; strictly limit supply for next drop."
+      ],
+      "projection": "Positive"
+    }
+  },
+  "analytics_projections": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "chartData": {
+        "datasets": [
+          {
+            "backgroundColor": "rgba(255,255,255,0.1)",
+            "borderColor": "#666666",
+            "data": [
+              35478162,
+              34003273,
+              33914685,
+              36981394,
+              36875720,
+              36024942,
+              34937326,
+              37671231,
+              37675805,
+              38719176,
+              36823719,
+              37670989,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            "fill": true,
+            "label": "Historical",
+            "tension": 0.4
+          },
+          {
+            "borderColor": "#00FF5F",
+            "borderDash": [
+              5,
+              5
+            ],
+            "data": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              37670989,
+              38395933,
+              38703302,
+              39010671,
+              39318040,
+              39625409,
+              39932778
+            ],
+            "fill": false,
+            "label": "Projection (Linear)",
+            "tension": 0
+          }
+        ],
+        "labels": [
+          "M1",
+          "M2",
+          "M3",
+          "M4",
+          "M5",
+          "M6",
+          "M7",
+          "M8",
+          "M9",
+          "M10",
+          "M11",
+          "M12",
+          "Fut1",
+          "Fut2",
+          "Fut3",
+          "Fut4",
+          "Fut5",
+          "Fut6"
+        ]
+      },
+      "entity": "Label Wide",
+      "stats": {
+        "intercept": 34400136.98484848,
+        "slope": 307368.95104895066
+      }
+    }
+  },
+  "analytics_geography": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "regions": [
+        {
+          "percent": 39.3,
+          "region": "North America",
+          "value": 4789848
+        },
+        {
+          "percent": 23.6,
+          "region": "Europe",
+          "value": 2873901
+        },
+        {
+          "percent": 15.7,
+          "region": "Asia",
+          "value": 1915930
+        },
+        {
+          "percent": 0.7,
+          "region": "Los Angeles, US",
+          "value": 82000
+        },
+        {
+          "percent": 0.3,
+          "region": "Toronto, CA",
+          "value": 40000
+        },
+        {
+          "percent": 0.6,
+          "region": "London, UK",
+          "value": 70500
+        },
+        {
+          "percent": 0.5,
+          "region": "Berlin, DE",
+          "value": 67000
+        },
+        {
+          "percent": 0.8,
+          "region": "Amsterdam, NL",
+          "value": 101100
+        },
+        {
+          "percent": 0.9,
+          "region": "New York, US",
+          "value": 106500
+        },
+        {
+          "percent": 0.7,
+          "region": "Sydney, AU",
+          "value": 80300
+        },
+        {
+          "percent": 0.1,
+          "region": "Tokyo, JP",
+          "value": 12000
+        },
+        {
+          "percent": 0.5,
+          "region": "Mexico City, MX",
+          "value": 67000
+        },
+        {
+          "percent": 0.4,
+          "region": "Paris, FR",
+          "value": 54000
+        },
+        {
+          "percent": 0.6,
+          "region": "San Francisco, US",
+          "value": 70000
+        },
+        {
+          "percent": 0.1,
+          "region": "Austin, US",
+          "value": 6500
+        },
+        {
+          "percent": 0,
+          "region": "Vancouver, CA",
+          "value": 4500
+        },
+        {
+          "percent": 0,
+          "region": "Seattle, US",
+          "value": 4000
+        },
+        {
+          "percent": 1,
+          "region": "Chicago, US",
+          "value": 118000
+        },
+        {
+          "percent": 0.3,
+          "region": "Detroit, US",
+          "value": 32000
+        },
+        {
+          "percent": 0.7,
+          "region": "Miami, US",
+          "value": 86000
+        },
+        {
+          "percent": 0.1,
+          "region": "Ibiza, ES",
+          "value": 15000
+        },
+        {
+          "percent": 0.9,
+          "region": "Space, Ibiza",
+          "value": 110000
+        },
+        {
+          "percent": 0.9,
+          "region": "Guvernment, Toronto",
+          "value": 105000
+        },
+        {
+          "percent": 0.8,
+          "region": "Ministry of Sound, London",
+          "value": 95000
+        },
+        {
+          "percent": 0.7,
+          "region": "Womb, Tokyo",
+          "value": 85000
+        },
+        {
+          "percent": 0.7,
+          "region": "Zouk, Singapore",
+          "value": 80000
+        },
+        {
+          "percent": 0.6,
+          "region": "Sao Paulo, BR",
+          "value": 78000
+        },
+        {
+          "percent": 0.6,
+          "region": "Warung, Brazil",
+          "value": 76000
+        },
+        {
+          "percent": 0.6,
+          "region": "Buenos Aires, AR",
+          "value": 75000
+        },
+        {
+          "percent": 0.6,
+          "region": "D-Edge, Sao Paulo",
+          "value": 72000
+        },
+        {
+          "percent": 0.6,
+          "region": "Palladium, Los Angeles",
+          "value": 70000
+        },
+        {
+          "percent": 0.5,
+          "region": "Berghain, Berlin",
+          "value": 65000
+        },
+        {
+          "percent": 0.5,
+          "region": "Seoul, KR",
+          "value": 60000
+        },
+        {
+          "percent": 0.5,
+          "region": "Mumbai, IN",
+          "value": 55000
+        },
+        {
+          "percent": 0.4,
+          "region": "Dubai, AE",
+          "value": 52000
+        },
+        {
+          "percent": 0.4,
+          "region": "Red Rocks, Denver",
+          "value": 50000
+        },
+        {
+          "percent": 0.4,
+          "region": "Fabric, London",
+          "value": 48000
+        },
+        {
+          "percent": 0.3,
+          "region": "Montreal, CA",
+          "value": 40000
+        },
+        {
+          "percent": 1.1,
+          "region": "Oceania",
+          "value": 140000
+        },
+        {
+          "percent": 1.8,
+          "region": "South America",
+          "value": 220000
+        },
+        {
+          "percent": 0.1,
+          "region": "Manchester, UK",
+          "value": 8500
+        },
+        {
+          "percent": 0,
+          "region": "Glasgow, UK",
+          "value": 5200
+        }
+      ]
+    }
+  },
+  "anr_stats_demo1": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "artistVotes": 0,
+      "ratio": 0,
+      "stars": 0,
+      "totalVotes": 2
+    }
+  },
+  "anr_demo_rating": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "stars": 0
+    }
+  },
+  "artists_artist_role": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "artists": [],
+      "limit": 50,
+      "offset": 0,
+      "total": 0
+    }
+  },
+  "artist_own_detail_artist_role": {
+    "status": 403,
+    "contentType": "application/json",
+    "body": {
+      "error": "Access denied to this artist"
+    }
+  },
+  "artist_other_detail_artist_role": {
+    "status": 403,
+    "contentType": "application/json",
+    "body": {
+      "error": "Access denied to this artist"
+    }
+  },
+  "monthly_sales_artist_role": {
+    "status": 403,
+    "contentType": "application/json",
+    "body": {
+      "error": "Access denied"
+    }
+  },
+  "label_overview_artist_role": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "activeArtists": 0,
+      "annualProjection": 0,
+      "monthlyRevenue": 0,
+      "quarterlyProjection": 0,
+      "timestamp": "<VOLATILE>",
+      "topArtists": []
+    }
+  },
+  "users_list_artist_role": {
+    "status": 403,
+    "contentType": "application/json",
+    "body": {
+      "error": "Admin access required"
+    }
+  },
+  "create_artist_artist_role": {
+    "status": 403,
+    "contentType": "application/json",
+    "body": {
+      "error": "Admin access required"
+    }
+  },
+  "exports_artist_role_labelwide": {
+    "status": 403,
+    "contentType": "application/json",
+    "body": {
+      "error": "Only admins can export label-wide data"
+    }
+  },
+  "exports_artist_role_own": {
+    "status": 403,
+    "contentType": "application/json",
+    "body": {
+      "error": "Access denied for this artist"
+    }
+  },
+  "auth_me_artist_role": {
+    "status": 404,
+    "contentType": "application/json",
+    "body": {
+      "error": "User not found"
+    }
+  },
+  "reset_password_missing": {
+    "status": 404,
+    "contentType": "application/json",
+    "body": {
+      "error": "Endpoint not found",
+      "path": "/v3/auth/reset-password"
+    }
+  },
+  "label_entity_audit_missing": {
+    "status": 404,
+    "contentType": "application/json",
+    "body": {
+      "error": "Endpoint not found",
+      "path": "/v3/label/entity-audit"
+    }
+  },
+  "forgot_password_unknown": {
+    "status": 404,
+    "contentType": "application/json",
+    "body": {
+      "error": "User not found"
+    }
+  },
+  "__meta": {
+    "adminTokenObtained": true,
+    "artistTokenObtained": true,
+    "entry": "mau5trap-production-api.js"
+  }
+}

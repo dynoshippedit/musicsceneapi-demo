@@ -25,7 +25,12 @@ jspm_packages/
 # Database
 *.sqlite
 *.sqlite3
+*.sqlite-journal
 *.db
+
+# Test artifacts
+tests/snapshots/.live.json
+tests/snapshots/current.json
 
 # OS
 .DS_Store
