@@ -1,0 +1,7 @@
+/* example-records-magenta: PORTABILITY TEST ONLY (§14.7). Not a production design. Hue 330° — outside the forbidden 200–290° band. */
+:root[data-theme="example-records-magenta"] {
+  --color-brand-primary:        #FF2D95;
+  --color-brand-primary-bright: #FF66B3;
+  --color-brand-primary-deep:   #B3005E;
+  --color-on-brand:             #000000;
+}

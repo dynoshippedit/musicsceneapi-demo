@@ -1,0 +1,14 @@
+.card {
+  position: relative;
+  overflow: hidden;
+  min-height: var(--kpi-height-min);
+}
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: var(--color-accent);
+  opacity: .5;
+}
+.label { margin-bottom: var(--space-2); }

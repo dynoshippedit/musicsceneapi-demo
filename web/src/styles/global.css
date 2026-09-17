@@ -1,0 +1,38 @@
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root { min-height: 100%; }
+body, h1, h2, h3, p { margin: 0; }
+body {
+  background-color: var(--color-bg);
+  background-image: var(--gradient-decoration);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: 100% 100vh;
+  color: var(--color-text);
+  font: var(--text-base)/var(--leading-body) var(--font-ui);
+}
+button, input { font: inherit; }
+button { cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+.panel { background: var(--color-panel); border: var(--border-panel); border-radius: var(--radius-panel); padding: var(--panel-pad); }
+.panel--accent { border: var(--border-panel-accent); background: var(--color-accent-faint); }
+.panel--well { background: var(--color-bg-deep); border: var(--border-panel); border-radius: var(--radius-panel); }
+.mono { font-family: var(--font-mono); }
+.label { font: 700 var(--text-xs)/1 var(--font-mono); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--color-text-muted); }
+.label--accent { color: var(--color-accent); }
+.kpi { font: 700 var(--text-3xl)/var(--leading-tight) var(--font-mono); color: var(--color-text); }
+.value { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.text-neon { color: var(--color-accent); text-shadow: var(--glow-accent); }
+.status-dot { width: 8px; height: 8px; border-radius: var(--radius-pill); display: inline-block; }
+.status-dot--on { background: var(--color-success); box-shadow: var(--glow-accent); }
+.status-dot--warn { background: var(--color-warning); }
+.status-dot--off { background: var(--color-danger); box-shadow: var(--glow-danger); }
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; box-shadow: var(--glow-accent-soft); }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--color-bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--color-text-faint); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-accent); }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+@keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
+@keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }

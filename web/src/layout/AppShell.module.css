@@ -1,0 +1,19 @@
+.shell { min-height: 100dvh; }
+.main {
+  margin-left: var(--sidebar-width);
+  padding: var(--page-gutter);
+}
+.backdrop { display: none; }
+@media (max-width: 1279px) {
+  .main { margin-left: var(--sidebar-rail-width); }
+}
+@media (max-width: 1023px) {
+  .main { margin-left: 0; }
+  .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 9;
+    background: color-mix(in srgb, var(--color-bg-deep) 90%, transparent);
+  }
+}

@@ -1,7 +1,8 @@
 # REFACTOR_PROGRESS.md
 
-Running log of the incremental refactor. Phase 1 and Phase 2 are complete;
-Phase 3 has not been authorized.
+Running log of the incremental refactor. Phases 1–3 (backend) and 4A–4B
+(frontend planning + first vertical slice) are complete. Phase 4C has not been
+authorized.
 
 Reference commit for all "original"/"pre-refactor" claims: `c0281d8`.
 
@@ -14,6 +15,13 @@ Reference commit for all "original"/"pre-refactor" claims: `c0281d8`.
 | 1 | Canonical entrypoint, config, middleware, auth, models, shared utils | COMPLETE |
 | 2 | repositories, services, integrations facade, AI, analytics, reports, jobs, controllers/routes | COMPLETE |
 | 3 | Defect remediation, security fixes, validation, logging redaction | COMPLETE — see PHASE_3_VALIDATION.md |
+| 4A | Frontend architecture, visual design contract, independent design audit + reconciliation, brand-portability audit | COMPLETE — `FRONTEND_ARCHITECTURE.md`, `MAU5TRAP_VISUAL_DESIGN_CONTRACT.md`, `PHASE_4A_DESIGN_AUDIT.md`, `PHASE_4A_HANDOFF.md` (§22 reconciles the audit), `BRAND_PORTABILITY_AUDIT*.md` |
+| 4B | `web/` Vite+React reference slice: brand layer, API client, auth, shell, Login + Dashboard against live `/v3/label/overview`; two-profile portability gate | COMPLETE — `PHASE_4B_HANDOFF.md`; independently re-verified in `PHASE_4B_VALIDATION.md` (live gate, `cd web && npm run gate`) and `PHASE_4B_STATIC_AUDIT.md` |
+| 4C | Remaining page migration (Artists first) | NOT AUTHORIZED |
+
+Backend after Phase 3: `npm test` = 121 pass / 0 fail / 26 suites (re-run
+2026-09-16 during 4B validation; backend untouched by 4A/4B). Legacy HTML
+frontends remain in place until their replacement passes its own gate.
 
 Monolith size: **3207 → 82 lines** (`mau5trap-production-api.js` is now an app
 assembler). 39 modules under `src/`, 5249 lines total.

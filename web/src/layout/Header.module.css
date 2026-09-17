@@ -1,0 +1,10 @@
+.header { height: var(--header-height); margin-bottom: var(--space-6); display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.heading { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.titleGroup { min-width: 0; }
+.titleGroup h1 { font: 700 var(--text-2xl)/var(--leading-tight) var(--font-ui); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.titleGroup p { margin-top: var(--space-1); color: var(--color-text-muted); font: var(--text-base)/1.2 var(--font-ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); flex: none; font: 500 var(--text-base)/1 var(--font-ui); }
+.avatar { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: var(--radius-pill); background: var(--color-surface-1); color: var(--color-accent); font: 700 var(--text-2xs)/1 var(--font-mono); }
+.menu { display: none; border: 0; background: none; color: var(--color-text-muted); font-size: 18px; }
+@media (max-width: 1023px) { .menu { display: inline-flex; } }
+@media (max-width: 600px) { .chip span:last-child { display: none; } }

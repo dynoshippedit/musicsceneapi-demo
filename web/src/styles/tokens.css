@@ -1,0 +1,155 @@
+:root {
+  /* ============ NEUTRAL ENVIRONMENT ============ */
+  --color-bg:            #0A0A0A;   /* page background. "Charcoal black". */
+  --color-bg-deep:       #050505;   /* console output wells, input troughs, code blocks */
+  --color-surface-1:     #111111;   /* solid panel alternative, skeleton blocks, table header bg */
+  --color-surface-2:     #161616;   /* hover row, nested panel inside a panel */
+  --color-panel:         rgba(20, 20, 20, 0.75);   /* standard panel fill (over the body gradient) */
+  --color-input-bg:      rgba(0, 0, 0, 0.30);
+
+  /* ============ GREEN — THE ONLY SIGNAL COLOR ============ */
+  --green-500:           #00FF5F;   /* mau5trap neon. Level-1 accent. */
+  --green-300:           #66FF9F;   /* hover/lift of level-1 text only */
+  --green-700:           #00A63E;   /* pressed state of primary button */
+  --green-a20:           rgba(0, 255, 95, 0.20);
+  --green-a10:           rgba(0, 255, 95, 0.10);   /* "primary-dim": active nav, badge fills, hover fills */
+  --green-a05:           rgba(0, 255, 95, 0.05);   /* whisper tint: highlighted rows, shortlist bg */
+  --color-accent:        var(--green-500);         /* components use --color-accent, never --green-500 directly,
+                                                      so a future alternate theme swaps ONE line */
+  --color-accent-dim:    var(--green-a10);
+  --color-accent-faint:  var(--green-a05);
+
+  /* ============ TEXT ============ */
+  --color-text:          #F5F5F5;   /* primary */
+  --color-text-muted:    #B5B5B5;   /* secondary labels, table body secondary cells */
+  --color-text-dim:      #666666;   /* chart ticks, placeholders, "// system ready" console idle text */
+  --color-text-faint:    #444444;   /* disabled icons, inactive vote buttons */
+  --color-text-on-accent:#000000;   /* text on a solid green fill is ALWAYS black */
+
+  /* ============ STATUS (semantic; each pairs with a text label, never color-alone) ============ */
+  --color-success:       var(--green-500);
+  --color-warning:       #FFA500;
+  --color-warning-dim:   rgba(255, 165, 0, 0.12);
+  --color-danger:        #FF4444;
+  --color-danger-dim:    rgba(255, 50, 50, 0.10);
+  --color-danger-border: rgba(255, 50, 50, 0.30);
+  --color-info:          #00E5FF;   /* RESTRICTED: tier "core" in NetworkGraph legend + info badges only */
+  --color-tier-dev:      #D500F9;   /* RESTRICTED: tier "developing" in NetworkGraph legend ONLY.
+                                       Never a button, link, nav, heading, or general accent. */
+
+  /* ============ BORDERS ============ */
+  --border-color:        rgba(255, 255, 255, 0.10);
+  --border-color-strong: rgba(255, 255, 255, 0.18);
+  --border-color-accent: rgba(0, 255, 95, 0.35);
+  --border-panel:        1px solid var(--border-color);
+  --border-panel-accent: 1px solid var(--border-color-accent);
+
+  /* ============ GEOMETRY ============ */
+  --radius-control:      2px;    /* buttons, inputs, selects, badges (square-ish) */
+  --radius-panel:        4px;    /* panels, cards, modals, chart/map containers */
+  --radius-pill:         999px;  /* ONLY: status pills <= 22px tall, avatar circles, the mau5-head loader */
+  /* No other radius values exist. 16px "glass card" radius from the legacy file is
+     deliberately RETIRED — it is the single biggest source of generic-SaaS drift. */
+
+  /* ============ GLOW / SHADOW ============ */
+  --glow-accent:         0 0 10px rgba(0, 255, 95, 0.50);   /* status dots, focus ring, console cursor */
+  --glow-accent-soft:    0 0 6px  rgba(0, 255, 95, 0.35);
+  --glow-danger:         0 0 10px rgba(255, 68, 68, 0.50);
+  --shadow-overlay:      0 0 50px rgba(0, 0, 0, 0.60);      /* modals / lightbox ONLY */
+  /* Panels at rest have NO box-shadow. Text has NO text-shadow except .text-neon on <= 4 words. */
+
+  /* ============ TYPOGRAPHY ============ */
+  --font-ui:             'Inter', system-ui, sans-serif;
+  --font-mono:           'JetBrains Mono', 'Space Mono', ui-monospace, monospace;
+  --text-2xs:  10px;   /* legend labels, badge text */
+  --text-xs:   11px;   /* table headers, form labels, metadata */
+  --text-sm:   12px;   /* secondary body, nav sublabels, console output */
+  --text-md:   13px;   /* dense table body */
+  --text-base: 14px;   /* body, inputs, buttons */
+  --text-lg:   16px;   /* panel titles */
+  --text-xl:   20px;   /* page section titles */
+  --text-2xl:  28px;   /* page H1 */
+  --text-3xl:  32px;   /* KPI values, artist detail H2 */
+  --tracking-label:      0.08em;   /* uppercase labels */
+  --tracking-wide:       0.12em;   /* "INTELLIGENCE PLATFORM" wordmark sublabel */
+  --leading-tight:       1.2;
+  --leading-body:        1.5;
+  --leading-console:     1.6;
+
+  /* ============ SPACING (4px grid) ============ */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px;  --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-7: 32px;  --space-8: 40px;
+
+  /* ============ LAYOUT ============ */
+  --sidebar-width:       224px;   /* legacy 260px -> tightened. MAX 240px. */
+  --sidebar-rail-width:  56px;    /* collapsed icon rail (responsive) */
+  --page-gutter:         var(--space-6);   /* legacy 40px -> 24px. MAX 32px. */
+  --panel-pad:           var(--space-4);   /* legacy 24px -> 16px. MAX 20px. */
+  --panel-pad-lg:        var(--space-5);
+  --table-cell-y:        10px;    /* legacy 16px -> 10px. MAX 12px. */
+  --table-cell-x:        12px;
+  --row-height-max:      44px;
+  --header-height:       56px;
+
+  /* ============ MOTION ============ */
+  --dur-fast:   120ms;
+  --dur-base:   200ms;
+  --ease:       cubic-bezier(0.2, 0, 0, 1);
+
+  /* ============ DECORATION (the ONLY permitted gradients) ============ */
+  --gradient-decoration: linear-gradient(to bottom, rgba(0, 255, 95, 0.10), rgba(0, 255, 95, 0));
+  /* used on: body background (fixed), sidebar background. Nowhere else. */
+  --gradient-scanline:   linear-gradient(to bottom, transparent, var(--green-a10) 50%, transparent);
+  /* used on: the AI console output well overlay ONLY. */
+}
+
+:root {
+  /* ============ PHASE 4A ADDENDUM — FRONTEND_ARCHITECTURE.md §13.9 ============ */
+  /* login ceremony (§13.3) — the ONLY screen allowed a third gradient and 48px padding */
+  --gradient-login:      radial-gradient(circle at 50% 50%, rgba(0, 255, 95, 0.05) 0%, transparent 50%);
+  --login-card-width:    420px;
+  --login-card-pad:      48px;
+
+  /* shell geometry (§13.5) — measurable, not adjectival */
+  --brand-mark-size:     40px;    /* Mau5Head in the sidebar; 24px in the rail */
+  --nav-item-height:     40px;
+  --kpi-height-min:      88px;    /* StatCard content height without delta; max 112px with delta; never stretched */
+
+  /* charts / maps (contract §3.11-3.12) — chartDefaults.js reads these via getComputedStyle so canvas colors have ONE source */
+  --chart-grid:          rgba(255, 255, 255, 0.05);
+  --chart-series-2:      #666666;                 /* historical / secondary series */
+  --chart-tooltip-bg:    rgba(0, 0, 0, 0.80);
+}
+
+:root {
+  /* ============ BRAND LAYER — FRONTEND_ARCHITECTURE.md §14.4 ============ */
+  /* The theme contract. A brand theme file (brand/themes/<id>.css, scoped to body[data-theme="<id>"])
+     overrides ONLY the four --color-brand-* tokens below (fonts/surfaces: see §14.4 "theme surface").
+     Reference values = mau5trap-console = the contract §1 palette. */
+  --color-brand-primary:        var(--green-500);
+  --color-brand-primary-bright: var(--green-300);
+  --color-brand-primary-deep:   var(--green-700);
+  --color-on-brand:             #000000;          /* text on a solid brand fill; literal on purpose (no cycle with --color-text-on-accent) */
+
+  /* derived alphas — automatic for any brand primary */
+  --color-brand-primary-a20:    color-mix(in srgb, var(--color-brand-primary) 20%, transparent);
+  --color-brand-primary-muted:  color-mix(in srgb, var(--color-brand-primary) 10%, transparent);
+  --color-brand-primary-faint:  color-mix(in srgb, var(--color-brand-primary)  5%, transparent);
+
+  /* rebind every accent alias the contract defines onto the brand layer, so components
+     (which use --color-accent*, never --green-*) follow the active theme automatically */
+  --color-accent:          var(--color-brand-primary);
+  --color-accent-bright:   var(--color-brand-primary-bright);   /* primary-button hover, link hover (was --green-300) */
+  --color-accent-deep:     var(--color-brand-primary-deep);     /* primary-button pressed (was --green-700) */
+  --color-accent-a20:      var(--color-brand-primary-a20);
+  --color-accent-dim:      var(--color-brand-primary-muted);
+  --color-accent-faint:    var(--color-brand-primary-faint);
+  --color-text-on-accent:  var(--color-on-brand);
+  --color-success:         var(--color-brand-primary);
+  --border-color-accent:   color-mix(in srgb, var(--color-brand-primary) 35%, transparent);
+  --glow-accent:           0 0 10px color-mix(in srgb, var(--color-brand-primary) 50%, transparent);
+  --glow-accent-soft:      0 0 6px  color-mix(in srgb, var(--color-brand-primary) 35%, transparent);
+  --gradient-decoration:   linear-gradient(to bottom, var(--color-brand-primary-muted), transparent);
+  --gradient-scanline:     linear-gradient(to bottom, transparent, var(--color-brand-primary-muted) 50%, transparent);
+  --gradient-login:        radial-gradient(circle at 50% 50%, var(--color-brand-primary-faint) 0%, transparent 50%);
+}

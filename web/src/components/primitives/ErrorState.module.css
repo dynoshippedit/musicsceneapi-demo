@@ -1,0 +1,26 @@
+.error { color: var(--color-danger); }
+.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  text-align: center;
+}
+.panel {
+  padding: var(--space-3);
+  background: var(--color-danger-dim);
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-panel);
+  text-align: center;
+}
+.field { font: var(--text-sm)/var(--leading-body) var(--font-ui); }
+.icon { font-size: 48px; line-height: 1; margin-bottom: var(--space-5); }
+.kicker { color: var(--color-danger); margin-bottom: var(--space-3); }
+.fullscreen .kicker { font-size: var(--text-lg); margin-bottom: var(--space-4); }
+.message { color: var(--color-text-muted); font: var(--text-base)/var(--leading-body) var(--font-ui); }
+.fullscreen .message { margin-bottom: var(--space-6); }
+.panel .message { color: var(--color-danger); font-size: var(--text-md); }
