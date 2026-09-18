@@ -23,7 +23,8 @@ Reference commit for all "original"/"pre-refactor" claims: `c0281d8`.
 | 4C | Remaining page migration: Artists, Artist detail (9 tabs), A&R Room + Scouting, Intelligence, Marketing, Fans, Operations, Settings (Integrations + AI), Admin, 404, and dashboard completion (forecast chart, heatmap, command console, exports) | COMPLETE (uncommitted, pending operator review) — see PHASE_4C_HANDOFF.md |
 | 4CF | Commercial foundation / CRUD truth: user CRUD truth, delete guards + session revocation, artist canonical source of truth, persist-or-demo contract, minimal customer/label ownership seam (Label Intelligence Profile), minimal audit + usage seams | COMPLETE (uncommitted, pending operator review) — see PHASE_4CF_COMMERCIAL_FOUNDATION.md |
 | PLANNING | Next-step roadmap (13 steps) + execution mechanics (pin ledger, per-step recipes) | COMPLETE (docs only) — see NEXT_STEPS_PLAN.md, EXECUTION_GUIDE.md |
-| D0 | Checkpoint strategy for the uncommitted 4C+4CF tree | APPROVED A — DECISION_D0_CHECKPOINT.md; first validation blocked on B1/B2/B3/FE-01/FE-02; checkpoint taken 2026-09-18 after those integrity repairs |
+| D0 | Checkpoint strategy for the uncommitted 4C+4CF tree | COMPLETE — `7336323` (Option A after integrity correction) |
+| 1 | Deployment truth (`server.js` PM2 fork) | COMPLETE — see EXECUTION_RESULTS.md §12 |
 | D7 | Password reset flow (Step 7) | PENDING SIGN-OFF — STEP7_PASSWORD_RESET_DECISION.md |
 | D12F | /health truth (Step 12F) | PENDING SIGN-OFF — DECISION_D12F_HEALTH.md |
 

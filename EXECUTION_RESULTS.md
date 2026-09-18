@@ -4,7 +4,7 @@ First validation date: 2026-09-17 (EDT). Integrity correction: 2026-09-18.
 Repository: `/home/dino/mau5trap-repo`.
 Starting HEAD: `7efb44b4ac88f9a512a5370a3c76553dd5e21a72`.
 D0 checkpoint commit: first pass **NONE**; second pass **Option A after B1/B2/B3/FE-01/FE-02 repair** (see §11).
-Numbered execution steps implemented: **NONE** (Step 1 is next).
+Numbered execution steps implemented: **Step 1 complete** (see §12).
 
 Sections 1–10 are the first-pass stop record and are retained. Do not treat their
 "BLOCKED / FAILED" footer as current; §11 and the footer below it are current.
@@ -205,9 +205,9 @@ D0 Option A checkpoint proceeds on this corrected tree.
 
 ## Final status
 
-EXECUTION SEQUENCE STATUS: D0 CHECKPOINT READY — integrity correction complete
+EXECUTION SEQUENCE STATUS: IN PROGRESS — D0 + Step 1 complete; Step 2 next
 
-D0 CHECKPOINT: APPROVED A; executing after integrity correction
+D0 CHECKPOINT: `7336323` (Option A after integrity correction)
 
 CRUD / DATA INTEGRITY: PASS on the reproduced B1/B2/B3/FE-01/FE-02 failures
 
@@ -221,4 +221,12 @@ HEALTH CONTRACT: NOT REACHED; D12F still PENDING SIGN-OFF
 
 DEDICATED-LABEL COMMERCIAL PATH: inherited seams present; Step 5 not started
 
-READY FOR NEXT PRODUCT PHASE: YES for Step 1 of EXECUTION_GUIDE.md (with §14 qualifications)
+READY FOR NEXT PRODUCT PHASE: YES — Step 1 complete; Step 2 is next
+
+## 12. Step 1 — Deployment truth (2026-09-18)
+
+- `ecosystem.config.js`: `script:'./server.js'`, `exec_mode:'fork'`, `instances:1`, `restart_delay:3000`, `max_memory_restart:'1G'`.
+- README / QUICKSTART / PRODUCTION_DEPLOYMENT / package-production.json now name `server.js`.
+- Isolated PM2 (`PM2_HOME=/tmp/mau5-step1-pm2`, PORT 3992, scratch SQLite): online, fork_mode, health 200, then `pm2 delete` + `pm2 kill` on that home only.
+- Default `~/.pm2` process list stayed `[]`. Operator DB hash/mtime unchanged.
+- `npm test` 142/142 after the step. No pins flipped.

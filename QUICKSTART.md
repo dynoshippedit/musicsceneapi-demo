@@ -15,7 +15,7 @@ npm install
 Start the API server. This handles authentication, database (in-memory), and AI logic.
 
 ```bash
-node mau5trap-production-api.js
+node server.js
 ```
 *   ✅ Server should show: `Server: http://localhost:3000`
 *   ✅ Verify it's running: `curl http://localhost:3000/health`

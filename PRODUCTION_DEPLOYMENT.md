@@ -30,7 +30,7 @@ JWT_SECRET=super_secret_long_key_here_must_be_complex
 > ⚠️ **CRITICAL**: The app will **crash on startup** if `JWT_SECRET` is missing. This is a security feature.
 
 ## 2. Process Management (PM2)
-We effectively utilize **PM2** for clustering (using all CPU cores) and auto-restarts.
+We utilize **PM2** in fork mode (one instance) with auto-restarts.
 
 **Start the Cluster:**
 ```bash
@@ -59,7 +59,7 @@ pm2 startup
 ## 4. Performance Tuning
 *   **Gzip Compression**: Enabled for all responses >1KB.
 *   **Caching**: In-memory caching for the heavy `/v3/artists` endpoint (5-minute TTL).
-*   **Clustering**: PM2 automatically scales to `max` available CPU cores.
+*   **Process model**: PM2 fork mode, single instance (in-process stores are not sharded).
 
 ## 5. Logging
 Logs are written to the `logs/` directory:
@@ -75,4 +75,4 @@ Since this is a standard Node.js app, you can deploy it easily:
 **Railway/Heroku/Render:**
 1.  Connect your GitHub Repo.
 2.  Set Environment Variables in their dashboard.
-3.  Set Start Command: `node mau5trap-production-api.js` (or use PM2 if supported).
+3.  Set Start Command: `node server.js` (or use PM2 if supported).

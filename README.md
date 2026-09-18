@@ -71,7 +71,7 @@ npm install -g http-server
 ### 2. Run the System
 **Terminal 1 (Backend API):**
 ```bash
-node mau5trap-production-api.js
+node server.js
 # Runs on Port 3000
 ```
 
@@ -93,7 +93,7 @@ Open your browser to:
 ---
 
 ## 📂 Project Structure
-*   `mau5trap-production-api.js`: The main Express server file.
+*   `server.js`: The main Express server file.
 *   `mau5trap-frontend-connected.html`: The Data-Rich React Application.
 *   `mau5trap-terminal-dashboard.html`: The "Hacker" Aesthetic Dashboard.
 *   `/reports`: Directory where PDF reports are generated auto-magically.

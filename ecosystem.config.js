@@ -1,11 +1,12 @@
 module.exports = {
     apps: [{
         name: 'mau5trap-api',
-        script: './mau5trap-production-api.js',
-        instances: 'max', // Use all available cores (Clustering)
-        exec_mode: 'cluster',
-        watch: false, // Don't watch in production to save CPU
-        max_memory_restart: '1G', // Auto-restart if memory leaks
+        script: './server.js',
+        instances: 1,
+        exec_mode: 'fork',
+        watch: false,
+        restart_delay: 3000,
+        max_memory_restart: '1G',
         env: {
             NODE_ENV: 'development'
         },
