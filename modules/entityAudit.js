@@ -3,6 +3,11 @@
 
 const axios = require('axios');
 
+// PHASE 4CF: label-specific knowledge-source configuration (hosts, pages,
+// parser keywords, user agents, fallbacks) moved to the Label Intelligence
+// Profile. Values for mau5trap are byte-identical to the previous literals.
+const profile = require('../src/profile');
+
 /**
  * Audit Google Knowledge Graph for artist entity
  * @param {string} artistName - Artist name to search
@@ -60,8 +65,8 @@ async function auditGoogleKG(artistName) {
         }
 
         if (!bestMatch) {
-            console.log(`Debugging GoogleKG: Tertiary search failed. Trying 'mau5trap artist ${artistName}'...`);
-            response = await runSearch(`mau5trap artist ${artistName}`);
+            console.log(`Debugging GoogleKG: Tertiary search failed. Trying '${profile.searchContext.tertiaryQueryPrefix}${artistName}'...`);
+            response = await runSearch(`${profile.searchContext.tertiaryQueryPrefix}${artistName}`);
             items = response.data.itemListElement || [];
             // For this fallback, we use relaxed matching to capture any entity with an image
             bestMatch = findBestMatch(items, artistName, true);
@@ -177,7 +182,7 @@ async function auditWikipedia(artistName) {
                 format: 'json',
                 srlimit: 1
             },
-            headers: { 'User-Agent': 'Mau5trapIntelligence/1.0 (admin@mau5trap.com)' },
+            headers: { 'User-Agent': profile.knowledgeSources.http.wikiUserAgent },
             timeout: 5000
         });
 
@@ -203,7 +208,7 @@ async function auditWikipedia(artistName) {
                 format: 'json',
                 inprop: 'url'
             },
-            headers: { 'User-Agent': 'Mau5trapIntelligence/1.0 (admin@mau5trap.com)' },
+            headers: { 'User-Agent': profile.knowledgeSources.http.wikiUserAgent },
             timeout: 5000
         });
 
@@ -211,12 +216,9 @@ async function auditWikipedia(artistName) {
         const categories = (page.categories || []).map(cat => cat.title);
         const externalLinks = (page.extlinks || []).map(link => link['*']);
 
-        // Check for music-related categories
+        // Check for music-related categories (profile-owned keyword list)
         const musicRelated = categories.some(cat =>
-            cat.includes('musician') ||
-            cat.includes('DJ') ||
-            cat.includes('electronic music') ||
-            cat.includes('music producer')
+            profile.knowledgeSources.wikipedia.categoryKeywords.some((kw) => cat.includes(kw))
         );
 
         // Fetch Summary & Thumbnail from REST API (Better Bio Data)
@@ -225,7 +227,7 @@ async function auditWikipedia(artistName) {
         try {
             const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle.replace(/ /g, '_'))}`;
             const summaryRes = await axios.get(summaryUrl, {
-                headers: { 'User-Agent': 'Mau5trapIntelligence/1.0 (admin@mau5trap.com)' },
+                headers: { 'User-Agent': profile.knowledgeSources.http.wikiUserAgent },
                 timeout: 5000
             });
             if (summaryRes.status === 200) {
@@ -284,7 +286,7 @@ async function auditDiscogs(artistName) {
                 per_page: 1
             },
             headers: {
-                'User-Agent': 'mau5trap-api/1.0',
+                'User-Agent': profile.knowledgeSources.http.discogsUserAgent,
                 'Authorization': `Discogs key=${apiKey}, secret=${apiSecret}`
             },
             timeout: 5000
@@ -445,7 +447,7 @@ function generateSchemaLD(artist, auditResults) {
         "@type": "MusicGroup",
         "name": artist.name,
         "url": artist.website || `https://www.${artist.name.toLowerCase()}.com`,
-        "genre": artist.genreHybrids || "Electronic Music",
+        "genre": artist.genreHybrids || profile.knowledgeSources.defaultGenre,
         "sameAs": []
     };
 
@@ -543,10 +545,10 @@ function detectInconsistencies(auditResults, artist) {
  */
 async function getFandomRoster() {
     try {
-        const response = await axios.get('https://deadmau5.fandom.com/api.php', {
+        const response = await axios.get(`${profile.knowledgeSources.fandom.host}/api.php`, {
             params: {
                 action: 'parse',
-                page: 'Mau5trap',
+                page: profile.knowledgeSources.fandom.rosterPage,
                 format: 'json',
                 prop: 'wikitext'
             },
@@ -565,17 +567,18 @@ async function getFandomRoster() {
         };
 
         let currentSection = null;
+        const kw = profile.knowledgeSources.fandom.sectionKeywords;
 
         lines.forEach(line => {
             const cleanLine = line.trim();
 
-            // Detect Section Headers
-            if (cleanLine.includes("Current") && cleanLine.startsWith("=")) {
+            // Detect Section Headers (profile-owned keywords)
+            if (cleanLine.includes(kw.current) && cleanLine.startsWith("=")) {
                 currentSection = 'current';
-            } else if ((cleanLine.includes("Former") || cleanLine.includes("Previous")) && cleanLine.startsWith("=")) {
+            } else if (kw.former.some((f) => cleanLine.includes(f)) && cleanLine.startsWith("=")) {
                 currentSection = 'former';
-            } else if (cleanLine.startsWith("==") && !cleanLine.includes("Current") && !cleanLine.includes("Former") && !cleanLine.includes("Previous") && !cleanLine.includes("Artists")) {
-                if (cleanLine !== "==Artists==") {
+            } else if (cleanLine.startsWith("==") && !cleanLine.includes(kw.current) && !kw.former.some((f) => cleanLine.includes(f)) && !cleanLine.includes(kw.artists)) {
+                if (cleanLine !== `==${kw.artists}==`) {
                     currentSection = null;
                 }
             }
@@ -609,16 +612,16 @@ async function getFandomRoster() {
  * Audit the Record Label itself
  */
 async function auditLabel() {
-    const labelName = 'Mau5trap';
+    const labelName = profile.knowledgeSources.wikipedia.labelPage;
 
     // Wikipedia
     let wikipedia = { status: 'not_found', exists: false };
     try {
-        const wikiUrl = `https://en.wikipedia.org/wiki/Mau5trap`;
+        const wikiUrl = `https://en.wikipedia.org/wiki/${profile.knowledgeSources.wikipedia.labelPage}`;
         // Try to fetch, but fallback to mock if 403/Forbidden (common with Wiki API without proper User-Agent)
         try {
-            const res = await axios.get(`https://en.wikipedia.org/api/rest_v1/page/summary/Mau5trap`, {
-                headers: { 'User-Agent': 'Mau5trapBot/1.0 (bot@mau5trap.com)' }
+            const res = await axios.get(`https://en.wikipedia.org/api/rest_v1/page/summary/${profile.knowledgeSources.wikipedia.labelPage}`, {
+                headers: { 'User-Agent': profile.knowledgeSources.http.labelBotUserAgent }
             });
             if (res.status === 200) {
                 wikipedia = {
@@ -631,13 +634,13 @@ async function auditLabel() {
             }
         } catch (apiError) {
             // Fallback for demo stability
-            console.warn('Wiki API failed, using fallback data for Mau5trap');
+            console.warn(`Wiki API failed, using fallback data for ${labelName}`);
             wikipedia = {
                 status: 'verified',
                 exists: true,
                 url: wikiUrl,
-                summary: "Mau5trap (stylized as mau5trap) is a Canadian independent record label founded by electronic music producer Deadmau5 in 2007. The label was formerly distributed by Ultra Records and is now a division of the Seven20 management group.",
-                thumbnail: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Mau5trap_logo.png/220px-Mau5trap_logo.png"
+                summary: profile.knowledgeSources.wikipedia.fallbackSummary,
+                thumbnail: profile.knowledgeSources.wikipedia.fallbackThumbnail
             };
         }
     } catch (e) { console.error('Label Wiki Audit failed', e.message); }
@@ -650,15 +653,15 @@ async function auditLabel() {
             fandom = {
                 status: 'verified',
                 exists: true,
-                url: 'https://deadmau5.fandom.com/wiki/Mau5trap',
-                title: 'Mau5trap (Wiki)',
+                url: `${profile.knowledgeSources.fandom.host}${profile.knowledgeSources.fandom.labelWikiPath}`,
+                title: profile.knowledgeSources.fandom.labelWikiTitle,
                 rosterSize: rosterRes.roster.current ? rosterRes.roster.current.length : 0
             };
         }
     } catch (e) { console.error('Label Fandom Audit failed', e.message); }
 
     // Discogs (Mock for now, or use real if creds exist)
-    const discogs = { status: 'verified', exists: true, url: 'https://www.discogs.com/label/86878-Mau5trap-Recordings' };
+    const discogs = { status: 'verified', exists: true, url: profile.knowledgeSources.discogs.labelUrl };
 
     // Genius (Not typically relevant for Labels like Artists, so we set as not found but present to prevent crash)
     const genius = { status: 'not_found', exists: false };
@@ -681,7 +684,7 @@ async function auditLabel() {
 async function auditFandom(artistName) {
     try {
         // Search for the page
-        const searchRes = await axios.get('https://deadmau5.fandom.com/api.php', {
+        const searchRes = await axios.get(`${profile.knowledgeSources.fandom.host}/api.php`, {
             params: {
                 action: 'query',
                 list: 'search',
@@ -705,7 +708,7 @@ async function auditFandom(artistName) {
         // Fetch Page Image
         let imageUrl = null;
         try {
-            const imageRes = await axios.get('https://deadmau5.fandom.com/api.php', {
+            const imageRes = await axios.get(`${profile.knowledgeSources.fandom.host}/api.php`, {
                 params: {
                     action: 'query',
                     prop: 'pageimages',
@@ -729,7 +732,7 @@ async function auditFandom(artistName) {
             exists: true,
             pageId: page.pageid,
             title: page.title,
-            url: `https://deadmau5.fandom.com/wiki/${encodeURIComponent(page.title.replace(/ /g, '_'))}`,
+            url: `${profile.knowledgeSources.fandom.host}/wiki/${encodeURIComponent(page.title.replace(/ /g, '_'))}`,
             image: imageUrl
         };
 

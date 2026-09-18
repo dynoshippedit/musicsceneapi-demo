@@ -1,0 +1,19 @@
+.bar {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: var(--border-panel);
+  overflow-x: auto;
+}
+.tab {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 var(--space-4);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+.tab:hover { color: var(--color-text); }
+.active { color: var(--color-accent); border-bottom-color: var(--color-accent); }

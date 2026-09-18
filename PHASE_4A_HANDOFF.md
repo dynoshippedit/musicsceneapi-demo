@@ -46,6 +46,12 @@ KPI data  GET /v3/label/overview serves { monthlyRevenue, quarterlyProjection, a
           activeArtists, topArtists, timestamp } — verified against src/routes/label.js L127-134 and
           tests/snapshots/baseline.json. The legacy StatCards read totalRevenue/totalStreams/avgROI,
           which do not exist → the live page shows $NaNM / NaNM / undefinedx today. See §6 row 5, 39-40.
+> Amended pre-4C (Decision 4, 2026-09-17): `tests/snapshots/baseline.json` is the Phase-1 capture of the PRE-REFACTOR monolith
+>   (`__meta.entry: mau5trap-production-api.js`, 50 cases) and is read by NO test. The deterministic baseline `npm test` compares
+>   against is `tests/snapshots/phase2_baseline.json` (91 cases, re-captured after the Phase 3 fixes — PHASE_3_VALIDATION.md §7).
+>   The field set above is unchanged in both. Artist-role `/v3/label/overview` values are "as served" (Phase 3 HIGH-4 artist-access
+>   normalization, `src/auth/index.js` normalizeArtistAccess): seeded artist → activeArtists 1 · 8464217 · 25392651 · 101570604,
+>   not the monolith's zeros. See PHASE_4C_PREREQUISITE_VALIDATION.md §6.
 
 Brand     The backend is NOT label-neutral yet: architecture §15 catalogs 25 hardcoding sites
           (9 class C — AI label context, KG search prefix, entity-audit prefix, root-admin email, A&R benchmark,
@@ -463,6 +469,14 @@ the gate, not an optional extra.
     (frozen snapshot label_overview_admin; mock data unchanged) — no NaN / undefined / null anywhere on the page
 [ ] tours@rezz.com / rezz123 → primary nav shows ONLY Dashboard and Artists (seeded pageAccess overview+roster); bottom group still shows
     Settings + Terminate Session; the four cards render that token's /v3/label/overview values (snapshot: $0 · $0 · $0 · 0), never NaN
+> Amended pre-4C (Decision 1, 2026-09-17): the artist's primary nav is DERIVED from the `pageAccess` array the backend now serves on
+>   POST /v3/auth/login and GET /v3/auth/me (seeded artist ['overview','roster'] → Dashboard + Artists; model default '["overview"]').
+>   web/src/auth/permissions.js carries no role→permission table any more (admin → all mirrors the backend seed/override ['all']);
+>   the gate (G05, F10, F18) computes the expected nav from the live login payload, not from a constant.
+> Amended pre-4C (Decision 4 investigation, 2026-09-17): the artist overview values are "as served by the API" for that token — the
+>   `$0 · $0 · $0 · 0` snapshot is NOT a contractual constant (the live artist account receives non-zero values since the Phase 3
+>   artist-access fix; PHASE_4B_STATIC_AUDIT.md F-12). The gate formats the live /v3/label/overview response with Node Intl and
+>   compares; "never NaN / undefined / null" is the contractual part of this line.
 [ ] wrong password → ErrorState panel variant inside the login card with the server's `error` text ("Invalid credentials"); button returns to INITIALIZE SESSION
 [ ] stop backend, reload /dashboard → full-viewport ErrorState (icon + CONNECTION FAILURE + message + RETRY CONNECTION), no white screen, no uncaught console error;
     start backend, click RETRY CONNECTION → KPI row renders without a page reload
@@ -493,9 +507,23 @@ COPY (architecture §13.1)
               "MONTHLY REVENUE" "QUARTERLY PROJECTION" "ANNUAL PROJECTION" "ACTIVE ARTISTS" "CONNECTION FAILURE" "RETRY CONNECTION"
 [ ] [grep]    every BRAND string lives only under brand/profiles/mau5trap/ — "INTELLIGENCE PLATFORM", "mau5trap Intelligence Platform", "mau5trap.com" appear nowhere else in web/src;
               the bare slug "mau5trap" may additionally appear only as the registry.js keys/defaultSlug and the theme file name/selector
+> Amended pre-4C (Decision 3, 2026-09-17): as written this cannot pass — the byte-for-byte tokens.css block ([diff] box above) carries
+>   `/* "INTELLIGENCE PLATFORM" wordmark sublabel */` at tokens.css:74. Corrected, scope-aware rule (gate check S03): the three brand
+>   strings are grepped over web/src outside brand/profiles/mau5trap/ with /* */ COMMENTS stripped from styles/tokens.css only; a brand
+>   string in a tokens.css declaration/selector or anywhere in any other file still FAILS. Run: `node web/validation/gate.mjs --static-only`.
 [ ] [grep]    forbidden-string grep from architecture §13.1 → no results (no Email / Password / Sign in / Log in / Sign out / Continue / Welcome / Assistant …)
 [ ] [grep]    grep -rniE "mau5trap|mau5|deadmau5|rezz" web/src --exclude-dir=brand → no results; same grep on web/src/brand --exclude-dir=profiles --exclude-dir=themes → only registry.js
+> Amended pre-4C (Decision 3, 2026-09-17): the first grep cannot pass as written — it hits the byte-for-byte tokens.css COMMENTS the
+>   [diff] box mandates (tokens.css:11 "mau5trap neon", :50 "mau5-head loader", :114 "Mau5Head", :128 "mau5trap-console"). Corrected rule
+>   (gate check S01): same pattern over web/src outside brand/ — INCLUDING comments, class names and storage keys in every other file —
+>   with /* */ comments stripped from styles/tokens.css only, so identity in a tokens.css declaration or selector still FAILS.
+>   The second grep is unchanged (gate check S02: only brand/registry.js may match). Run: `node web/validation/gate.mjs --static-only`.
 [ ] [grep]    grep -rnE "art_[a-z0-9]+" web/src → no results; grep -rn "@mau5trap.com\|@rezz.com" web/src → no results
+> Amended pre-4C (Decision 3, 2026-09-17): the second grep cannot pass as written — it hits the schema-required contact/email data of
+>   the mau5trap profile (brand/profiles/mau5trap/profile.js:12-13 `admin@mau5trap.com`, `notify@mau5trap.com`; architecture §14.2).
+>   Corrected rule (gate check S04): label email domains are allowed under web/src/brand/profiles/** ONLY; a hit anywhere else in web/src
+>   (generic code or brand core — a prefilled login, a dev shortcut, a hardcoded contact) still FAILS. The `art_*` grep is unchanged
+>   (gate check S08). Seed passwords admin123/rezz123 are additionally forbidden anywhere in web/src (gate check S09, architecture §14.5).
 [ ] [grep]    emoji grep from architecture §13.1 → no results
 [ ] [grep]    grep -rn "Total Revenue\|Total Streams\|Avg ROI\|TOTAL REVENUE\|TOTAL STREAMS\|AVG ROI" web/src → no results (rows 39-41)
 [ ] [measure] under the mau5trap profile the wordmark renders lowercase "mau5trap" on login and sidebar (profile.displayName verbatim)
@@ -506,6 +534,13 @@ MARK (architecture §13.2, §14.6)
 [ ] [grep]    layout/Sidebar.jsx and components/primitives/LoadingScreen.jsx import BrandMark / BrandLoader from brand/, and import NOTHING from brand/profiles/;
               grep -rn "from.*brand/profiles" web/src → only brand/registry.js
 [ ] [grep]    grep -rn "ri-headphone\|ri-music\|ri-disc" web/src/layout → no results
+> Amended pre-4C (Decision 3, 2026-09-17): cannot pass as written — `ri-headphone-line` is the prescribed A&R Room nav icon (architecture
+>   §5) and lives in layout/nav.js:6. The leak this box guards against is a Remixicon standing in for the brand mark. Corrected rule
+>   (gate check S07): `ri-headphone|ri-music|ri-disc` over ALL of web/src is allowed ONLY as the `icon` value of the `{ id: 'anr', … }`
+>   entry in layout/nav.js; any other occurrence — the sidebar brand block, BrandMark/BrandLoader, the login card, another nav entry, any
+>   component — still FAILS. The import rule two lines above is enforced the same way (gate check S06: profile/theme imports only in
+>   brand/registry.js). Run: `node web/validation/gate.mjs --static-only`; `node web/validation/static-checks.mjs --self-test` proves each
+>   S-rule still flags a synthetic leak.
 [ ] [measure] sidebar brand block: rendered mark is the Mau5Head SVG 40×40, wordmark 20px/800, sublabel 11px mono green uppercase (.label--accent, tracking-wide); nothing else in the block
 [ ] [measure] full-page loader is the mau5-head (80px ring + 2 ears, pulse) rendered via <BrandLoader/>, background #0A0A0A, no spinner, no text other than (optionally) INITIALIZING NEURAL LINK...
 
@@ -690,6 +725,13 @@ carries a `.label` kicker (architecture §13.5.6).
 | A profile theme picks a blue/violet primary and the console turns generic | the hue rule is a platform rule (architecture §14.4); theme files are grepped like components |
 | `color-mix()` unsupported on an older browser | modern evergreen browsers are the supported floor; `color-mix()` is permitted and semantic theme tokens remain authoritative. If older-browser support is required later, generate or handle fallback values centrally, never per component (§20 resolved Q14) |
 | Rebranded frontend, un-rebranded backend | expected until Phase 4-LABEL (architecture §15.2); document in `web/README.md` that AI answers, PDFs and reset emails stay mau5trap-flavoured until then |
+
+> Amended pre-4C (Decision 4, 2026-09-17) — applies to the row "Artist-role `/v3/label/overview` returns all zeros in the frozen
+>   snapshot" above: the zeros come from `tests/snapshots/baseline.json`, a Phase-1 capture of the pre-refactor monolith read by no
+>   test. The deterministic baseline is `tests/snapshots/phase2_baseline.json`, in which the seeded artist's overview is
+>   activeArtists 1 · monthlyRevenue 8464217 · quarterlyProjection 25392651 · annualProjection 101570604 (Phase 3 HIGH-4
+>   artist-access normalization). The mitigation stands as written — render whatever the API serves honestly, never special-case,
+>   never "fix" the backend — but the values are "as served", not a zero constant. See PHASE_4C_PREREQUISITE_VALIDATION.md §6.
 
 ## 19. Phase 4B MUST NOT
 

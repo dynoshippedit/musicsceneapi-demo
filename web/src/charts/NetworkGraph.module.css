@@ -1,0 +1,9 @@
+.wrap { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.canvas { width: 100%; display: block; background: var(--color-bg-deep); border: var(--border-panel); border-radius: var(--radius-panel); }
+.legend { list-style: none; display: flex; gap: var(--space-4); margin: 0; padding: 0; font: var(--text-2xs)/1 var(--font-mono); letter-spacing: var(--tracking-label); color: var(--color-text-dim); }
+.legend li { display: inline-flex; align-items: center; gap: var(--space-2); }
+.swatch { width: 8px; height: 8px; border-radius: var(--radius-pill); display: inline-block; }
+/* The ONE place the restricted tier hues may be rendered (tokens.css). */
+.flagship { background: var(--color-accent); }
+.core { background: var(--color-info); }
+.developing { background: var(--color-tier-dev); }

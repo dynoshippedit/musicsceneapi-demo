@@ -30,6 +30,7 @@ const config = require('./src/config');
 config.assertSecrets();
 
 const logger = require('./src/config/logger');
+const profile = require('./src/profile');
 const api = require('./mau5trap-production-api');
 const { registerJobs } = require('./src/jobs');
 
@@ -54,29 +55,35 @@ async function start() {
     //     without starting timers. Disable with SCHEDULE_JOBS=false.
     registerJobs({ enabled: process.env.SCHEDULE_JOBS !== 'false' });
 
-    // 3. Bind listener. Banner text preserved verbatim from api L3181-3204.
+    // 3. Bind listener. Banner text sourced from the active Label Intelligence
+    //    Profile (PHASE 4CF); mau5trap values are verbatim, minus the stale
+    //    joel@deadmau5.com line (that account was never seeded — see the 4CF
+    //    phase doc). Account lines derive from profile.seedUsers. Box lines
+    //    are padded programmatically so the box stays rectangular for any
+    //    profile (the original byte-counted padding was ragged on two lines).
     const server = app.listen(PORT, () => {
+        const BOX_INNER = 61; // border line is 63 chars: two corners + 61 '═'
+        const boxLine = (text) => `║   ${String(text).slice(0, BOX_INNER - 3).padEnd(BOX_INNER - 3)}║`;
+        const seedLines = profile.seedUsers
+            .map((s) => `- ${s.email} (${s.password}) - ${s.bannerLabel}`)
+            .join('\n');
+        const bannerTop = '═'.repeat(BOX_INNER);
         console.log(`
-╔═══════════════════════════════════════════════════════════╗
-║                                                           ║
-║   mau5trap Production API                                ║
-║   Multi-Tenant Access Control Enabled                    ║
-║                                                           ║
-║   Server: http://localhost:${PORT}                         ║
-║   Environment: ${config.env}                              ║
-║                                                           ║
-║   Features:                                              ║
-║   ✓ User Authentication (JWT)                           ║
-║   ✓ Role-Based Access Control                           ║
-║   ✓ Monthly Report Generation                           ║
-║   ✓ Auto-Printing Enabled                               ║
-║                                                           ║
-╚═══════════════════════════════════════════════════════════╝
+╔${bannerTop}╗
+${boxLine('')}
+${boxLine(profile.identity.bannerTitle)}
+${boxLine(profile.identity.bannerSubtitle)}
+${boxLine('')}
+${boxLine(`Server: http://localhost:${PORT}`)}
+${boxLine(`Environment: ${config.env}`)}
+${boxLine('')}
+${boxLine('Features:')}
+${profile.identity.bannerFeatures.map((f) => boxLine(`✓ ${f}`)).join('\n')}
+${boxLine('')}
+╚${bannerTop}╝
 
 Default Users:
-- admin@mau5trap.com (admin123) - Full access
-- tours@rezz.com (rezz123) - REZZ only
-- joel@deadmau5.com (mau5123) - deadmau5 only
+${seedLines}
 
 ⚠️  CHANGE DEFAULT PASSWORDS IMMEDIATELY!
     `);

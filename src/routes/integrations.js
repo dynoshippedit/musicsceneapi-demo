@@ -39,7 +39,7 @@ function register(app, ctx) {
         prospects, anrSubmissions, anrState, userIntegrations, salesData, apiCache,
         aiService, performLinearRegression, generateSyntheticHistory,
         integrationFacade, fetchArtistData, getIntegrationStatus, SERVICES, limiters,
-        generateMonthlyReport
+        generateMonthlyReport, profile
     } = ctx;
 
     // Google KG Proxy for Artist Entity
@@ -62,11 +62,12 @@ function register(app, ctx) {
                 } catch (e) { /* ignore */ }
             }
 
-            // 2. Fallback: Contextual Search (Google KG with 'mau5trap' prefix)
-            // If we STILL have no image (or entity not found initially), try searching "mau5trap [Artist]"
+            // 2. Fallback: Contextual Search (Google KG with label prefix)
+            // PHASE 4CF: the prefix is label intelligence — profile-owned
+            // (was the literal `mau5trap ${query}`).
             if (!result.image) {
                 try {
-                    const contextualQuery = `mau5trap ${query}`;
+                    const contextualQuery = `${profile.searchContext.artistQueryPrefix}${query}`;
                     const contextResult = await integrationFacade.auditGoogleKG(contextualQuery);
                     if (contextResult.exists && contextResult.image) {
                         // Only adopt the image if the main result failed or lacked one
@@ -123,7 +124,10 @@ function register(app, ctx) {
             name: SERVICES[key].name,
             connected: integrations[key]?.connected || false,
             lastSync: integrations[key]?.lastSync || null,
-            quotaUsed: Math.floor(Math.random() * 80) // Mock quota usage 0-80%
+            // PHASE 4CF (persist-or-demo): quotaUsed was Math.random() per
+            // call — simulated numbers presented as operational metering.
+            // Now explicit null = "no metering data"; the UI renders '—'.
+            quotaUsed: null
         }));
 
         res.json({ services: status });

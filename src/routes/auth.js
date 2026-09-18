@@ -39,12 +39,23 @@ function register(app, ctx) {
         prospects, anrSubmissions, anrState, userIntegrations, salesData, apiCache,
         aiService, performLinearRegression, generateSyntheticHistory,
         integrationFacade, fetchArtistData, getIntegrationStatus, SERVICES, limiters,
-        generateMonthlyReport
+        generateMonthlyReport, profile
     } = ctx;
+
+    // pageAccess (pre-Phase-4C Decision 1): User.pageAccess is stringified
+    // JSON in a STRING column (models L50; seeds: admin ["all"], artist
+    // ["overview","roster"]). One parser shared by the DB login path and
+    // GET /v3/auth/me so both carry the same array shape the admin-override
+    // login already returns. Parsing/fallback is exactly the original inline
+    // login expression. Frontend nav/UI visibility ONLY — backend route
+    // authorization never consults this field.
+    function parsePageAccess(raw) {
+        return JSON.parse(raw || '["overview"]');
+    }
 
     // Login Endpoint
     app.post('/v3/auth/login', async (req, res) => {
-        const { email, password } = req.body;
+        const { email, password } = req.body || {};
 
         // CRITICAL-1 FIX (Phase 3): reject a missing/empty email/password up
         // front with 401. Previously an empty body reached User.findOne({email:
@@ -74,8 +85,8 @@ function register(app, ctx) {
             const match = await bcrypt.compare(password, user.passwordHash);
             if (!match) return res.status(401).json({ error: 'Invalid credentials' });
 
-            // Parse pageAccess
-            const parsedPageAccess = JSON.parse(user.pageAccess || '["overview"]');
+            // Parse pageAccess (shared parser; see parsePageAccess above)
+            const parsedPageAccess = parsePageAccess(user.pageAccess);
 
             // JWT IDENTITY FIX (Phase 3): include the user's primary key `id`
             // claim. The previous payload omitted it, so req.user.id was
@@ -96,7 +107,8 @@ function register(app, ctx) {
                     name: user.name,
                     email: user.email,
                     role: user.role,
-                    artistAccess: user.artistAccess
+                    artistAccess: user.artistAccess,
+                    pageAccess: parsedPageAccess
                 }
             });
         } catch (e) {
@@ -132,13 +144,15 @@ function register(app, ctx) {
 
             await sendEmail({
                 to: email,
-                subject: 'mau5trap OS - Password Reset Request',
+                // PHASE 4CF: reset-email identity from the Label Intelligence
+                // Profile (values byte-identical for mau5trap).
+                subject: profile.email.resetSubject,
                 html: `
                     <div style="font-family: monospace; background: #000; color: #fff; padding: 20px;">
-                        <h2 style="color: #00ff00;">PASSWORD RESET REQUIRED</h2>
+                        <h2 style="color: ${profile.email.resetHeadingColor};">PASSWORD RESET REQUIRED</h2>
                         <p>A request was received to reset the credentials for <strong>${email}</strong>.</p>
                         <p>Click the secure link below to proceed:</p>
-                        <a href="${resetLink}" style="color: #00ff00; font-size: 16px;">${resetLink}</a>
+                        <a href="${resetLink}" style="color: ${profile.email.resetLinkColor}; font-size: 16px;">${resetLink}</a>
                         <p style="margin-top: 20px; color: #666;">If you did not request this, ignore this transmission.</p>
                     </div>
                 `
@@ -157,8 +171,10 @@ function register(app, ctx) {
             const user = await User.findByPk(req.user.id);
             if (!user) return res.status(404).json({ error: 'User not found' });
 
-            // Prevent deleting the main admin for safety in this demo
-            if (user.email === 'admin@mau5trap.com') {
+            // Prevent deleting the main admin for safety in this demo.
+            // PHASE 4CF: the root-admin email now comes from the Label
+            // Intelligence Profile instead of a hardcoded literal.
+            if (user.email === profile.rootAdminEmail) {
                 return res.status(403).json({ error: 'Cannot delete root admin account.' });
             }
 
@@ -185,7 +201,8 @@ function register(app, ctx) {
                 email: user.email,
                 name: user.name,
                 role: user.role,
-                artistAccess: user.artistAccess
+                artistAccess: user.artistAccess,
+                pageAccess: parsePageAccess(user.pageAccess)
             });
         } catch (err) {
             res.status(500).json({ error: 'Internal error' });
@@ -194,7 +211,7 @@ function register(app, ctx) {
 
     // Change password
     app.post('/v3/auth/change-password', authenticateToken, async (req, res) => {
-        const { currentPassword, newPassword } = req.body;
+        const { currentPassword, newPassword } = req.body || {};
 
         if (!currentPassword || !newPassword) {
             return res.status(400).json({ error: 'Current and new password required' });

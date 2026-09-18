@@ -1,7 +1,7 @@
 import { useLocation } from 'react-router-dom';
 import { useBrand } from '../brand/BrandContext.jsx';
 import { useAuth } from '../auth/useAuth.js';
-import { NAV_PRIMARY, NAV_SECONDARY } from './nav.js';
+import { resolveNavEntry } from './nav.js';
 import styles from './Header.module.css';
 
 function initials(name = '') {
@@ -12,8 +12,11 @@ export function Header({ onMenuClick }) {
   const location = useLocation();
   const { text } = useBrand();
   const { user } = useAuth();
-  const route = [...NAV_PRIMARY, ...NAV_SECONDARY].find((item) => location.pathname === item.to) || NAV_PRIMARY[0];
-  const title = text.nav[route.id] || route.label;
+  // Segment-bounded longest match, so a detail or sub-tab route keeps its section title
+  // instead of falling back to the first nav entry (which is what exact matching did in 4B).
+  // An unmatched path is a 404 and says so, rather than borrowing the first nav entry's title.
+  const route = resolveNavEntry(location.pathname);
+  const title = route ? (text.nav[route.id] || route.label) : text.notFoundTitle;
   return (
     <header className={styles.header}>
       <div className={styles.heading}>
@@ -22,7 +25,9 @@ export function Header({ onMenuClick }) {
         </button>
         <div className={styles.titleGroup}>
           <h1>{title}</h1>
-          {route.subtitle && <p>{text[route.subtitle]}</p>}
+          {/* Legacy renders the same sub-line under EVERY page title (L3526). PHASE_4A_HANDOFF.md
+              §20 Q10 is still unanswered, and it states 4C defaults to the legacy behaviour. */}
+          <p>{text.dashboardSubtitle}</p>
         </div>
       </div>
       <div className={`panel ${styles.chip}`}>

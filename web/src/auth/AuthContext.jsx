@@ -38,8 +38,13 @@ export function AuthProvider({ children }) {
       })
       .catch((error) => {
         if (error.name === 'AbortError') return;
-        if (error.status === 401 || error.status === 403 || error.status === 404) logout();
-        // A temporary network failure does not destroy a locally valid session.
+        // PHASE_4A_HANDOFF.md §9 / FRONTEND_ARCHITECTURE.md §6: only 401/403 from /me end the session
+        // (the backend answers 401 to a missing bearer and 403 to an invalid/expired one — src/auth/index.js).
+        if (error.status === 401 || error.status === 403) { logout(); return; }
+        // Anything else (network failure, 5xx, 404 "User not found") is a reconciliation failure, not a
+        // session failure: the locally stored token/user stay in place and the backend still authorizes
+        // every request. Pre-4C Decision 5 — a /me 404 previously called logout() here, which destroyed
+        // the ADMIN_EMAIL override login whose JWT carries no `id` claim (PHASE_4B_STATIC_AUDIT.md F-10).
       });
     return () => controller.abort();
   }, [session.token, logout]);

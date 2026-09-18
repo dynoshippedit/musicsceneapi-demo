@@ -1,7 +1,9 @@
 // Phase 4B acceptance gate (PHASE_4A_HANDOFF.md §15 functional + mechanical + portability boxes).
 // Runs headless against ALREADY-RUNNING servers and prints one line per check.
 //
-//   cd web && npm run gate
+//   cd web && npm run gate                  full run (static S-checks first, then the browser checks)
+//   node validation/gate.mjs --static-only  only the static brand-portability checks (no servers, no browser)
+//   node validation/static-checks.mjs --self-test  prove each static rule catches a synthetic leak
 //
 // Env:
 //   BASE_URL         frontend origin              (default http://127.0.0.1:5173, Vite dev — the
@@ -13,13 +15,17 @@
 //   SCREENSHOT_DIR   where the phase4b-*.png set is (over)written (default: this directory)
 //
 // Exit code: 0 when every check passes, 1 otherwise. No source file is imported from web/src —
-// expected values are derived from the live API + Node's Intl, and from the 4A/contract spec.
+// expected values are derived from the live API + Node's Intl, and from the 4A/contract spec; the
+// static S-checks (static-checks.mjs) read web/src as TEXT with the §15 [grep] rules as amended pre-4C.
 
 import { chromium } from 'playwright';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { parseColor, sameColor, fmt, KPI_ORDER } from './lib.mjs';
+import { runStaticChecks, DEFAULT_SRC } from './static-checks.mjs';
+
+const STATIC_ONLY = process.argv.includes('--static-only');
 
 const BASE = (process.env.BASE_URL || 'http://127.0.0.1:5173').replace(/\/$/, '');
 const API = (process.env.API_URL || 'http://localhost:3000').replace(/\/$/, '');
@@ -47,7 +53,9 @@ const SPEC = {
   },
   voice: ['ACCESS ID', 'PASSPHRASE', 'INITIALIZE SESSION', 'RESTRICTED ACCESS. UNAUTHORIZED CONNECTIONS WILL BE TERMINATED.', 'Authorized personnel only.', 'Forgot Password?'],
   navAll: ['Dashboard', 'Artists', 'A&R Room', 'Intelligence', 'Marketing', 'Fans', 'Operations', 'Admin'],
-  navArtist: ['Dashboard', 'Artists'],
+  // 4A §10 vocabulary: pageAccess key → primary nav label. Pre-4C Decision 1: the artist's expected nav is
+  // DERIVED from the pageAccess array the live API serves (no role table here or in web/src).
+  navByPerm: [['overview', 'Dashboard'], ['roster', 'Artists'], ['anr_room', 'A&R Room'], ['ai_lab', 'Intelligence'], ['marketing', 'Marketing'], ['fans', 'Fans'], ['operations', 'Operations'], ['admin', 'Admin']],
   text: 'rgb(245, 245, 245)', muted: 'rgb(181, 181, 181)', bg: 'rgb(10, 10, 10)', onAccent: 'rgb(0, 0, 0)',
   danger: 'rgb(255, 68, 68)', dangerDim: 'rgba(255, 50, 50, 0.1)', dangerBorder: 'rgba(255, 50, 50, 0.3)', hairline: 'rgba(255, 255, 255, 0.1)',
   mau5HeadPath: 'M 30 70 Q 50 90 70 70 Q 50 82 30 70',
@@ -62,6 +70,16 @@ function check(id, name, pass, observed) {
 async function step(id, name, fn) {
   try { await fn(); } catch (error) { check(id, name, false, `threw: ${error.message.split('\n')[0]}`); }
 }
+function summarizeAndExit() {
+  const pass = results.filter((r) => r.pass).length; const fail = results.length - pass;
+  console.log(`GATE SUMMARY: ${pass} pass, ${fail} fail, ${results.length} checks`);
+  process.exit(fail ? 1 : 0);
+}
+
+// ---------- S: static brand-portability checks (§15 [grep] boxes, amended pre-4C — no servers needed) ----------
+console.log(`Phase 4B gate — static checks over ${DEFAULT_SRC}${STATIC_ONLY ? ' (--static-only: browser checks skipped)' : ''}`);
+runStaticChecks(DEFAULT_SRC, check);
+if (STATIC_ONLY) summarizeAndExit();
 
 // ---------- console / error capture ----------
 const consoleErrors = [];   // unexpected console.error messages
@@ -85,14 +103,28 @@ function expectedKpis(overview, locale, currency) {
   const f = fmt(locale, currency);
   return [f.money(overview.monthlyRevenue), f.money(overview.quarterlyProjection), f.money(overview.annualProjection), f.integer(overview.activeArtists)];
 }
+// Primary nav a user should see, derived from the API payload only (4A §10 + nav.js adminOnly rule for Admin).
+function expectedNav(user) {
+  const access = Array.isArray(user?.pageAccess) ? user.pageAccess : [];
+  const admin = user?.role === 'admin';
+  if (admin || access.includes('all')) return SPEC.navAll.filter((label) => label !== 'Admin' || admin);
+  return SPEC.navByPerm.filter(([perm]) => access.includes(perm) && (perm !== 'admin' || admin)).map(([, label]) => label);
+}
 
 // ---------- browser helpers ----------
 const browser = await chromium.launch({ headless: HEADLESS });
 const context = await browser.newContext({ viewport: VIEWPORT });
 const page = await context.newPage();
+// `GET /v3/ai/providers` is ARCHITECTURALLY absent on this backend. PHASE_4A_HANDOFF.md §12
+// specifies asking for it and degrading to system-default mode on 404, so that the frontend
+// flips to a real provider catalogue with no rewrite once the route ships. Its 404 is therefore
+// expected in ANY phase — named explicitly by URL rather than by loosening the rule for all.
+const DOCUMENTED_ABSENT_ROUTES = ['/v3/ai/providers'];
+const isDocumentedAbsent = (m) => DOCUMENTED_ABSENT_ROUTES.some((route) => (m.location()?.url || '').includes(route));
+
 page.on('console', (m) => {
   if (m.type() === 'error') {
-    if (/^Failed to load resource/.test(m.text()) && phase.expectsHttpErrors) expectedResourceErrors.push(`[${phase.name}] ${m.text()}`);
+    if (/^Failed to load resource/.test(m.text()) && (phase.expectsHttpErrors || isDocumentedAbsent(m))) expectedResourceErrors.push(`[${phase.name}] ${m.text()}${isDocumentedAbsent(m) ? ' (documented absent route)' : ''}`);
     else consoleErrors.push(`[${phase.name}] ${m.text()}`);
   } else if (m.type() === 'warning') consoleWarnings.push(`[${phase.name}] ${m.text().slice(0, 160)}`);
 });
@@ -155,7 +187,11 @@ await step('G04', 'live API overview (artist)', async () => {
 const expAdminUsd = expectedKpis(adminOverview.body, SPEC.mau5trap.locale, SPEC.mau5trap.currency);
 const expAdminGbp = expectedKpis(adminOverview.body, SPEC.example.locale, SPEC.example.currency);
 const expArtistUsd = expectedKpis(artistOverview.body, SPEC.mau5trap.locale, SPEC.mau5trap.currency);
-console.log(`INFO | expected (Node Intl) admin en-US/USD: ${expAdminUsd.join(' · ')} | admin en-GB/GBP: ${expAdminGbp.join(' · ')} | artist en-US/USD: ${expArtistUsd.join(' · ')}`);
+const expArtistNav = expectedNav(artistApi.body.user);
+check('G05', 'login payloads carry pageAccess arrays (pre-4C Decision 1 contract: admin ⊇ all, artist non-empty)',
+  Array.isArray(adminApi.body.user?.pageAccess) && adminApi.body.user.pageAccess.includes('all') && Array.isArray(artistApi.body.user?.pageAccess) && artistApi.body.user.pageAccess.length > 0,
+  `admin.pageAccess=${JSON.stringify(adminApi.body.user?.pageAccess)} artist.pageAccess=${JSON.stringify(artistApi.body.user?.pageAccess)} → expected artist nav [${expArtistNav.join(', ')}]`);
+console.log(`INFO | expected (Node Intl) admin en-US/USD: ${expAdminUsd.join(' · ')} | admin en-GB/GBP: ${expAdminGbp.join(' · ')} | artist en-US/USD: ${expArtistUsd.join(' · ')} (values as served by the API — not a contractual constant)`);
 
 // ---------- F: functional — mau5trap profile ----------
 setPhase('unauth');
@@ -302,7 +338,12 @@ await step('V08', 'shell geometry: sidebar 224 / 24px 16px / hairline / blur(20p
   check('V14', 'KPI anatomy: 2px accent left rule @.5 full height; .label 11px mono muted uppercase; .kpi 32px/700 mono text tabular-nums',
     d.cards.every((c) => c.ruleW === '2px' && sameColor(c.ruleBg, SPEC.mau5trap.accent) && c.ruleOp === '0.5' && Math.abs(parseFloat(c.ruleH) - c.clientH) < 1 && c.labelSize === '11px' && sameColor(c.labelColor, SPEC.muted) && c.labelTransform === 'uppercase' && c.kpiSize === '32px' && c.kpiWeight === '700' && /JetBrains Mono/.test(c.kpiFamily) && sameColor(c.kpiColor, SPEC.text) && c.kpiNum === 'tabular-nums'),
     `rule=${c0.ruleW} ${c0.ruleBg} op=${c0.ruleOp} h=${c0.ruleH} (card inner ${c0.clientH}px); label ${c0.labelSize} ${c0.labelColor} ${c0.labelTransform}; kpi ${c0.kpiSize}/${c0.kpiWeight} ${c0.kpiFamily.split(',')[0]} ${c0.kpiColor} ${c0.kpiNum}`);
-  check('V16', 'nothing below the KPI row (main = header + grid), no Vite error overlay', d.mainChildren.join('|') === 'HEADER|DIV' && !d.overlay, `main children=[${d.mainChildren.join(', ')}] overlay=${d.overlay}`);
+  // AMENDED FOR PHASE 4C. In 4B the dashboard was deliberately a KPI row over an empty canvas,
+  // and V16 enforced that nothing was invented to fill it. 4C SPECIFIES what goes there —
+  // matrix row 7 (revenue forecast + log sale), row 8 (global heatmap), row 21 (console rail)
+  // and row 31 (exports). So the box now asserts the KPI row is still FIRST and that everything
+  // below it is one of those specified surfaces, rather than asserting emptiness.
+  check('V16', 'KPI row is first under the header; everything below it is a specified 4C surface (no filler)', d.mainChildren[0] === 'HEADER' && d.mainChildren[1] === 'DIV' && d.mainChildren.slice(2).every((tag) => tag === 'DIV' || tag === 'SECTION') && d.mainChildren.length <= 4 && !d.overlay, `main children=[${d.mainChildren.join(', ')}] (expected HEADER, KPI DIV, then the 4C forecast/console row and the map section) overlay=${d.overlay}`);
 });
 await shot('phase4b-mau5trap-dashboard.png');
 
@@ -311,16 +352,98 @@ await step('F08', 'persisted session survives reload; userData reconciled with /
   await page.reload(); await page.waitForSelector('.kpi', { timeout: T });
   const after = await readSession(); const u = JSON.parse(after.userData);
   check('F08', 'persisted session survives reload; userData reconciled with /v3/auth/me', new URL(page.url()).pathname === '/dashboard' && after.authToken === before.authToken && u.email === ADMIN.email && u.role === 'admin' && typeof u.name === 'string', `path=${new URL(page.url()).pathname} token-unchanged=${after.authToken === before.authToken} userData=${JSON.stringify({ ...u, id: u.id })}`);
+  check('F18', 'reconciled userData carries the /me pageAccess array (pre-4C Decision 1 contract)', Array.isArray(u.pageAccess) && u.pageAccess.includes('all'), `userData.pageAccess=${JSON.stringify(u.pageAccess)}`);
 });
-await step('F15', 'unbuilt routes redirect to /dashboard (nav click + direct)', async () => {
+// AMENDED FOR PHASE 4C. In 4B every route except /dashboard was unbuilt, so F15 asserted that
+// they all redirected. 4A §4 specifies those routes for 4C and gives `*` a NotFoundPage — so
+// the same box now asserts the shipped contract: every nav target resolves to its OWN path and
+// renders, and only a genuinely unknown path shows 404. This is a scope change, not a relaxation.
+await step('F15', 'every primary/secondary nav target resolves to its own route and renders (4C route map)', async () => {
   const errBefore = consoleErrors.length + pageErrors.length;
-  await page.click('nav[aria-label=Primary] a:has-text("Artists")'); await page.waitForURL('**/dashboard', { timeout: T }); const p1 = new URL(page.url()).pathname;
-  await page.click('nav[aria-label=Secondary] a:has-text("Settings")'); await page.waitForURL('**/dashboard', { timeout: T }); const p2 = new URL(page.url()).pathname;
-  await page.goto(`${BASE}/anr`); await page.waitForURL('**/dashboard', { timeout: T }); const p3 = new URL(page.url()).pathname;
-  await page.goto(`${BASE}/does-not-exist`); await page.waitForURL('**/dashboard', { timeout: T }); const p4 = new URL(page.url()).pathname;
-  await page.waitForSelector('.kpi', { timeout: T });
-  const notFound = await page.evaluate(() => /404|not found/i.test(document.body.innerText));
-  check('F15', 'unbuilt routes redirect to /dashboard (nav click + direct)', [p1, p2, p3, p4].every((p) => p === '/dashboard') && !notFound && consoleErrors.length + pageErrors.length === errBefore, `Artists->${p1} Settings->${p2} /anr->${p3} /does-not-exist->${p4} 404text=${notFound} newErrors=${consoleErrors.length + pageErrors.length - errBefore}`);
+  const expected = [
+    ['Dashboard', '/dashboard'], ['Artists', '/artists'], ['A&R Room', '/anr'], ['Intelligence', '/intelligence'],
+    ['Marketing', '/marketing'], ['Fans', '/fans'], ['Operations', '/operations'], ['Admin', '/admin'],
+  ];
+  const landed = [];
+  for (const [label, path] of expected) {
+    await page.click(`nav[aria-label=Primary] a:has-text("${label}")`);
+    await page.waitForURL(`**${path}`, { timeout: T });
+    await page.waitForSelector('main h1', { timeout: T });
+    landed.push(`${label}->${new URL(page.url()).pathname}`);
+  }
+  await page.click('nav[aria-label=Secondary] a:has-text("Settings")');
+  await page.waitForURL('**/settings/**', { timeout: T });
+  landed.push(`Settings->${new URL(page.url()).pathname}`);
+  const denied = await page.evaluate(() => /ACCESS DENIED/.test(document.body.innerText));
+  const ok = landed.every((entry, index) => index >= expected.length || entry === `${expected[index][0]}->${expected[index][1]}`)
+    && landed[expected.length] === 'Settings->/settings/integrations' && !denied;
+  check('F15', 'every primary/secondary nav target resolves to its own route and renders (4C route map)', ok && consoleErrors.length + pageErrors.length === errBefore, `${landed.join(' ')} deniedAnywhere=${denied} newErrors=${consoleErrors.length + pageErrors.length - errBefore}`);
+});
+await step('F20', 'unknown path renders the 404 page in place (4A §4: NotFoundPage replaces the 4B redirect)', async () => {
+  const errBefore = consoleErrors.length + pageErrors.length;
+  await page.goto(`${BASE}/does-not-exist`);
+  await page.waitForSelector('main h1', { timeout: T });
+  const path = new URL(page.url()).pathname;
+  const body = await bodyText();
+  check('F20', 'unknown path renders the 404 page in place (4A §4: NotFoundPage replaces the 4B redirect)', path === '/does-not-exist' && /404/.test(body) && /ROUTE NOT FOUND/.test(body) && consoleErrors.length + pageErrors.length === errBefore, `path=${path} has404=${/404/.test(body)} newErrors=${consoleErrors.length + pageErrors.length - errBefore}`);
+  await page.goto(`${BASE}/dashboard`); await page.waitForSelector('.kpi', { timeout: T });
+});
+// 4C ADMIN: the permission editor is only "done" if grants actually PERSIST. Before the
+// Phase 4C backend fix, POST /v3/users dropped pageAccess and PUT /v3/users/:id assigned a raw
+// array to a STRING column with no try/catch — which took the whole API process down. This box
+// drives the real UI and then asserts the server is still answering.
+await step('F22', 'Admin: pageAccess round-trips through create + edit, and the API survives the write', async () => {
+  const probe = { name: 'Gate Probe', email: `gate-probe-${Date.now()}@example.test`, password: 'gate-pass-123' };
+  await page.goto(`${BASE}/admin`); await page.waitForSelector('main h1', { timeout: T });
+
+  // The page has TWO forms — the compact CommandConsole rail and the user editor. Everything
+  // below is scoped to the editor, so a stray match can never submit an empty AI query.
+  const editor = page.locator('main form').last();
+  const fieldByLabel = (label) => editor.locator('div').filter({ has: editor.page().locator(`label:text-is("${label}")`) }).locator('input').first();
+  await fieldByLabel('NAME').fill(probe.name);
+  await editor.locator('input[type=email]').fill(probe.email);
+  await editor.locator('input[type=password]').fill(probe.password);
+  for (const perm of ['marketing', 'fans']) await editor.locator(`label:has-text("${perm}") input[type=checkbox]`).check();
+  await editor.locator('button[type=submit]').click();
+  await page.waitForTimeout(1200);
+
+  const createdRow = await page.evaluate((email) => {
+    const row = [...document.querySelectorAll('tbody tr')].find((tr) => tr.innerText.includes(email));
+    return row ? row.innerText.replace(/\s+/g, ' ') : null;
+  }, probe.email);
+
+  // Re-open that user in the editor, swap one grant, save, and read the row back.
+  await page.evaluate((email) => {
+    const row = [...document.querySelectorAll('tbody tr')].find((tr) => tr.innerText.includes(email));
+    row?.querySelector('button')?.click();
+  }, probe.email);
+  await page.waitForTimeout(400);
+  await editor.locator('label:has-text("operations") input[type=checkbox]').check();
+  await editor.locator('button[type=submit]').click();
+  await page.waitForTimeout(1200);
+
+  const editedRow = await page.evaluate((email) => {
+    const row = [...document.querySelectorAll('tbody tr')].find((tr) => tr.innerText.includes(email));
+    return row ? row.innerText.replace(/\s+/g, ' ') : null;
+  }, probe.email);
+
+  const health = await fetch(`${API}/health`).then((r) => r.status).catch((e) => `unreachable: ${e.message}`);
+
+  // Clean up so repeated gate runs stay deterministic.
+  await page.evaluate(async ({ email, api }) => {
+    const token = localStorage.getItem('authToken');
+    const users = await (await fetch(`${api}/v3/users`, { headers: { Authorization: `Bearer ${token}` } })).json();
+    const target = users.find((u) => u.email === email);
+    if (target) await fetch(`${api}/v3/users/${target.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+  }, { email: probe.email, api: API });
+  await page.goto(`${BASE}/dashboard`); await page.waitForSelector('.kpi', { timeout: T });
+
+  // Grant badges are uppercased by CSS, so innerText comes back uppercase — match either.
+  const createdOk = Boolean(createdRow) && /marketing/i.test(createdRow) && /fans/i.test(createdRow);
+  const editedOk = Boolean(editedRow) && /operations/i.test(editedRow);
+  check('F22', 'Admin: pageAccess round-trips through create + edit, and the API survives the write',
+    createdOk && editedOk && health === 200,
+    `created="${createdRow}" edited="${editedRow}" apiHealthAfterWrite=${health}`);
 });
 await step('F17', 'localStorage keys ⊆ {authToken,userData,platform.brandProfile}', async () => {
   const s = await readSession(); const allowed = ['authToken', 'userData', 'platform.brandProfile'];
@@ -346,10 +469,40 @@ await step('F09', 'Terminate Session -> /login, authToken/userData cleared', asy
 });
 
 setPhase('artist-login');
-await step('F10', 'seeded artist: nav ONLY Dashboard+Artists, Settings+Terminate Session; KPI === live artist API en-US/USD; no NaN', async () => {
+await step('F10', 'seeded artist: primary nav === pageAccess-derived items (Decision 1), Settings+Terminate Session; KPI === live artist API en-US/USD; no NaN', async () => {
   await uiLogin(ARTIST);
   const n = await navState(); const values = await kpiTexts(); const t = await bodyText();
-  check('F10', 'seeded artist: nav ONLY Dashboard+Artists, Settings+Terminate Session; KPI === live artist API en-US/USD; no NaN', n.primary.join('|') === SPEC.navArtist.join('|') && n.secondary.join('|') === 'Settings' && n.logout === 'Terminate Session' && values.join('|') === expArtistUsd.join('|') && !hasBadTokens(t), `primary=[${n.primary.join(', ')}] secondary=[${n.secondary.join(', ')}] bottom="${n.logout}" kpi=${values.join(' · ')} (expected ${expArtistUsd.join(' · ')}) header="${n.header}"`);
+  check('F10', 'seeded artist: primary nav === pageAccess-derived items (Decision 1), Settings+Terminate Session; KPI === live artist API en-US/USD; no NaN', n.primary.join('|') === expArtistNav.join('|') && n.secondary.join('|') === 'Settings' && n.logout === 'Terminate Session' && values.join('|') === expArtistUsd.join('|') && !hasBadTokens(t), `primary=[${n.primary.join(', ')}] (expected from pageAccess ${JSON.stringify(artistApi.body.user?.pageAccess)}: [${expArtistNav.join(', ')}]) secondary=[${n.secondary.join(', ')}] bottom="${n.logout}" kpi=${values.join(' · ')} (expected ${expArtistUsd.join(' · ')}) header="${n.header}"`);
+
+  // 4C: a typed URL must behave like the nav. Routes the artist's pageAccess does NOT grant
+  // render ACCESS DENIED in place (never a redirect — a redirect target is itself guarded and
+  // would loop for an empty grant). Granted routes still render. Backend stays authoritative.
+  const ungranted = [];
+  for (const path of ['/marketing', '/fans', '/operations', '/admin', '/anr', '/intelligence']) {
+    await page.goto(`${BASE}${path}`); await page.waitForSelector('main h1', { timeout: T });
+    ungranted.push(`${path}:${/ACCESS DENIED/.test(await bodyText()) ? 'denied' : 'RENDERED'}:${new URL(page.url()).pathname}`);
+  }
+  await page.goto(`${BASE}/artists`); await page.waitForSelector('main h1', { timeout: T });
+  const grantedBody = await bodyText();
+  const grantedOk = !/ACCESS DENIED/.test(grantedBody);
+  check('F21', 'artist: routes outside pageAccess render ACCESS DENIED in place; granted routes still render (PermissionRoute)',
+    ungranted.every((entry) => entry.includes(':denied:')) && grantedOk && !hasBadTokens(grantedBody),
+    `${ungranted.join(' ')} | /artists rendered=${grantedOk}`);
+
+  await page.goto(`${BASE}/dashboard`); await page.waitForSelector('.kpi', { timeout: T });
+  await page.click('aside button:has-text("Terminate Session")'); await page.waitForURL('**/login', { timeout: T });
+});
+
+setPhase('me-404', true);
+await step('F19', 'intercepted 404 on /v3/auth/me keeps the stored session (Decision 5): still /dashboard, authToken/userData intact', async () => {
+  await uiLogin(ADMIN);
+  const before = await readSession();
+  await context.route('**/v3/auth/me', (route) => route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: 'User not found' }) }));
+  await page.reload(); await page.waitForSelector('.kpi', { timeout: T });
+  await page.waitForTimeout(300);
+  const s = await readSession();
+  await context.unroute('**/v3/auth/me');
+  check('F19', 'intercepted 404 on /v3/auth/me keeps the stored session (Decision 5): still /dashboard, authToken/userData intact', new URL(page.url()).pathname === '/dashboard' && s.authToken === before.authToken && s.userData !== null && JSON.parse(s.userData).email === ADMIN.email, `path=${new URL(page.url()).pathname} token-unchanged=${s.authToken === before.authToken} userData-kept=${s.userData !== null}`);
   await page.click('aside button:has-text("Terminate Session")'); await page.waitForURL('**/login', { timeout: T });
 });
 
@@ -477,6 +630,23 @@ await step('P09', 'example: fullscreen ErrorState unchanged except hue (kicker/b
 
 // ---------- back to mau5trap: remove the override, no edits ----------
 setPhase('restore-mau5trap');
+// 4C MAP PORTABILITY (PHASE_4A_HANDOFF.md §17, closes BRAND_PORTABILITY_AUDIT W04).
+// Under the test profile the dashboard map must plot a location supplied ONLY by that profile,
+// and must NOT resolve the reference label's venue names — which is only possible if the
+// generic map holds no coordinate table of its own and reads the ACTIVE profile.
+await step('P11', 'example: map plots the profile-only location and cannot resolve the default profile\'s venues (no coordinates in generic source)', async () => {
+  await page.goto(`${BASE}/dashboard`); await page.waitForSelector('.kpi', { timeout: T });
+  await page.waitForSelector('[data-mapped-count]', { timeout: T });
+  await page.waitForTimeout(500);
+  const m = await page.evaluate(() => {
+    const node = document.querySelector('[data-mapped-count]');
+    return { mapped: Number(node.dataset.mappedCount), unmapped: Number(node.dataset.unmappedCount), tooltipSource: node.getAttribute('aria-label') };
+  });
+  const markers = await page.locator('path.leaflet-interactive').count();
+  check('P11', 'example: map plots the profile-only location and cannot resolve the default profile\'s venues (no coordinates in generic source)',
+    m.mapped >= 1 && m.unmapped > 0 && markers > 0,
+    `mapped=${m.mapped} (profile homeMarkers) unmapped=${m.unmapped} (API regions this profile has no centres for) svgMarkers=${markers}`);
+});
 await step('P10', 'remove override -> mau5trap identity, accent, mark, wordmark and $ KPIs return with no edits', async () => {
   await page.evaluate(() => localStorage.removeItem('platform.brandProfile'));
   await page.reload(); await page.waitForSelector('.kpi', { timeout: T });
@@ -494,6 +664,4 @@ console.log(`INFO | console warnings (${consoleWarnings.length}): ${[...new Set(
 console.log(`INFO | screenshots written to ${SHOTS}: phase4b-mau5trap-login.png phase4b-mau5trap-dashboard.png phase4b-example-login.png phase4b-example-dashboard.png phase4b-error.png`);
 
 await browser.close();
-const pass = results.filter((r) => r.pass).length; const fail = results.length - pass;
-console.log(`GATE SUMMARY: ${pass} pass, ${fail} fail, ${results.length} checks`);
-process.exit(fail ? 1 : 0);
+summarizeAndExit();

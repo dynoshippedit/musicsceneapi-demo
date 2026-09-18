@@ -88,6 +88,14 @@ was re-verified and is still accurate. The docs themselves were not edited
    The reference capture `final.jpeg` labels its KPIs `MONTHLY REVENUE` /
    `ANNUAL PROJECTION`, i.e. the served fields — the endpoint, not the HTML
    glue, reflects the intended product.
+   > Amended pre-4C (Decision 4, 2026-09-17): `tests/snapshots/baseline.json` is the
+   > Phase-1 capture of the PRE-REFACTOR monolith (`__meta.entry:
+   > mau5trap-production-api.js`, 50 cases) and is read by NO test. The deterministic
+   > baseline `npm test` compares against is `tests/snapshots/phase2_baseline.json`
+   > (91 cases, re-captured after the Phase 3 fixes). The served field set cited here
+   > is identical in both; only the artist-role VALUES differ — they are "as served"
+   > (Phase 3 HIGH-4 artist-access normalization): seeded artist → activeArtists 1 ·
+   > 8464217 · 25392651 · 101570604. See PHASE_4C_PREREQUISITE_VALIDATION.md §6.
 
 ---
 
@@ -850,6 +858,16 @@ Admin values shown are the frozen snapshot (`tests/snapshots/baseline.json`
 → `label_overview_admin`: 3202870 / 134773080 / 539092320 / 29) formatted
 by §13.5.4 — they are the expected render, not illustrations.
 
+> Amended pre-4C (Decision 4, 2026-09-17): the admin values above are correct and are
+> also what the deterministic baseline `tests/snapshots/phase2_baseline.json`
+> (the file `npm test` reads) and a clean-seed server serve today. Note however that
+> `tests/snapshots/baseline.json` itself is a Phase-1 capture of the pre-refactor
+> monolith read by no test; the authoritative snapshot is `phase2_baseline.json`.
+> For the ARTIST role the values are "as served" (Phase 3 HIGH-4): seeded artist →
+> activeArtists 1 · 8464217 · 25392651 · 101570604, not zeros. The gate compares the
+> rendered KPIs against the live `/v3/label/overview` body formatted with Node Intl.
+> See PHASE_4C_PREREQUISITE_VALIDATION.md §6.
+
 #### 13.5.2 Sidebar (`layout/Sidebar.jsx`; legacy L3416-3517)
 
 | Element | Spec |
@@ -879,6 +897,11 @@ Data: `GET /v3/label/overview` → `{ monthlyRevenue, quarterlyProjection, annua
 | 4 | `ACTIVE ARTISTS` | `activeArtists` | `integer`: `new Intl.NumberFormat(locale.numberLocale)` | `29` |
 
 - Missing/non-numeric field → render `—` (em dash) in the value slot; never `NaN`, `undefined`, `null`, `0` -as-fallback. Zero from the server renders as `$0` / `0` (the snapshot's artist-role response is all zeros — that is the frozen backend, render it).
+  > Amended pre-4C (Decision 4, 2026-09-17): the "all zeros" artist-role response is the Phase-1 monolith capture in
+  > `tests/snapshots/baseline.json`, read by no test. The deterministic baseline (`tests/snapshots/phase2_baseline.json`) and a
+  > clean-seed server give the seeded artist activeArtists 1 · 8464217 · 25392651 · 101570604 (Phase 3 HIGH-4). The rendering
+  > rule stands: zero from the server still renders as `$0` / `0`; the values are "as served", not a constant. See
+  > PHASE_4C_PREREQUISITE_VALIDATION.md §6.
 - `topArtists` and `timestamp` are NOT rendered in 4B (no "top performer" mini-list, no "updated at" line).
 - Sub/delta line: 12px `--font-mono` `--color-accent`, `margin-top: var(--space-1)`, rendered ONLY when derived from a served field. **Phase 4B renders none** — the legacy `+12% vs last month` / `2.4M daily average` / `Target: 5.0x` are hardcoded literals (L3543-3561) and are not ported; `N Flagship` needs `/v3/artists` (4C).
 - Grid: `display:grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); align-items: start;` — `start` is mandatory so cards are content-height (88–112px), never stretched to fill.

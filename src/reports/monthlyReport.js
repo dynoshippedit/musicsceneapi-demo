@@ -22,6 +22,7 @@
 'use strict';
 
 const PDFDocument = require('pdfkit-table');
+const profile = require('../profile');
 const {
     generatePieChart,
     generateBarChart,
@@ -41,8 +42,10 @@ async function generateMonthlyReport(artist, month) {
         doc.on('error', reject);
 
         // --- STYLES ---
+        // PHASE 4CF: label identity/colors from the Label Intelligence
+        // Profile (mau5trap values byte-identical).
         const colors = {
-            primary: '#00FF00', // mau5trap green
+            primary: profile.reports.accentColor, // was the hardcoded mau5trap green
             dark: '#1a1a1a',
             text: '#000000',
             grey: '#666666',
@@ -51,8 +54,8 @@ async function generateMonthlyReport(artist, month) {
 
         // --- HEADER ---
         doc.rect(0, 0, 612, 100).fill(colors.dark);
-        doc.fillColor('white').fontSize(26).font('Helvetica-Bold').text('mau5trap', 50, 35);
-        doc.fillColor(colors.primary).fontSize(10).font('Helvetica').text('INTELLIGENCE REPORT', 50, 65);
+        doc.fillColor('white').fontSize(26).font('Helvetica-Bold').text(profile.reports.monthlyHeader, 50, 35);
+        doc.fillColor(colors.primary).fontSize(10).font('Helvetica').text(profile.reports.monthlySubheader, 50, 65);
 
         doc.fillColor('white').fontSize(12).text(`Generated: ${new Date().toLocaleString()}`, 400, 35, { align: 'right', width: 160 });
         doc.fontSize(10).text(`Period: ${month}`, 400, 55, { align: 'right', width: 160 });
@@ -443,7 +446,7 @@ async function generateMonthlyReport(artist, month) {
         // broken original (which crashed), not a visual regression of any
         // previously-working output.
         doc.fontSize(8).fillColor(colors.grey).text(
-            `MAU5TRAP INTELLIGENCE • CONFIDENTIAL`,
+            profile.reports.confidentialLine,
             50,
             doc.page.height - 40,
             { align: 'center', width: doc.page.width - 100 }

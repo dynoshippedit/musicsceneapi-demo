@@ -30,45 +30,13 @@
 
 'use strict';
 
+// PHASE 4CF: mock scout fixtures moved VERBATIM into the Label Intelligence
+// Profile (profile.datasets.scouts). Filter semantics and the simulated delay
+// are unchanged.
+const profile = require('../profile');
+
 /** Mock scout results. Verbatim from the original handler. */
-const MOCK_SCOUTS = [
-    {
-        spotifyId: 's_k5',
-        name: 'K5',
-        image: 'https://i.scdn.co/image/ab67616d0000b273b5', // Placeholder
-        followers: 12500,
-        popularity: 45,
-        genres: ['techno', 'dark ambient'],
-        url: 'https://open.spotify.com/artist/k5'
-    },
-    {
-        spotifyId: 's_neon',
-        name: 'Neon Flux',
-        image: null,
-        followers: 48200,
-        popularity: 62,
-        genres: ['bass house', 'electro'],
-        url: 'https://open.spotify.com/artist/neonflux'
-    },
-    {
-        spotifyId: 's_cyber',
-        name: 'Cyber Mode',
-        image: null,
-        followers: 8200,
-        popularity: 38,
-        genres: ['industrial', 'midtempo'],
-        url: 'https://open.spotify.com/artist/cybermode'
-    },
-    {
-        spotifyId: 's_analog',
-        name: 'Analog Soul',
-        image: null,
-        followers: 22100,
-        popularity: 55,
-        genres: ['prog house', 'melodic techno'],
-        url: 'https://open.spotify.com/artist/analogsoul'
-    }
-];
+const MOCK_SCOUTS = profile.datasets.scouts;
 
 /** Simulated network latency from the original (setTimeout 500ms). */
 const SIMULATED_DELAY_MS = 500;

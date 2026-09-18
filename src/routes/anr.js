@@ -29,6 +29,8 @@
 
 'use strict';
 
+const { Transaction } = require('sequelize');
+
 /**
  * @param {object} app Express application
  * @param {object} ctx dependency bundle from src/routes/context.js
@@ -46,16 +48,38 @@ function register(app, ctx) {
         prospects, anrSubmissions, anrState, userIntegrations, salesData, apiCache,
         aiService, performLinearRegression, generateSyntheticHistory,
         integrationFacade, fetchArtistData, getIntegrationStatus, SERVICES, limiters,
-        generateMonthlyReport
+        generateMonthlyReport, profile, AnrSubmission
     } = ctx;
 
+    // PHASE 4CF: store #1 (submissions + shortlist) is now DURABLE DB state
+    // (AnrSubmission table). Row → response mapping reproduces the original
+    // memory-object shapes exactly: keys whose value was `undefined` in the
+    // original objects are omitted (JSON drops undefined but keeps null).
+    function submissionToShape(row) {
+        const shape = {
+            id: row.id,
+            artist: row.artist ?? undefined,
+            track: row.track ?? undefined,
+            genre: row.genre ?? undefined,
+            url: row.url ?? undefined,
+            votes: row.votes,
+            status: row.status ?? undefined,
+            submittedAt: row.submittedAt ?? undefined
+        };
+        if (row.imageUrl != null) shape.imageUrl = row.imageUrl;
+        if (row.followers != null) shape.followers = row.followers;
+        if (row.voters != null) shape.voters = row.voters;
+        return shape;
+    }
+
     // Get Submissions
-    app.get('/v3/anr/submissions', authenticateToken, (req, res) => {
-        res.json({ submissions: anrSubmissions });
+    app.get('/v3/anr/submissions', authenticateToken, async (req, res) => {
+        const rows = await AnrSubmission.findAll({ order: [['id', 'ASC']] });
+        res.json({ submissions: rows.map(submissionToShape) });
     });
 
     // Submit Demos
-    app.post('/v3/anr/submissions', authenticateToken, (req, res) => {
+    app.post('/v3/anr/submissions', authenticateToken, async (req, res) => {
         const { artist, track, url, genre } = req.body;
         if (!artist || !track || !url) return res.status(400).json({ error: 'Missing fields' });
 
@@ -63,7 +87,7 @@ function register(app, ctx) {
             id: `sub_${Date.now()}`,
             artist,
             track,
-            genre: genre || 'Electronic',
+            genre: genre || profile.anr.defaultGenre,
             url,
             votes: 0,
             voters: {}, // Tracks userId -> direction
@@ -71,52 +95,136 @@ function register(app, ctx) {
             submittedAt: new Date().toISOString()
         };
 
-        anrSubmissions.unshift(newSub);
-        res.json({ success: true, submission: newSub });
+        try {
+            await AnrSubmission.create({
+                id: newSub.id,
+                artist: newSub.artist,
+                track: newSub.track,
+                genre: newSub.genre,
+                url: newSub.url,
+                votes: newSub.votes,
+                voters: newSub.voters,
+                status: newSub.status,
+                submittedAt: newSub.submittedAt
+            });
+            res.json({ success: true, submission: newSub });
+        } catch (err) {
+            if (err && err.name === 'SequelizeUniqueConstraintError') {
+                // Two submissions in the same millisecond: mint a fresh id once.
+                newSub.id = `sub_${Date.now() + 1}${Math.floor(Math.random() * 1000)}`;
+                newSub.submittedAt = new Date().toISOString();
+                try {
+                    await AnrSubmission.create({
+                        id: newSub.id, artist: newSub.artist, track: newSub.track,
+                        genre: newSub.genre, url: newSub.url, votes: newSub.votes,
+                        voters: newSub.voters, status: newSub.status, submittedAt: newSub.submittedAt
+                    });
+                    return res.json({ success: true, submission: newSub });
+                } catch (err2) {
+                    logger.error('A&R submission create failed (retry):', err2);
+                    return res.status(500).json({ error: 'Failed to create submission' });
+                }
+            }
+            logger.error('A&R submission create failed:', err);
+            res.status(500).json({ error: 'Failed to create submission' });
+        }
     });
 
     // Vote on Submission
     // Vote on Submission (One Vote Per User Logic)
-    app.post('/v3/anr/submissions/:id/vote', authenticateToken, (req, res) => {
+    app.post('/v3/anr/submissions/:id/vote', authenticateToken, async (req, res) => {
         const { id } = req.params;
-        const { direction } = req.body; // 'up' or 'down'
+        const { direction } = req.body || {}; // 'up' or 'down'
+        if (direction !== undefined && direction !== 'up' && direction !== 'down') {
+            return res.status(400).json({ error: 'Direction must be "up" or "down"' });
+        }
         const userId = req.user.id;
 
-        const sub = anrSubmissions.find(s => s.id === id);
-        if (!sub) return res.status(404).json({ error: 'Submission not found' });
+        const isRetryable = (err) => {
+            const nested = err && err.parent;
+            const msg = String((err && err.message) || (nested && nested.message) || '');
+            const name = (err && err.name) || (nested && nested.name) || '';
+            return name === 'SequelizeTimeoutError'
+                || /SQLITE_BUSY|SQLITE_LOCKED|database is locked/i.test(msg);
+        };
 
-        // Initialize voters map if missing (migration safety)
-        if (!sub.voters) sub.voters = {};
+        const applyVote = async () => sequelize.transaction(
+            { type: Transaction.TYPES.IMMEDIATE },
+            async (t) => {
+                const sub = await AnrSubmission.findByPk(id, { transaction: t });
+                if (!sub) return { missing: true };
 
-        const previousVote = sub.voters[userId];
+                // Initialize voters map if missing (migration safety)
+                const voters = { ...(sub.voters || {}) };
+                const votes = sub.votes || 0;
+                const previousVote = voters[userId];
 
-        if (previousVote === direction) {
-            // Toggle off (remove vote)
-            if (direction === 'up') sub.votes--;
-            else sub.votes++;
-            delete sub.voters[userId];
-        } else {
-            // Vote (or Switch)
-            if (previousVote === 'up') sub.votes--; // Undo previous up
-            if (previousVote === 'down') sub.votes++; // Undo previous down
+                let newVotes = votes;
+                if (previousVote === direction) {
+                    // Toggle off (remove vote)
+                    if (direction === 'up') newVotes--;
+                    else newVotes++;
+                    delete voters[userId];
+                } else {
+                    // Vote (or Switch)
+                    if (previousVote === 'up') newVotes--; // Undo previous up
+                    if (previousVote === 'down') newVotes++; // Undo previous down
 
-            if (direction === 'up') sub.votes++;
-            if (direction === 'down') sub.votes--;
+                    if (direction === 'up') newVotes++;
+                    if (direction === 'down') newVotes--;
 
-            sub.voters[userId] = direction;
+                    voters[userId] = direction;
+                }
+
+                // Fresh object so Sequelize detects the JSON change.
+                sub.voters = voters;
+                sub.votes = newVotes;
+                await sub.save({ transaction: t });
+                return { sub };
+            }
+        );
+
+        let outcome;
+        try {
+            const maxAttempts = 8;
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                try {
+                    outcome = await applyVote();
+                    break;
+                } catch (e) {
+                    if (!isRetryable(e) || attempt === maxAttempts - 1) throw e;
+                    await new Promise((r) => setTimeout(r, 15 * (attempt + 1)));
+                }
+            }
+        } catch (e) {
+            logger.error('A&R vote failed:', e);
+            return res.status(500).json({ error: 'Database error' });
         }
+        if (!outcome || outcome.missing) return res.status(404).json({ error: 'Submission not found' });
 
-        res.json({ success: true, votes: sub.votes, userVote: sub.voters[userId] || null });
+        res.json({ success: true, votes: outcome.sub.votes, userVote: outcome.sub.voters[userId] || null });
     });
 
     // Delete Submission (Admin Only)
-    app.delete('/v3/anr/submissions/:id', authenticateToken, (req, res) => {
+    app.delete('/v3/anr/submissions/:id', authenticateToken, async (req, res) => {
         if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
         const { id } = req.params;
-        const index = anrSubmissions.findIndex(s => s.id === id);
-        if (index === -1) return res.status(404).json({ error: 'Submission not found' });
 
-        anrSubmissions.splice(index, 1);
+        let sub;
+        try {
+            sub = await AnrSubmission.findByPk(id);
+        } catch (e) {
+            logger.error('A&R delete lookup failed:', e);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (!sub) return res.status(404).json({ error: 'Submission not found' });
+
+        try {
+            await sub.destroy();
+        } catch (e) {
+            logger.error('A&R delete failed:', e);
+            return res.status(500).json({ error: 'Database error' });
+        }
         res.json({ success: true });
     });
 
@@ -133,8 +241,14 @@ function register(app, ctx) {
         if (demo) {
             votes = (demo.ratings || []).length;
         } else {
-            // Fallback to legacy submissions
-            const sub = anrSubmissions.find(s => s.id === demoId);
+            // Fallback to legacy submissions (PHASE 4CF: now DB-backed).
+            let sub;
+            try {
+                sub = await AnrSubmission.findByPk(demoId);
+            } catch (e) {
+                logger.error('A&R rating fallback lookup failed:', e);
+                return res.status(500).json({ error: 'Database error' });
+            }
             if (!sub) return res.status(404).json({ error: 'Not found' });
             votes = sub.votes || 0;
         }
@@ -164,16 +278,20 @@ function register(app, ctx) {
     // AI Competitive Evaluation
     app.post('/v3/anr/evaluate', authenticateToken, (req, res) => {
         const { prospectId } = req.body;
-        const prospectName = prospectId === 'p1' ? 'Neon Horizon' : 'Unknown Artist';
+        // PHASE 4CF: evaluation copy and benchmark are label intelligence,
+        // now sourced from the profile (mau5trap values byte-identical).
+        const prospectName = prospectId === 'p1'
+            ? profile.anr.evaluate.prospectNames.p1
+            : profile.anr.evaluate.unknownProspectName;
 
         const report = {
             prospect: prospectName,
-            benchmark: 'deadmau5',
+            benchmark: profile.anr.benchmarkArtist,
             signabilityScore: Math.floor(Math.random() * (95 - 70) + 70),
-            analysis: `AI analysis indicates ${prospectName} shares 82% sonic similarity with the benchmark.`,
-            projectedRevenue: { y1: 150000, y2: 450000, y3: 1200000 },
-            risks: ['High competition in genre', 'Limited touring history'],
-            recommendedDeal: '360 Deal / 50-50 Split'
+            analysis: profile.anr.evaluate.similarityCopy.replace('{prospect}', prospectName),
+            projectedRevenue: { ...profile.anr.evaluate.projectedRevenue },
+            risks: [...profile.anr.evaluate.risks],
+            recommendedDeal: profile.anr.evaluate.recommendedDeal
         };
 
         setTimeout(() => res.json(report), 1000);
@@ -347,7 +465,7 @@ function register(app, ctx) {
     });
 
     // POST /v3/anr/shortlist
-    app.post('/v3/anr/shortlist', authenticateToken, (req, res) => {
+    app.post('/v3/anr/shortlist', authenticateToken, async (req, res) => {
         const artist = req.body;
 
         // Create a new submission/prospect entry
@@ -364,13 +482,30 @@ function register(app, ctx) {
             votes: 0
         };
 
-        // Persist to in-memory store
-        // Check if duplicate
-        const exists = anrSubmissions.find(s => s.artist === artist.name);
-        if (!exists) {
-            anrSubmissions.unshift(newEntry);
-            console.log(`[A&R] Shortlisted and Persisted: ${artist.name}`);
-            res.json({ success: true, message: `${artist.name} added to shortlist`, entry: newEntry });
+        // PHASE 4CF: durable persistence (AnrSubmission row).
+        const duplicate = artist.name != null
+            ? await AnrSubmission.findOne({ where: { artist: artist.name } })
+            : null;
+        if (!duplicate) {
+            try {
+                await AnrSubmission.create({
+                    id: newEntry.id,
+                    artist: newEntry.artist ?? null,
+                    track: newEntry.track,
+                    genre: newEntry.genre,
+                    imageUrl: newEntry.imageUrl ?? null,
+                    followers: newEntry.followers ?? null,
+                    url: newEntry.url ?? null,
+                    status: newEntry.status,
+                    submittedAt: newEntry.submittedAt,
+                    votes: newEntry.votes
+                });
+                console.log(`[A&R] Shortlisted and Persisted: ${artist.name}`);
+                res.json({ success: true, message: `${artist.name} added to shortlist`, entry: newEntry });
+            } catch (err) {
+                logger.error('A&R shortlist persist failed:', err);
+                res.status(500).json({ error: 'Failed to shortlist artist' });
+            }
         } else {
             res.json({ success: true, message: `${artist.name} is already in the shortlist` });
         }

@@ -21,11 +21,14 @@ const config = require('../config');
 const logger = require('../config/logger');
 const models = require('../models');
 const auth = require('../auth');
+const profile = require('../profile');
 const dataShape = require('../utils/dataShape');
 const charts = require('../utils/charts');
 const cache = require('../services/cacheService');
 const emailService = require('../services/emailService');
 const entityAuditService = require('../services/entityAuditService');
+const usageService = require('../services/usageService');
+const auditService = require('../services/auditService');
 const artistRepo = require('../repositories/artistRepository');
 const stores = require('../repositories/inMemoryStores');
 const operationsRepo = require('../repositories/operationsRepository');
@@ -40,12 +43,55 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
 
+/**
+ * PHASE 4CF — composite authenticateToken (Objective 2).
+ *
+ * Layer 1 (auth.authenticateToken, unchanged and still pinned by unit tests)
+ * performs pure JWT verification. Layer 2 revalidates the token's subject
+ * against the database on EVERY protected request:
+ *
+ *   - row missing (user deleted)       → 401, previously issued tokens die;
+ *   - row present                       → role/artistAccess/integrationCount/
+ *     email are re-sourced from the row, so permission changes take effect
+ *     immediately instead of living 24h in the token.
+ *
+ * Tokens WITHOUT an `id` claim — the ADMIN_EMAIL/ADMIN_PASS override branch
+ * (src/routes/auth.js) — skip the lookup and keep their claim-based behavior
+ * exactly as today (documented debt; no behavioral pin exists for it).
+ *
+ * A database failure during revalidation fails OPEN (claims used, error
+ * logged): during a DB outage every DB-backed route is unusable anyway, and a
+ * hard auth failure would take even the health path down. Documented tradeoff.
+ */
+function authenticateToken(req, res, next) {
+    auth.authenticateToken(req, res, async () => {
+        try {
+            if (req.user && req.user.id != null) {
+                const user = await models.User.findByPk(req.user.id);
+                if (!user) {
+                    return res.status(401).json({ error: 'User not found' });
+                }
+                req.user.role = user.role;
+                req.user.artistAccess = user.artistAccess;
+                req.user.integrationCount = user.integrationCount;
+                req.user.email = user.email;
+                req.user.id = user.id;
+            }
+            next();
+        } catch (err) {
+            logger.error('Auth revalidation failed; continuing with token claims:', err);
+            next();
+        }
+    });
+}
+
 /** @returns {object} the dependency bundle */
 function buildContext() {
     return {
         // infrastructure
         config,
         logger,
+        profile,
         JWT_SECRET: config.jwtSecret,
         bcrypt,
         jwt,
@@ -57,13 +103,20 @@ function buildContext() {
         User: models.User,
         Artist: models.Artist,
         Stats: models.Stats,
+        // PHASE 4CF: durable product-state models (persist-or-demo contract).
+        AnrSubmission: models.AnrSubmission,
+        SalesEntry: models.SalesEntry,
 
         // auth
-        authenticateToken: auth.authenticateToken,
+        authenticateToken,
         hasArtistAccess: auth.hasArtistAccess,
         filterDataByAccess: auth.filterDataByAccess,
         checkExportAccess: auth.checkExportAccess,
         generateToken: auth.generateToken,
+
+        // PHASE 4CF: ownership root + audit/usage seams
+        usageService,
+        auditService,
 
         // utils
         calculateTotalRevenue: dataShape.calculateTotalRevenue,

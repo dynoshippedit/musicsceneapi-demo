@@ -1,0 +1,19 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 18px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  font: 700 var(--text-2xs)/1 var(--font-mono);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.dot { width: 6px; height: 6px; border-radius: var(--radius-pill); background: currentColor; }
+.neutral { background: var(--color-surface-2); color: var(--color-text-muted); }
+.accent { background: var(--color-accent-dim); color: var(--color-accent); }
+.warning { background: var(--color-warning-dim); color: var(--color-warning); }
+.danger { background: var(--color-danger-dim); color: var(--color-danger); }
+.muted { background: transparent; color: var(--color-text-dim); border: var(--border-panel); }
+.provenance { color: var(--color-text-dim); letter-spacing: var(--tracking-label); }

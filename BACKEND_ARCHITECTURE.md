@@ -202,6 +202,11 @@ Unchanged schema, unchanged persistence behavior.
 | `Artist` | STRING (`art_*`) | entire domain object in a JSON `data` column |
 | `Stats` | INTEGER autoincrement | `artistId` is a STRING with **no FK**; table is never written |
 
+> Amended pre-4C (Decision 1, 2026-09-17): `User.pageAccess` (stringified JSON, STRING column) is now parsed and served as an array on
+>   BOTH `POST /v3/auth/login` (DB path) and `GET /v3/auth/me` via one shared `parsePageAccess()` in `src/routes/auth.js` — an additive
+>   response field for frontend nav visibility only; authorization is unchanged. Write-side debt unchanged: the live `POST /v3/users`
+>   drops `pageAccess`, and the live `PUT /v3/users/:id` assigns the raw array to the STRING column (see PHASE_4C_PREREQUISITE_VALIDATION.md §9).
+
 `sequelize.sync({ alter: true })` still runs on every boot (no migrations).
 
 ### Three sources of truth — preserved, now visible

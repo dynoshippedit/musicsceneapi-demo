@@ -34,7 +34,7 @@ function register(app, ctx) {
         prospects, anrSubmissions, anrState, userIntegrations, salesData, apiCache,
         aiService, performLinearRegression, generateSyntheticHistory,
         integrationFacade, fetchArtistData, getIntegrationStatus, SERVICES, limiters,
-        generateMonthlyReport
+        generateMonthlyReport, profile, SalesEntry
     } = ctx;
 
     // Endpoint: Get Geographic Analysis
@@ -42,7 +42,18 @@ function register(app, ctx) {
         try {
             const geography = {};
 
-            // Aggregate data
+            // NOTE (PHASE 4CF): this aggregate intentionally reads the
+            // profile roster (memory) rather than the canonical hybrid list.
+            // Two reasons: (1) API-created artists have no
+            // streamingBreakdown.byLocation, so they contribute nothing to
+            // geography today; (2) `regions` is built in FIRST-ENCOUNTER
+            // order, which depends on artist iteration order — the baseline
+            // captures this case AFTER the AI keyword cases have reordered
+            // the shared roster array, so a DB-order read would return a
+            // different region sequence (verified: the integer sums are
+            // order-invariant; region ORDER is the parity-sensitive part).
+            // Reading the same array preserves byte parity. Documented
+            // residual.
             labelData.artists.forEach(artist => {
                 if (artist.revenue && artist.revenue.streamingBreakdown && artist.revenue.streamingBreakdown.byLocation) {
                     artist.revenue.streamingBreakdown.byLocation.forEach(loc => {
@@ -76,17 +87,36 @@ function register(app, ctx) {
     });
 
     // Endpoint: Log Real Sales Data
-    app.post('/v3/analytics/sales', authenticateToken, (req, res) => {
-        const { artistId, month, revenue } = req.body;
+    // PHASE 4CF: sales entries are now DURABLE DB state (SalesEntry table).
+    // They were a process-memory object — customer-entered revenue silently
+    // reverted to synthetic random history on every restart. Also adds the
+    // ghost-artistId guard (F-7): a sale must reference an existing artist.
+    app.post('/v3/analytics/sales', authenticateToken, async (req, res) => {
+        const { artistId, month, revenue } = req.body || {};
         if (!artistId || !month || !revenue) return res.status(400).json({ error: 'Missing fields' });
 
-        if (!salesData[artistId]) salesData[artistId] = [];
+        // NaN/boundless inputs would violate SalesEntry.revenue NOT NULL and
+        // crash the handler → keep the client-format error a 400 (this was
+        // accepted into memory pre-phase; the durable store is stricter).
+        const parsedRevenue = parseFloat(revenue);
+        if (!Number.isFinite(parsedRevenue)) return res.status(400).json({ error: 'Revenue must be a number' });
 
-        // Remove existing entry for same month if exists
-        salesData[artistId] = salesData[artistId].filter(e => e.month !== month);
+        // Canonical artist resolution (DB-first).
+        const artist = await artistRepo.findById(artistId);
+        if (!artist) return res.status(404).json({ error: 'Artist not found' });
 
-        salesData[artistId].push({ month, revenue: parseFloat(revenue) });
-        res.json({ success: true, count: salesData[artistId].length });
+        // Upsert by (artistId, month): same-month entries replace, matching
+        // the original memory semantics.
+        const existing = await SalesEntry.findOne({ where: { artistId, month } });
+        if (existing) {
+            existing.revenue = parsedRevenue;
+            await existing.save();
+        } else {
+            await SalesEntry.create({ artistId, month, revenue: parsedRevenue });
+        }
+
+        const count = await SalesEntry.count({ where: { artistId } });
+        res.json({ success: true, count });
     });
 
     // Endpoint: Get Revenue Projections
@@ -100,17 +130,21 @@ function register(app, ctx) {
             let historyValues = [];
 
             if (artistId) {
-                const artist = labelData.artists.find(a => a.id === artistId);
+                // PHASE 4CF: canonical DB-first artist read.
+                const artist = await artistRepo.findById(artistId);
                 if (!artist) return res.status(404).json({ error: 'Artist not found' });
 
                 name = artist.name;
                 growthRate = artist.growthRate || 5;
 
                 // USE REAL DATA IF AVAILABLE
-                if (salesData[artistId] && salesData[artistId].length >= 3) {
-                    // Sort by month (simple string sort for now, assuming ISO or 1-12)
-                    const sorted = salesData[artistId].sort((a, b) => a.month.localeCompare(b.month));
-                    historyValues = sorted.map(s => s.revenue);
+                // PHASE 4CF: sales history is now durable DB state.
+                const salesEntries = await SalesEntry.findAll({
+                    where: { artistId },
+                    order: [['month', 'ASC']]
+                });
+                if (salesEntries.length >= 3) {
+                    historyValues = salesEntries.map((s) => s.revenue);
                     currentRevenue = historyValues[historyValues.length - 1]; // Last known
                 } else {
                     // Fallback to Synthetic
@@ -119,10 +153,12 @@ function register(app, ctx) {
                 }
 
             } else {
+                // PHASE 4CF: canonical roster (DB-first).
+                const roster = await artistRepo.findAllHybrid();
                 // Check if labelData exists and has artists
-                if (labelData && labelData.artists) {
+                if (roster && roster.length) {
                     // Calculate Sum manually to avoid dependency on getLabelOverview if undefined here
-                    currentRevenue = labelData.artists.reduce((sum, a) =>
+                    currentRevenue = roster.reduce((sum, a) =>
                         sum + ((a.revenue.streaming || 0) + (a.revenue.touring || 0) + (a.revenue.merch || 0)), 0);
                 } else {
                     currentRevenue = 500000;
@@ -162,7 +198,8 @@ function register(app, ctx) {
                         {
                             label: 'Projection (Linear)',
                             data: [...Array(11).fill(null), historyValues[11], ...projections],
-                            borderColor: '#00FF5F',
+                            // PHASE 4CF: accent from the Label Intelligence Profile.
+                            borderColor: profile.charts.projectionAccent,
                             borderDash: [5, 5],
                             fill: false,
                             tension: 0

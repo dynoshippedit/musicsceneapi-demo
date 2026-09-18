@@ -137,23 +137,28 @@ describe('src/auth — authenticateToken', () => {
         });
     });
 
-    test('PINS: tokens signed by the live login handlers carry no `id` claim', () => {
-        // Both login branches inline jwt.sign WITHOUT `id` (api L483, L500),
-        // while generateToken() (which does include id) is never called.
-        // Consequence: req.user.id === undefined, so /v3/auth/me,
-        // DELETE /v3/auth/me and change-password cannot resolve a user, and
-        // userIntegrations[undefined] is one bucket shared by all users.
+    test('PINS: token id shapes — generateToken carries id; DB login signs id; ADMIN override omits it', () => {
+        // Phase 3 added `id: user.id` to the DB-login branch, so normal
+        // logins resolve a real user id (pinned end-to-end by the snapshot
+        // suite's seeded logins and by the 4CF composite auth, which
+        // re-sources id/role/artistAccess/email from the row). Only
+        // ADMIN_EMAIL/ADMIN_PASS OVERRIDE tokens omit `id`: the composite
+        // layer treats them as id-less and skips DB revalidation
+        // (src/routes/context.js) — those requests share the
+        // userIntegrations[undefined] bucket documented in
+        // src/repositories/inMemoryStores.js.
         const jwt = require('jsonwebtoken');
-        const loginShapedToken = jwt.sign(
+        const helperToken = auth.generateToken({ id: 7, email: 'x@y.z', role: 'admin', artistAccess: 'all' });
+        assert.strictEqual(jwt.verify(helperToken, config.jwtSecret).id, 7, 'PINNED: generateToken carries numeric id');
+
+        // An id-less token (override-branch shape) must decode with no id —
+        // it exercises the composite's skip-lookup path, not an error.
+        const overrideShapedToken = jwt.sign(
             { email: 'x@y.z', role: 'admin', artistAccess: 'all', integrationCount: 10 },
             config.jwtSecret
         );
-        const decoded = jwt.verify(loginShapedToken, config.jwtSecret);
-        assert.strictEqual(decoded.id, undefined, 'PINNED: login tokens omit id');
-
-        // generateToken DOES include id — proving the helper is the unused path.
-        const helperToken = auth.generateToken({ id: 7, email: 'x@y.z', role: 'admin', artistAccess: 'all' });
-        assert.strictEqual(jwt.verify(helperToken, config.jwtSecret).id, 7);
+        assert.strictEqual(jwt.verify(overrideShapedToken, config.jwtSecret).id, undefined,
+            'PINNED: override-style tokens omit id and skip DB revalidation');
     });
 });
 
@@ -334,5 +339,147 @@ describe('src/models — shape without connecting', () => {
         const a = Stats.getAttributes();
         assert.ok(a.artistId, 'artistId column present');
         assert.ok(!a.artistId.references, 'PINNED: no FK constraint (audit finding)');
+    });
+
+    test('PHASE 4CF: AuditEvent, AnrSubmission and SalesEntry exist with the contract columns', () => {
+        const { AuditEvent, AnrSubmission, SalesEntry } = require('../../src/models');
+        const audit = AuditEvent.getAttributes();
+        assert.ok(audit.labelSlug, 'audit rows carry the active label slug');
+        assert.ok(audit.actorId, 'audit rows carry the actor id');
+        assert.ok(audit.action, 'audit rows carry the action');
+        assert.ok(audit.resourceType && audit.resourceId, 'audit rows carry resource identity');
+        assert.ok(audit.metadata, 'audit rows carry metadata');
+        assert.ok(audit.requestId, 'audit rows correlate to a request id');
+
+        const sub = AnrSubmission.getAttributes();
+        assert.strictEqual(sub.id.primaryKey, true);
+        assert.ok(sub.voters, 'AnrSubmission persists the voters map');
+
+        const sale = SalesEntry.getAttributes();
+        assert.ok(sale.artistId && sale.month && sale.revenue, 'SalesEntry persists (artistId, month, revenue)');
+    });
+});
+
+// ===========================================================================
+// PHASE 4CF — Label Intelligence Profile + minimal seams
+// ===========================================================================
+describe('src/profile — Label Intelligence Profile', () => {
+    const profile = require('../../src/profile');
+
+    test('mau5trap is the active reference profile with its values intact', () => {
+        assert.strictEqual(profile.slug, 'mau5trap');
+        assert.strictEqual(profile.rootAdminEmail, 'admin@mau5trap.com');
+        assert.strictEqual(profile.seedUsers.length, 2);
+        assert.strictEqual(profile.seedUsers[0].email, 'admin@mau5trap.com');
+        assert.strictEqual(profile.seedUsers[1].email, 'tours@rezz.com');
+    });
+
+    test('mau5trap intelligence survived externalization byte-for-byte', () => {
+        assert.strictEqual(profile.ai.systemContext, 'AI analyst for mau5trap. Concise, data-driven insights.');
+        assert.strictEqual(profile.ai.keywordInsights.roiSecondPlace, 'Rezz is second at 6.5x.');
+        assert.strictEqual(profile.searchContext.artistQueryPrefix, 'mau5trap ');
+        assert.strictEqual(profile.knowledgeSources.fandom.host, 'https://deadmau5.fandom.com');
+        assert.deepStrictEqual(Object.keys(profile.socialMappings).sort(), ['art_deadmau5', 'art_rezz']);
+        assert.strictEqual(profile.reports.accentColor, '#00FF00');
+        assert.strictEqual(profile.reports.confidentialLine, 'MAU5TRAP INTELLIGENCE • CONFIDENTIAL');
+    });
+
+    test('the roster dataset is the shared object graph (29 artists)', () => {
+        assert.strictEqual(profile.datasets.roster.artists.length, 29);
+        assert.match(profile.datasets.roster.artists[0].id, /^art_/, 'artist ids use the art_ prefix');
+        assert.ok(profile.datasets.anr.anrSubmissions.length >= 2, 'A&R seeds present');
+        assert.ok(profile.datasets.operations.logistics.length === 3, 'operations fixtures present');
+    });
+
+    test('unknown LABEL_SLUG falls back to mau5trap rather than crashing', () => {
+        process.env.LABEL_SLUG = 'definitely-not-a-label';
+        delete require.cache[require.resolve('../../src/profile')];
+        const resolved = require('../../src/profile');
+        delete process.env.LABEL_SLUG;
+        assert.strictEqual(resolved.slug, 'mau5trap');
+        // Restore the module for any later test that requires it.
+        delete require.cache[require.resolve('../../src/profile')];
+        require('../../src/profile');
+    });
+});
+
+describe('src/services/usageService — minimal usage-attribution seam', () => {
+    test('recordUsage appends structured entries and caps the ring buffer', () => {
+        const { createUsageService } = require('../../src/services/usageService');
+        const store = [];
+        const svc = createUsageService({ log: { info: () => {} }, store });
+
+        const entry = svc.recordUsage('ai_tokens', 42, { model: 'm', userId: 7, provider: 'groq' });
+        assert.strictEqual(entry.kind, 'ai_tokens');
+        assert.strictEqual(entry.quantity, 42);
+        assert.strictEqual(entry.userId, 7);
+        assert.ok(entry.recordedAt, 'timestamped');
+        assert.strictEqual(store.length, 1);
+
+        for (let i = 0; i < 150; i++) svc.recordUsage('provider_call', 1, {});
+        assert.strictEqual(store.length, 100, 'ring buffer capped at 100');
+        assert.strictEqual(store[store.length - 1].kind, 'provider_call');
+    });
+});
+
+describe('src/services/auditService — minimal audit-event seam', () => {
+    test('emitAudit persists the contract shape and never throws', () => {
+        const { createAuditService } = require('../../src/services/auditService');
+        const created = [];
+        const fakeModel = {
+            create: (record) => {
+                created.push(record);
+                return Promise.resolve(record);
+            }
+        };
+        const fakeProfile = { slug: 'test-label' };
+        const errors = [];
+        const svc = createAuditService({ model: fakeModel, activeProfile: fakeProfile, log: { error: (...a) => errors.push(a) } });
+
+        const req = { user: { id: 9, email: 'a@b.c' }, requestId: 'req-123' };
+        svc.emitAudit({ action: 'artist.create', resourceType: 'artist', resourceId: 'art_x', metadata: { name: 'X' }, req });
+
+        assert.strictEqual(created.length, 1);
+        const row = created[0];
+        assert.strictEqual(row.labelSlug, 'test-label', 'active label slug recorded');
+        assert.strictEqual(row.actorId, 9);
+        assert.strictEqual(row.actorEmail, 'a@b.c');
+        assert.strictEqual(row.action, 'artist.create');
+        assert.strictEqual(row.resourceType, 'artist');
+        assert.strictEqual(row.resourceId, 'art_x');
+        assert.deepStrictEqual(row.metadata, { name: 'X' });
+        assert.strictEqual(row.requestId, 'req-123');
+
+        // Audit failure must never surface to the caller.
+        const failing = createAuditService({
+            model: { create: () => Promise.reject(new Error('db down')) },
+            activeProfile: fakeProfile,
+            log: { error: (...a) => errors.push(a) }
+        });
+        assert.doesNotThrow(() => failing.emitAudit({ action: 'user.delete', req: null }));
+    });
+});
+
+describe('src/ai/aiService — usage hook at the paid-provider spend point', () => {
+    test('a successful Groq query records ai_tokens usage with attribution', async () => {
+        const { createAiService } = require('../../src/ai/aiService');
+        const records = [];
+        const usageService = { recordUsage: (kind, quantity, meta) => records.push({ kind, quantity, meta }) };
+
+        const fakeCache = { keys: { aiQuery: () => 'k' }, get: () => null, set: () => {} };
+        const fakeRepo = { findMockById: () => null, topByRoi: () => ({ name: 'A', roi: 1 }) };
+        const fakeClient = {
+            complete: async () => ({ content: 'answer', usage: { total_tokens: 123 }, model: 'test-model' })
+        };
+
+        const svc = createAiService({ client: fakeClient, cacheService: fakeCache, repo: fakeRepo, usageService });
+        const outcome = await svc.query({ prompt: 'hi', artistId: null, forceRefresh: true, user: { id: 3, role: 'admin' } });
+
+        assert.strictEqual(outcome.kind, 'ok');
+        assert.strictEqual(records.length, 1);
+        assert.strictEqual(records[0].kind, 'ai_tokens');
+        assert.strictEqual(records[0].quantity, 123);
+        assert.strictEqual(records[0].meta.userId, 3);
+        assert.strictEqual(records[0].meta.provider, 'groq');
     });
 });

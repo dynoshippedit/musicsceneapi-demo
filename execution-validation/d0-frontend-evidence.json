@@ -1,0 +1,47 @@
+{
+  "source": "unchanged current web/src",
+  "backend": "disposable d0-ui.sqlite",
+  "checks": [
+    {
+      "id": "FE-01-browser",
+      "sent": {
+        "artistId": "art_attlas",
+        "amount": 100,
+        "date": "2026-09-18T00:48:23.015Z"
+      },
+      "status": 400,
+      "body": {
+        "error": "Missing fields"
+      },
+      "passed": false
+    },
+    {
+      "id": "FE-02-image",
+      "draftOwner": "art_attlas",
+      "destination": "art_blackgummy",
+      "carriedInput": "https://example.test/draft-for-first-artist.png",
+      "writeStatus": 200,
+      "writeBody": {
+        "imageUrl": "https://example.test/draft-for-first-artist.png"
+      },
+      "persistedOnDestination": "https://example.test/draft-for-first-artist.png",
+      "passed": false
+    },
+    {
+      "id": "FE-02-denial",
+      "fault": "Browser-controlled 403 for next artist GET",
+      "requested": "art_bluemora",
+      "path": "/artists/art_bluemora",
+      "stillShowsPrevious": true,
+      "visibleHeadings": [
+        "BlackGummy (Core)",
+        "OVERVIEW",
+        "SOCIAL",
+        "IMAGE OVERRIDE URL"
+      ],
+      "showsAccessDenied": false,
+      "imageControlVisible": true,
+      "passed": false
+    }
+  ]
+}

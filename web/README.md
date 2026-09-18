@@ -22,13 +22,52 @@ The backend base is set in `.env.development` as `VITE_API_BASE_URL=http://local
 
 Select the portability test profile with `VITE_BRAND_PROFILE=example-records npm run dev`, or set `localStorage['platform.brandProfile']='example-records'` in development and reload. Remove the key and use the default configuration to restore mau5trap. Example Records changes presentation and display formatting over the current mau5trap backend numbers; the backend's label-specific intelligence, AI, PDFs, and reset email remain mau5trap-specific pending a separate bounded backend phase.
 
-## Verified Phase 4B notes
+## Verified Phase 4B notes (amended pre-4C, 2026-09-17)
 
-- The current `/v3/auth/login` and `/v3/auth/me` responses omit `pageAccess`. The frontend uses role defaults for navigation until the backend exposes that field; the backend still authorizes every request.
-- The live artist account currently receives one accessible artist and nonzero overview values. The zero-valued artist snapshot cited in the copied Phase 4A gate is stale after the Phase 3 artist-access fix.
+- `/v3/auth/login` and `/v3/auth/me` serve `pageAccess` (string array; seeded admin `['all']`, seeded artist `['overview','roster']`, model default `["overview"]`). Navigation visibility derives from that array only (`web/src/auth/permissions.js`); the frontend carries no role→permission table. `admin → all` is kept because it mirrors the backend's own seed/override definition of an admin. The backend still authorizes every request — `pageAccess` is nav/UI visibility only (pre-4C Decision 1).
+- A `/v3/auth/me` failure ends the session only on 401/403 (missing / invalid-or-expired bearer). A 404 (`User not found`), a 5xx or a network failure keeps the locally stored `authToken`/`userData`; the backend still authorizes every request. Known debt exposed by this: the `ADMIN_EMAIL`/`ADMIN_PASS` override token carries no `id` claim, so `/me` answers 404 for it — the override login now survives instead of being terminated on boot (pre-4C Decision 5; `PHASE_4B_STATIC_AUDIT.md` F-10).
+- The live artist account currently receives one accessible artist and nonzero overview values. The `$0 · $0 · $0 · 0` artist snapshot in the copied Phase 4A gate is stale after the Phase 3 artist-access fix and is not a contractual constant; the gate compares against the values the API serves, formatted with Node Intl.
 - The active theme sets both root and body theme attributes. The four color overrides are scoped on `:root` so semantic aliases declared in `tokens.css` update for the alternate profile.
-- `tokens.css` is copied byte-for-byte from the three required source blocks; its existing comments contain the reference label name. The required A&R navigation icon also contains `ri-headphone-line`, so the gate's broad icon grep must be applied to the brand block instead of the entire layout directory.
+- The §15 `[grep]` boxes are executed as scope-aware static checks (`S01`–`S09`, see below) rather than blanket greps: `tokens.css` is copied byte-for-byte and its comments name the reference label, so comments are stripped from that one file before matching; the prescribed A&R nav icon `ri-headphone-line` is allowed on that one `nav.js` entry only; label email domains are allowed under `brand/profiles/**` only. Everything else that the original greps would have caught still fails.
 - `Forgot Password?` remains visible but disabled until its 4C state is implemented. The existing backend reset route is missing.
+
+## Gate
+
+```sh
+cd web
+npm run gate                                   # full run: 9 static S-checks, then the browser checks (needs backend :3000 + vite :5173)
+node validation/gate.mjs --static-only         # only the static brand-portability checks — no servers, no browser
+node validation/static-checks.mjs --self-test  # proves every S-rule FAILS on a synthetic leak (temp copy) and PASSES on the real tree
+```
+
+Static rules (`web/validation/static-checks.mjs`; each prints one `PASS | Sxx …` line with its allowed boundary):
+
+| Id | Scope | Pattern | Allowed only | Catches |
+|---|---|---|---|---|
+| S01 | `web/src` outside `brand/` | `mau5trap\|deadmau5\|rezz\|mau5` (ci) | inside `/* */` comments of `styles/tokens.css` | label identity in any generic file (incl. comments, class names, storage keys) or in a `tokens.css` declaration/selector |
+| S02 | `brand/` outside `profiles/`, `themes/` | same | `brand/registry.js` | profile identity hardcoded in brand core |
+| S03 | `web/src` outside `brand/profiles/mau5trap/` | `INTELLIGENCE PLATFORM`, `mau5trap Intelligence Platform`, `mau5trap.com` | `tokens.css` comments | brand tagline / title / domain in platform code |
+| S04 | all `web/src` | `@mau5trap.com\|@rezz.com` | `brand/profiles/**` | seed credentials, prefilled login, hardcoded contact |
+| S05 | `web/src` minus `tokens.css`, `global.css`, `chartDefaults.js`, `brand/themes/`, `brand/profiles/` | `#hex`, `rgb(`, `hsl(` | those files | raw brand colour bypassing the theme layer |
+| S06 | all `web/src` | import/from of `…/profiles/…` or `…/themes/…` | `brand/registry.js` | a component importing a profile mark or theme directly |
+| S07 | all `web/src` | `ri-headphone\|ri-music\|ri-disc` | the `{ id: 'anr', … icon: 'ri-headphone-line' }` entry in `layout/nav.js` | a Remixicon standing in for the brand mark |
+| S08 | all `web/src` | `art_[a-z0-9]+` | nowhere | fixture artist ids |
+| S09 | all `web/src` | `admin123\|rezz123` | nowhere | seed passwords |
+
+Browser checks added pre-4C: `G05` (login payloads carry `pageAccess`), `F18` (reconciled `userData` carries `pageAccess`), `F19` (a `/me` 404 keeps the session); `F10` derives the artist's expected nav from the live login payload.
+
+### Phase 4C changes to the gate (2026-09-17 — see `../PHASE_4C_HANDOFF.md` §10)
+
+Full run is now **70 checks**. Added: `F20` (unknown path renders the 404 page in place), `F21` (artist role: routes outside `pageAccess` render ACCESS DENIED in place, granted routes still render), `F22` (Admin `pageAccess` round-trips through create + edit **and the API is still alive after the write**), `P11` (map portability — the Example Records profile's own location plots while the default profile's venue names do not resolve).
+
+Two boxes were **amended from 4B scope to the 4A §4 route map**, and both are marked `AMENDED FOR PHASE 4C` in `gate.mjs`:
+
+- `F15` asserted that every route redirected to `/dashboard` because none were built; it now asserts all eight primary nav targets plus Settings resolve to their own paths and render.
+- `V16` asserted the dashboard was a KPI row over an empty canvas; it now asserts the KPI row is first and that everything below it is one of the surfaces 4A specifies (forecast, console rail, map), so filler still fails.
+
+A 404 on `GET /v3/ai/providers` is classified as a documented-absent route (4A §12 specifies probing it and degrading to system-default mode). It is named by URL in the console classifier, not handled by loosening the rule.
+
+Development aids, not part of acceptance: `node validation/smoke.mjs /route …` drives a list of routes and reports NaN/`undefined`/console errors per surface (`--artist` logs in as the seeded artist); `node validation/shots4c.mjs` writes the `phase4c-*.png` captures for both profiles.
 
 ## Phase 4A acceptance gate (verbatim)
 
@@ -67,6 +106,14 @@ the gate, not an optional extra.
     (frozen snapshot label_overview_admin; mock data unchanged) — no NaN / undefined / null anywhere on the page
 [ ] tours@rezz.com / rezz123 → primary nav shows ONLY Dashboard and Artists (seeded pageAccess overview+roster); bottom group still shows
     Settings + Terminate Session; the four cards render that token's /v3/label/overview values (snapshot: $0 · $0 · $0 · 0), never NaN
+> Amended pre-4C (Decision 1, 2026-09-17): the artist's primary nav is DERIVED from the `pageAccess` array the backend now serves on
+>   POST /v3/auth/login and GET /v3/auth/me (seeded artist ['overview','roster'] → Dashboard + Artists; model default '["overview"]').
+>   web/src/auth/permissions.js carries no role→permission table any more (admin → all mirrors the backend seed/override ['all']);
+>   the gate (G05, F10, F18) computes the expected nav from the live login payload, not from a constant.
+> Amended pre-4C (Decision 4 investigation, 2026-09-17): the artist overview values are "as served by the API" for that token — the
+>   `$0 · $0 · $0 · 0` snapshot is NOT a contractual constant (the live artist account receives non-zero values since the Phase 3
+>   artist-access fix; PHASE_4B_STATIC_AUDIT.md F-12). The gate formats the live /v3/label/overview response with Node Intl and
+>   compares; "never NaN / undefined / null" is the contractual part of this line.
 [ ] wrong password → ErrorState panel variant inside the login card with the server's `error` text ("Invalid credentials"); button returns to INITIALIZE SESSION
 [ ] stop backend, reload /dashboard → full-viewport ErrorState (icon + CONNECTION FAILURE + message + RETRY CONNECTION), no white screen, no uncaught console error;
     start backend, click RETRY CONNECTION → KPI row renders without a page reload
@@ -97,9 +144,23 @@ COPY (architecture §13.1)
               "MONTHLY REVENUE" "QUARTERLY PROJECTION" "ANNUAL PROJECTION" "ACTIVE ARTISTS" "CONNECTION FAILURE" "RETRY CONNECTION"
 [ ] [grep]    every BRAND string lives only under brand/profiles/mau5trap/ — "INTELLIGENCE PLATFORM", "mau5trap Intelligence Platform", "mau5trap.com" appear nowhere else in web/src;
               the bare slug "mau5trap" may additionally appear only as the registry.js keys/defaultSlug and the theme file name/selector
+> Amended pre-4C (Decision 3, 2026-09-17): as written this cannot pass — the byte-for-byte tokens.css block ([diff] box above) carries
+>   `/* "INTELLIGENCE PLATFORM" wordmark sublabel */` at tokens.css:74. Corrected, scope-aware rule (gate check S03): the three brand
+>   strings are grepped over web/src outside brand/profiles/mau5trap/ with /* */ COMMENTS stripped from styles/tokens.css only; a brand
+>   string in a tokens.css declaration/selector or anywhere in any other file still FAILS. Run: `node web/validation/gate.mjs --static-only`.
 [ ] [grep]    forbidden-string grep from architecture §13.1 → no results (no Email / Password / Sign in / Log in / Sign out / Continue / Welcome / Assistant …)
 [ ] [grep]    grep -rniE "mau5trap|mau5|deadmau5|rezz" web/src --exclude-dir=brand → no results; same grep on web/src/brand --exclude-dir=profiles --exclude-dir=themes → only registry.js
+> Amended pre-4C (Decision 3, 2026-09-17): the first grep cannot pass as written — it hits the byte-for-byte tokens.css COMMENTS the
+>   [diff] box mandates (tokens.css:11 "mau5trap neon", :50 "mau5-head loader", :114 "Mau5Head", :128 "mau5trap-console"). Corrected rule
+>   (gate check S01): same pattern over web/src outside brand/ — INCLUDING comments, class names and storage keys in every other file —
+>   with /* */ comments stripped from styles/tokens.css only, so identity in a tokens.css declaration or selector still FAILS.
+>   The second grep is unchanged (gate check S02: only brand/registry.js may match). Run: `node web/validation/gate.mjs --static-only`.
 [ ] [grep]    grep -rnE "art_[a-z0-9]+" web/src → no results; grep -rn "@mau5trap.com\|@rezz.com" web/src → no results
+> Amended pre-4C (Decision 3, 2026-09-17): the second grep cannot pass as written — it hits the schema-required contact/email data of
+>   the mau5trap profile (brand/profiles/mau5trap/profile.js:12-13 `admin@mau5trap.com`, `notify@mau5trap.com`; architecture §14.2).
+>   Corrected rule (gate check S04): label email domains are allowed under web/src/brand/profiles/** ONLY; a hit anywhere else in web/src
+>   (generic code or brand core — a prefilled login, a dev shortcut, a hardcoded contact) still FAILS. The `art_*` grep is unchanged
+>   (gate check S08). Seed passwords admin123/rezz123 are additionally forbidden anywhere in web/src (gate check S09, architecture §14.5).
 [ ] [grep]    emoji grep from architecture §13.1 → no results
 [ ] [grep]    grep -rn "Total Revenue\|Total Streams\|Avg ROI\|TOTAL REVENUE\|TOTAL STREAMS\|AVG ROI" web/src → no results (rows 39-41)
 [ ] [measure] under the mau5trap profile the wordmark renders lowercase "mau5trap" on login and sidebar (profile.displayName verbatim)
@@ -110,6 +171,13 @@ MARK (architecture §13.2, §14.6)
 [ ] [grep]    layout/Sidebar.jsx and components/primitives/LoadingScreen.jsx import BrandMark / BrandLoader from brand/, and import NOTHING from brand/profiles/;
               grep -rn "from.*brand/profiles" web/src → only brand/registry.js
 [ ] [grep]    grep -rn "ri-headphone\|ri-music\|ri-disc" web/src/layout → no results
+> Amended pre-4C (Decision 3, 2026-09-17): cannot pass as written — `ri-headphone-line` is the prescribed A&R Room nav icon (architecture
+>   §5) and lives in layout/nav.js:6. The leak this box guards against is a Remixicon standing in for the brand mark. Corrected rule
+>   (gate check S07): `ri-headphone|ri-music|ri-disc` over ALL of web/src is allowed ONLY as the `icon` value of the `{ id: 'anr', … }`
+>   entry in layout/nav.js; any other occurrence — the sidebar brand block, BrandMark/BrandLoader, the login card, another nav entry, any
+>   component — still FAILS. The import rule two lines above is enforced the same way (gate check S06: profile/theme imports only in
+>   brand/registry.js). Run: `node web/validation/gate.mjs --static-only`; `node web/validation/static-checks.mjs --self-test` proves each
+>   S-rule still flags a synthetic leak.
 [ ] [measure] sidebar brand block: rendered mark is the Mau5Head SVG 40×40, wordmark 20px/800, sublabel 11px mono green uppercase (.label--accent, tracking-wide); nothing else in the block
 [ ] [measure] full-page loader is the mau5-head (80px ring + 2 ears, pulse) rendered via <BrandLoader/>, background #0A0A0A, no spinner, no text other than (optionally) INITIALIZING NEURAL LINK...
 

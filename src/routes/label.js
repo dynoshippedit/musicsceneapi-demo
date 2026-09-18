@@ -33,7 +33,7 @@ function register(app, ctx) {
         prospects, anrSubmissions, anrState, userIntegrations, salesData, apiCache,
         aiService, performLinearRegression, generateSyntheticHistory,
         integrationFacade, fetchArtistData, getIntegrationStatus, SERVICES, limiters,
-        generateMonthlyReport
+        generateMonthlyReport, profile
     } = ctx;
 
     // Get global tours (consolidated)
@@ -61,9 +61,14 @@ function register(app, ctx) {
     });
 
     // Fan Demographics & Engagement Endpoint
-    app.get('/v3/fans/demographics', authenticateToken, (req, res) => {
+    app.get('/v3/fans/demographics', authenticateToken, async (req, res) => {
+        // PHASE 4CF: roster reads resolve through the canonical hybrid list so
+        // API-created artists are included; the demographic fixture itself is
+        // profile-owned reference data (was an inline literal).
+        const roster = await artistRepo.findAllHybrid();
+
         // 1. Calculate Top Movers (highest growth rate)
-        const validArtists = labelData.artists.filter(a => typeof a.growthRate === 'number');
+        const validArtists = roster.filter(a => typeof a.growthRate === 'number');
         const topMovers = validArtists
             .sort((a, b) => b.growthRate - a.growthRate)
             .slice(0, 5)
@@ -75,40 +80,18 @@ function register(app, ctx) {
             }));
 
         // 2. Global Demographics (Mock Aggregation)
-        const demographics = {
-            age: [
-                { range: '18-24', value: 35 },
-                { range: '25-34', value: 45 },
-                { range: '35-44', value: 15 },
-                { range: '45+', value: 5 }
-            ],
-            gender: [
-                { label: 'Male', value: 55 },
-                { label: 'Female', value: 42 },
-                { label: 'Other', value: 3 }
-            ],
-            locations: [
-                { city: 'Los Angeles', country: 'USA', value: 120000 },
-                { city: 'London', country: 'UK', value: 85000 },
-                { city: 'Toronto', country: 'Canada', value: 60000 },
-                { city: 'Berlin', country: 'Germany', value: 45000 },
-                { city: 'Sydney', country: 'Australia', value: 30000 }
-            ],
-            platformGrowth: [
-                { platform: 'Spotify', growth: 12.5 },
-                { platform: 'TikTok', growth: 28.4 },
-                { platform: 'Instagram', growth: 5.2 },
-                { platform: 'YouTube', growth: 8.1 }
-            ]
-        };
+        const demographics = profile.datasets.demographics;
 
         res.json({ topMovers, demographics });
 
     });
 
-    app.get('/v3/label/overview', authenticateToken, (req, res) => {
+    app.get('/v3/label/overview', authenticateToken, async (req, res) => {
+        // PHASE 4CF: canonical roster (DB-first) so created artists count.
+        const roster = await artistRepo.findAllHybrid();
+
         // Filter artists by access
-        const accessibleArtists = labelData.artists.filter(artist =>
+        const accessibleArtists = roster.filter(artist =>
             hasArtistAccess(req.user, artist.id)
         );
 

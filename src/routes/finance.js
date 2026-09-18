@@ -32,49 +32,67 @@ function register(app, ctx) {
         prospects, anrSubmissions, anrState, userIntegrations, salesData, apiCache,
         aiService, performLinearRegression, generateSyntheticHistory,
         integrationFacade, fetchArtistData, getIntegrationStatus, SERVICES, limiters,
-        generateMonthlyReport
+        generateMonthlyReport, profile
     } = ctx;
 
     // Calculate Royalties
-    app.post('/v3/royalties/calculate', authenticateToken, (req, res) => {
-        const { artistId, revenueSources, splits } = req.body;
+    app.post('/v3/royalties/calculate', authenticateToken, async (req, res) => {
+        try {
+            const { artistId, revenueSources, splits } = req.body || {};
 
-        // Default logic if not provided
-        const targetSplits = splits || { artist: 0.7, label: 0.3 };
-        const targetSources = revenueSources || ['streaming', 'merch', 'touring'];
+            if (revenueSources !== undefined && !Array.isArray(revenueSources)) {
+                return res.status(400).json({ error: 'revenueSources must be an array of source names' });
+            }
+            if (splits !== undefined && (typeof splits !== 'object' || splits === null || Array.isArray(splits))) {
+                return res.status(400).json({ error: 'splits must be an object' });
+            }
+            if (Array.isArray(revenueSources) && revenueSources.some((source) => typeof source !== 'string')) {
+                return res.status(400).json({ error: 'revenueSources must be an array of source names' });
+            }
 
-        const artist = labelData.artists.find(a => a.id === artistId);
-        if (!artist) return res.status(404).json({ error: 'Artist not found' });
+            // Default logic if not provided
+            const targetSplits = splits || { artist: 0.7, label: 0.3 };
+            const targetSources = revenueSources || ['streaming', 'merch', 'touring'];
 
-        let totalRevenue = 0;
-        const breakdown = {};
+            // PHASE 4CF: canonical DB-first artist read.
+            const artist = await artistRepo.findById(artistId);
+            if (!artist) return res.status(404).json({ error: 'Artist not found' });
 
-        targetSources.forEach(source => {
-            let amount = 0;
-            if (source === 'streaming') amount = artist.revenue.streaming;
-            if (source === 'merch') amount = artist.revenue.merch;
-            if (source === 'touring') amount = artist.revenue.touring;
+            let totalRevenue = 0;
+            const breakdown = {};
+            const revenue = artist.revenue || {};
 
-            breakdown[source] = amount;
-            totalRevenue += amount;
-        });
+            for (const source of targetSources) {
+                let amount = 0;
+                if (source === 'streaming') amount = revenue.streaming;
+                if (source === 'merch') amount = revenue.merch;
+                if (source === 'touring') amount = revenue.touring;
 
-        res.json({
-            artistName: artist.name,
-            totalRevenue,
-            payout: {
-                artist: totalRevenue * targetSplits.artist,
-                label: totalRevenue * targetSplits.label
-            },
-            breakdown,
-            splits: targetSplits
-        });
+                breakdown[source] = amount;
+                totalRevenue += amount;
+            }
+
+            res.json({
+                artistName: artist.name,
+                totalRevenue,
+                payout: {
+                    artist: totalRevenue * targetSplits.artist,
+                    label: totalRevenue * targetSplits.label
+                },
+                breakdown,
+                splits: targetSplits
+            });
+        } catch (err) {
+            logger.error('Royalty calculation failed:', err);
+            if (!res.headersSent) return res.status(500).json({ error: 'Internal server error' });
+        }
     });
 
     // Generate Contract (PDF Mock)
-    app.get('/v3/rights/contracts', authenticateToken, (req, res) => {
+    app.get('/v3/rights/contracts', authenticateToken, async (req, res) => {
         const { artistId } = req.query;
-        const artist = labelData.artists.find(a => a.id === artistId);
+        // PHASE 4CF: canonical DB-first artist read.
+        const artist = await artistRepo.findById(artistId);
 
         // In production, use PDFKit to generate real file
         res.json({

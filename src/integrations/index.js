@@ -20,6 +20,9 @@ const legacyIntegrations = require('../../integrations');
 const entityAudit = require('../../modules/entityAudit');
 const scoutService = require('./scoutService');
 const { SERVICES, limiters } = require('./rateLimiter');
+// PHASE 4CF: artist mappings live in the Label Intelligence Profile; exposed
+// here so the facade keeps its existing surface.
+const profile = require('../profile');
 
 function createIntegrationFacade({
     integrations = legacyIntegrations,
@@ -32,8 +35,8 @@ function createIntegrationFacade({
         fetchArtistData: (artistId, mockData) => integrations.fetchArtistData(artistId, mockData),
         /** Which providers have usable credentials. */
         getIntegrationStatus: () => integrations.getIntegrationStatus(),
-        /** Internal id -> external ids. Covers only art_deadmau5 and art_rezz. */
-        artistMappings: integrations.ARTIST_MAPPINGS,
+        /** Internal id -> external ids. Profile-owned (mau5trap: art_deadmau5 + art_rezz). */
+        artistMappings: profile.socialMappings,
 
         // ---- entity / metadata audit (modules/entityAudit.js) ----
         auditGoogleKG: (name) => audit.auditGoogleKG(name),

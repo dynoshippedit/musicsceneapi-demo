@@ -2,12 +2,19 @@
  * src/routes/artists.js
  *
  * Artist roster and per-artist reads. Data access goes through
- * src/repositories/artistRepository.js (DB + mock hybrid union).
+ * src/repositories/artistRepository.js (DB + roster hybrid union).
  *
- * Handler bodies were moved VERBATIM from mau5trap-production-api.js. They are
- * registered in their original relative order, which matters because Express
- * binds the first matching route. Cross-domain shadowing was checked and does
- * not exist: all duplicate registrations fall within a single domain.
+ * PHASE 4CF — canonical source of truth (Objective 3): every handler in this
+ * file now resolves artists through the repository's DB-first read, so list,
+ * detail, archive, restore, image and entity-audit all agree on ONE source.
+ * Previously list read DB∪memory while detail/archive/restore/image read
+ * memory only — API-created artists 404'd after any restart, and seeded
+ * artists' archive state diverged between list and detail (live-reproduced in
+ * the commercial recheck).
+ *
+ * Response bodies, status codes and authorization behavior are unchanged for
+ * the seeded roster. Deliberate changes: duplicate create → 409 (was 200 +
+ * "memory only" warning); DB create failure → 500 (was the same lying 200).
  *
  * Routes (9):
  *   GET    /v3/artists
@@ -40,7 +47,7 @@ function register(app, ctx) {
         prospects, anrSubmissions, anrState, userIntegrations, salesData, apiCache,
         aiService, performLinearRegression, generateSyntheticHistory,
         integrationFacade, fetchArtistData, getIntegrationStatus, SERVICES, limiters,
-        generateMonthlyReport
+        generateMonthlyReport, profile, auditService
     } = ctx;
 
     // Get all artists (with pagination/search)
@@ -48,14 +55,9 @@ function register(app, ctx) {
         const { search, limit = 50, offset = 0 } = req.query;
 
         try {
-            const dbArtists = await Artist.findAll();
-            // Merge DB schema with the JSON data
-            let fullList = dbArtists.map(a => ({ ...a.data, id: a.id, name: a.name }));
-
-            // HYBRID MERGE: Add memory-only artists (e.g. from failed DB writes or mock mode)
-            const dbIds = new Set(fullList.map(a => a.id));
-            const memoryArtists = labelData.artists.filter(a => !dbIds.has(a.id));
-            fullList = [...fullList, ...memoryArtists];
+            // PHASE 4CF: the list now goes through the repository's canonical
+            // hybrid read instead of re-implementing the union inline.
+            let fullList = await artistRepo.findAllHybrid();
 
             // Filter by Search
             if (search) {
@@ -82,38 +84,32 @@ function register(app, ctx) {
     });
 
     // Create new artist (Admin only)
+    // PHASE 4CF F-4: duplicate names now 409; the memory-only fallback that
+    // reported success for a failed DB write is gone.
     app.post('/v3/artists', authenticateToken, async (req, res) => {
         if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         const { name, tier } = req.body;
-        if (!name || !tier) return res.status(400).json({ error: 'Name/Tier required' });
+        if (typeof name !== 'string' || !name.trim() || typeof tier !== 'string' || !tier.trim()) return res.status(400).json({ error: 'Name/Tier required' });
 
-        const id = `art_${name.toLowerCase().replace(/\s+/g, '')}`;
-        const newArtist = {
-            id, name, displayName: name, tier,
-            status: 'active',
-            monthlyListeners: 0,
-            totalStreams: 0,
-            growthRate: 0,
-            revenue: { streaming: 0, touring: 0, merch: 0, sync: 0, branding: 0, youtube: 0 },
-            touring: { upcomingShows: 0, avgTicketPrice: 0, avgAttendance: 0, merchPerHead: 0, shows: [] },
-            social: { instagram: 0, twitter: 0, tiktok: 0, engagementRate: 0 },
-            merch: { onlineSales: 0, tourSales: 0, monthlySales: [] },
-            brandDeals: [],
-            collaborations: [],
-            meta: { dataSource: 'manual_entry', lastUpdated: new Date().toISOString() }
-        };
+        const outcome = await artistRepo.createArtist({ name, tier });
 
-        try {
-            await Artist.create({ id, name, data: newArtist });
-            // Sync to memory
-            const exists = labelData.artists.find(a => a.id === id);
-            if (!exists) labelData.artists.push(newArtist);
-            res.json({ success: true, artist: newArtist });
-        } catch (err) {
-            // Fallback to memory if DB fails (for prototype robustness)
-            labelData.artists.push(newArtist);
-            res.json({ success: true, artist: newArtist, warning: 'Persisted to memory only' });
+        if (outcome.conflict) {
+            return res.status(409).json({ error: 'Artist already exists', id: outcome.id });
         }
+        if (outcome.error) {
+            logger.error('Artist create failed:', outcome.error);
+            return res.status(500).json({ error: 'Failed to create artist' });
+        }
+
+        auditService.emitAudit({
+            action: 'artist.create',
+            resourceType: 'artist',
+            resourceId: outcome.created.id,
+            metadata: { name: outcome.created.name, tier: outcome.created.tier },
+            req
+        });
+
+        res.json({ success: true, artist: outcome.created });
     });
 
     // Archive Artist
@@ -121,16 +117,21 @@ function register(app, ctx) {
         if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         const { id } = req.params;
 
-        const artist = labelData.artists.find(a => a.id === id);
-        if (!artist) return res.status(404).json({ error: 'Artist not found' });
+        const outcome = await artistRepo.archiveArtist(id);
+        if (!outcome) return res.status(404).json({ error: 'Artist not found' });
+        if (outcome.error) {
+            logger.error('Artist archive persist failed:', outcome.error);
+            return res.status(500).json({ error: 'Failed to archive artist' });
+        }
+        const artist = outcome.artist;
 
-        artist.tier = 'archived';
-        artist.status = 'archived';
-
-        // Attempt DB update
-        try {
-            await Artist.update({ data: artist }, { where: { id } });
-        } catch (e) { console.error('DB Update failed, using memory'); }
+        auditService.emitAudit({
+            action: 'artist.archive',
+            resourceType: 'artist',
+            resourceId: id,
+            metadata: { name: artist.name },
+            req
+        });
 
         res.json({ success: true, message: `${artist.name} archived` });
     });
@@ -140,16 +141,21 @@ function register(app, ctx) {
         if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         const { id } = req.params;
 
-        const artist = labelData.artists.find(a => a.id === id);
-        if (!artist) return res.status(404).json({ error: 'Artist not found' });
+        const outcome = await artistRepo.restoreArtist(id);
+        if (!outcome) return res.status(404).json({ error: 'Artist not found' });
+        if (outcome.error) {
+            logger.error('Artist restore persist failed:', outcome.error);
+            return res.status(500).json({ error: 'Failed to restore artist' });
+        }
+        const artist = outcome.artist;
 
-        artist.tier = 'developing'; // Default back to developing
-        artist.status = 'active';
-
-        // Attempt DB update
-        try {
-            await Artist.update({ data: artist }, { where: { id } });
-        } catch (e) { console.error('DB Update failed, using memory'); }
+        auditService.emitAudit({
+            action: 'artist.restore',
+            resourceType: 'artist',
+            resourceId: id,
+            metadata: { name: artist.name },
+            req
+        });
 
         res.json({ success: true, message: `${artist.name} restored` });
     });
@@ -160,24 +166,23 @@ function register(app, ctx) {
         const { id } = req.params;
         const { imageUrl } = req.body;
 
-        const artist = labelData.artists.find(a => a.id === id);
-        if (!artist) return res.status(404).json({ error: 'Artist not found' });
+        const outcome = await artistRepo.setArtistImage(id, imageUrl);
+        if (!outcome) return res.status(404).json({ error: 'Artist not found' });
+        if (outcome.error) {
+            logger.error('Artist image persist failed:', outcome.error);
+            return res.status(500).json({ error: 'Failed to update artist image' });
+        }
+        const artist = outcome.artist;
 
-        // Update in-memory data
-        artist.manualImage = imageUrl;
+        auditService.emitAudit({
+            action: 'artist.image',
+            resourceType: 'artist',
+            resourceId: id,
+            metadata: { name: artist.name },
+            req
+        });
 
-        // In a real app with DB, we'd save this to the 'data' JSON column or a specific column
-        // For this session's hybrid mock approach:
-        try {
-            const dbArtist = await Artist.findByPk(id);
-            if (dbArtist) {
-                const newData = { ...dbArtist.data, manualImage: imageUrl };
-                dbArtist.data = newData;
-                await dbArtist.save();
-            }
-        } catch (e) { console.error('Failed to persist manual image:', e); }
-
-        res.json({ success: true, manualImage: imageUrl });
+        res.json({ success: true, manualImage: artist.manualImage });
     });
 
     // Get single artist (with access check)
@@ -186,7 +191,8 @@ function register(app, ctx) {
             return res.status(403).json({ error: 'Access denied to this artist' });
         }
 
-        const artist = labelData.artists.find(a => a.id === req.params.id);
+        // PHASE 4CF: canonical DB-first read (survives restarts).
+        const artist = await artistRepo.findById(req.params.id);
 
         if (!artist) {
             return res.status(404).json({ error: 'Artist not found' });
@@ -232,7 +238,9 @@ function register(app, ctx) {
             const artistId = req.params.id;
             const forceRefresh = req.query.refresh === 'true';
 
-            const outcome = await entityAuditService.audit(artistId, forceRefresh);
+            // PHASE 4CF: pass the requesting principal through for usage
+            // attribution (additive; service behavior otherwise unchanged).
+            const outcome = await entityAuditService.audit(artistId, forceRefresh, req.user);
 
             if (outcome.kind === 'not_found') {
                 return res.status(404).json({ error: 'Artist not found' });
@@ -246,12 +254,13 @@ function register(app, ctx) {
     });
 
     // Get monthly sales (with access check)
-    app.get('/v3/artists/:id/monthly-sales', authenticateToken, (req, res) => {
+    app.get('/v3/artists/:id/monthly-sales', authenticateToken, async (req, res) => {
         if (!hasArtistAccess(req.user, req.params.id)) {
             return res.status(403).json({ error: 'Access denied' });
         }
 
-        const artist = labelData.artists.find(a => a.id === req.params.id);
+        // PHASE 4CF: canonical DB-first read.
+        const artist = await artistRepo.findById(req.params.id);
         if (!artist) {
             return res.status(404).json({ error: 'Artist not found' });
         }
@@ -259,8 +268,8 @@ function register(app, ctx) {
         res.json({
             artistId: artist.id,
             artistName: artist.name,
-            merchSales: artist.merch.monthlySales,
-            tourRevenue: artist.touring.shows.map(show => ({
+            merchSales: artist.merch?.monthlySales,
+            tourRevenue: (artist.touring?.shows ?? []).map(show => ({
                 date: show.date,
                 venue: show.venue,
                 revenue: show.revenue
@@ -269,19 +278,17 @@ function register(app, ctx) {
     });
 
     // Development Report (AI) - Legacy Endpoint (Keep for compatibility)
-    app.get('/v3/artists/:id/development', authenticateToken, (req, res) => {
-        const artist = labelData.artists.find(a => a.id === req.params.id);
+    app.get('/v3/artists/:id/development', authenticateToken, async (req, res) => {
+        // PHASE 4CF: canonical DB-first read + profile-owned canned insights
+        // (mau5trap values byte-identical).
+        const artist = await artistRepo.findById(req.params.id);
         if (!artist) return res.status(404).json({ error: 'Artist not found' });
 
         res.json({
             artist: artist.name,
             projection: 'Positive',
-            insights: [
-                `${artist.name}'s streaming growth is outpacing the genre average by 15%.`,
-                "Strong engagement in South America suggests potential for a Q3 tour leg.",
-                "Merch sales per listener are lower than expected; strictly limit supply for next drop."
-            ],
-            focusAreas: ['TikTok Content', 'LATAM Tour', 'Limited Merch']
+            insights: profile.ai.developmentInsights.map((tpl) => tpl.replace('{artist}', artist.name)),
+            focusAreas: [...profile.ai.developmentFocusAreas]
         });
     });
 }

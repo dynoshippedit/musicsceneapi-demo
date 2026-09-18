@@ -1,0 +1,41 @@
+.page { display: flex; flex-direction: column; gap: var(--space-4); }
+.topBar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.pager { display: flex; gap: var(--space-2); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); }
+.bio { margin: 0; font-size: var(--text-base); color: var(--color-text-muted); line-height: var(--leading-body); max-width: 80ch; }
+.definition { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2) var(--space-6); margin: 0; }
+.definitionRow { display: grid; grid-template-columns: 160px 1fr; align-items: baseline; gap: var(--space-3); padding: var(--space-1) 0; border-bottom: var(--border-panel); }
+.definitionRow dd { margin: 0; color: var(--color-text); }
+.groupLabel { color: var(--color-text-muted); margin-top: var(--space-2); }
+.chips { display: flex; flex-wrap: wrap; gap: var(--space-2); list-style: none; margin: 0; padding: 0; }
+.imageForm { display: flex; gap: var(--space-2); align-items: center; }
+.imageInput {
+  flex: 1;
+  height: 32px;
+  padding: 0 var(--space-3);
+  background: var(--color-input-bg);
+  border: var(--border-panel);
+  border-radius: var(--radius-control);
+  color: var(--color-text);
+  font: var(--text-sm)/1 var(--font-mono);
+}
+.imageInput:focus { border-color: var(--color-accent); outline: none; box-shadow: var(--glow-accent-soft); }
+.scoreRow { display: flex; align-items: baseline; gap: var(--space-3); }
+.platformList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.platformRow {
+  display: grid;
+  grid-template-columns: 140px 110px 1fr;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--table-cell-y) 0;
+  border-bottom: var(--border-panel);
+}
+.platformMessage { font-size: var(--text-sm); color: var(--color-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 1279px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 1023px) {
+  .kpis { grid-template-columns: 1fr; }
+  .definition { grid-template-columns: 1fr; }
+  .definitionRow { grid-template-columns: 1fr; }
+  .platformRow { grid-template-columns: 1fr; gap: var(--space-1); }
+  .platformMessage { white-space: normal; }
+}

@@ -1,0 +1,174 @@
+{
+  "source": "/tmp/mau5-d0-y1p___d4",
+  "db": "/tmp/mau5-d0-integrity-G64ZZS/probe.sqlite",
+  "checks": [
+    {
+      "id": "FE-01",
+      "requestKeys": [
+        "artistId",
+        "amount",
+        "date"
+      ],
+      "response": {
+        "status": 400,
+        "body": {
+          "error": "Missing fields"
+        }
+      },
+      "expected": "2xx persisted sale",
+      "passed": false
+    },
+    {
+      "id": "B2",
+      "fault": "SQLite trigger rejects UPDATE on disposable Artists row",
+      "before": {
+        "tier": "flagship",
+        "manualImage": null
+      },
+      "archiveResponse": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "message": "REZZ archived"
+        }
+      },
+      "readBack": {
+        "tier": "flagship",
+        "manualImage": null
+      },
+      "imageResponse": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "manualImage": "https://example.test/d0-image.png"
+        }
+      },
+      "successAudits": [
+        {
+          "action": "artist.archive",
+          "resourceId": "art_rezz"
+        },
+        {
+          "action": "artist.image",
+          "resourceId": "art_rezz"
+        }
+      ],
+      "expected": "non-success response and no success audit when write rejected",
+      "passed": false,
+      "afterRestart": {
+        "tier": "flagship",
+        "manualImage": null
+      }
+    },
+    {
+      "id": "B3",
+      "attempts": [
+        {
+          "responses": [
+            {
+              "status": 200,
+              "body": {
+                "success": true,
+                "votes": 1,
+                "userVote": "up"
+              }
+            },
+            {
+              "status": 200,
+              "body": {
+                "success": true,
+                "votes": 1,
+                "userVote": "up"
+              }
+            }
+          ],
+          "storedVotes": 1
+        },
+        {
+          "responses": [
+            {
+              "status": 200,
+              "body": {
+                "success": true,
+                "votes": 1,
+                "userVote": "up"
+              }
+            },
+            {
+              "status": 200,
+              "body": {
+                "success": true,
+                "votes": 1,
+                "userVote": "up"
+              }
+            }
+          ],
+          "storedVotes": 1
+        },
+        {
+          "responses": [
+            {
+              "status": 200,
+              "body": {
+                "success": true,
+                "votes": 1,
+                "userVote": "up"
+              }
+            },
+            {
+              "status": 200,
+              "body": {
+                "success": true,
+                "votes": 1,
+                "userVote": "up"
+              }
+            }
+          ],
+          "storedVotes": 1
+        },
+        {
+          "responses": [
+            {
+              "status": 200,
+              "body": {
+                "success": true,
+                "votes": 1,
+                "userVote": "up"
+              }
+            },
+            {
+              "status": 200,
+              "body": {
+                "success": true,
+                "votes": 1,
+                "userVote": "up"
+              }
+            }
+          ],
+          "storedVotes": 1
+        }
+      ],
+      "expected": "2 successful distinct-user up-votes => storedVotes 2",
+      "passed": false
+    },
+    {
+      "id": "B1",
+      "request": {
+        "artistId": "art_rezz",
+        "revenueSources": {
+          "streaming": true
+        }
+      },
+      "response": {
+        "transportError": "TypeError: fetch failed"
+      },
+      "healthAfter": {
+        "transportError": "TypeError"
+      },
+      "childExitCode": 0,
+      "unhandledRejectionLogged": true,
+      "expected": "controlled 4xx and healthy API",
+      "passed": false
+    }
+  ]
+}

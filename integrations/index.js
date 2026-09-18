@@ -8,26 +8,13 @@ const youtubeIntegration = require('./youtube');
 const twitterIntegration = require('./twitter');
 const tiktokIntegration = require('./tiktok');
 
+// PHASE 4CF: artist mappings moved VERBATIM to the Label Intelligence Profile
+// (profile.socialMappings). Covers only art_deadmau5 and art_rezz; the other
+// roster artists fall back to mock data (documented residual).
+const profile = require('../src/profile');
+
 // Artist mapping: Internal ID -> External IDs
-const ARTIST_MAPPINGS = {
-    'art_deadmau5': {
-        spotifyId: '2CIMQHirSU0MQqyYHq0eOx',
-        instagramName: 'deadmau5',
-        ticketmasterName: 'deadmau5',
-        youtubeChannelId: 'UCJ6td3C9QlPO9O_J5dF4ZzA',  // NEW - Phase 2
-        twitterHandle: 'deadmau5',
-        tiktokUsername: '@deadmau5'
-    },
-    'art_rezz': {
-        spotifyId: '6kBDZFXuGQQL0PnZF6P2R4',
-        instagramName: 'officialrezz',
-        ticketmasterName: 'REZZ',
-        youtubeChannelId: 'UCq01irgbP5i1y7GI1S6GdTQ',  // NEW - Phase 2
-        twitterHandle: 'OfficialRezz',
-        tiktokUsername: '@officialrezz'
-    }
-    // Add more artists as needed
-};
+const ARTIST_MAPPINGS = profile.socialMappings;
 
 /**
  * Fetch real-time data for an artist from all configured APIs

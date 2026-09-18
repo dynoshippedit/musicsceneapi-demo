@@ -15,6 +15,7 @@ const fs = require('fs');
 const path = require('path');
 const winston = require('winston');
 const config = require('./index');
+const profile = require('../profile');
 
 // Ensure the log directory exists (see note above).
 const logDir = path.dirname(path.resolve(process.cwd(), config.logging.errorFile));
@@ -28,7 +29,8 @@ try {
 const logger = winston.createLogger({
     level: config.logging.level,
     format: winston.format.json(),
-    defaultMeta: { service: 'mau5trap-api' },
+    // PHASE 4CF: service identity from the Label Intelligence Profile.
+    defaultMeta: { service: profile.serviceName },
     transports: [
         new winston.transports.File({ filename: config.logging.errorFile, level: 'error' }),
         new winston.transports.File({ filename: config.logging.combinedFile })

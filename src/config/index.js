@@ -18,6 +18,11 @@
 
 require('dotenv').config();
 
+// PHASE 4CF: the Label Intelligence Profile is data-only (dotenv + datasets,
+// no app modules), so this edge is acyclic; db.storage defaults to the active
+// profile's sqlite file when DB_STORAGE is unset.
+const profile = require('../profile');
+
 const env = process.env.NODE_ENV || 'development';
 
 /**
@@ -79,7 +84,12 @@ const config = {
     // api L128-142
     db: {
         dialect: process.env.DB_DIALECT || 'sqlite',
-        storage: 'mau5trap_v5.sqlite',
+        // PHASE 4CF: storage was a hardcoded literal. DB_STORAGE env now
+        // selects the file, defaulting to the active Label Intelligence
+        // Profile's sqliteFile ('mau5trap_v5.sqlite') — the
+        // dedicated-instance deployment seam: each label instance points
+        // at its own database without a source edit.
+        storage: process.env.DB_STORAGE || profile.db.sqliteFile,
         url: process.env.DATABASE_URL,
         logging: false
     },
@@ -112,7 +122,10 @@ const config = {
         port: process.env.SMTP_PORT || 587,
         user: process.env.SMTP_USER || 'apikey',
         pass: process.env.SMTP_PASS || process.env.SENDGRID_API_KEY,
-        from: process.env.EMAIL_FROM || '"mau5trap OS" <notify@mau5trap.com>',
+        // PHASE 4CF: the brand default ('"mau5trap OS" <notify@mau5trap.com>')
+        // moved to the Label Intelligence Profile (profile.email.from);
+        // the operative default is resolved by the email service.
+        from: process.env.EMAIL_FROM || '',
         // api L583 — hardcoded localhost preserved; Phase 2 concern.
         resetLinkBase: 'http://localhost:8080/reset-password'
     },

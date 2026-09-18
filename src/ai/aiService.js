@@ -31,12 +31,17 @@ const { validateEntityAudit, ENTITY_AUDIT_FALLBACK } = require('./responseParser
 const artistRepo = require('../repositories/artistRepository');
 const { calculateTotalRevenue } = require('../utils/dataShape');
 const { hasArtistAccess } = require('../auth');
+const profile = require('../profile');
+const usage = require('../services/usageService');
 
-/** Exact dev-fallback sentence from the original. Do not reword. */
-const DEV_FALLBACK_ANSWER =
-    '[Dev Fallback] Growth is stable at 2.5%. Recommend increasing tour frequency in EU.';
+/**
+ * Exact dev-fallback sentence from the original. Do not reword.
+ * PHASE 4CF: value now lives in the Label Intelligence Profile (single
+ * source shared with src/routes/ai.js); mau5trap value is byte-identical.
+ */
+const DEV_FALLBACK_ANSWER = profile.ai.devFallback;
 
-function createAiService({ client = groqClient, cacheService = cache, repo = artistRepo } = {}) {
+function createAiService({ client = groqClient, cacheService = cache, repo = artistRepo, usageService = usage } = {}) {
     /**
      * POST /v3/ai/query — cached, context-aware, real LLM call.
      *
@@ -83,6 +88,17 @@ function createAiService({ client = groqClient, cacheService = cache, repo = art
             // Original logged token usage to stdout; retained.
             console.log(`[Groq Usage] Tokens: ${usage?.total_tokens || 'N/A'}`);
 
+            // PHASE 4CF: usage-attribution seam at the paid-provider spend
+            // point (Objective 7). Logs a structured record future metering
+            // can consume; no quotas or billing are built here.
+            usageService.recordUsage('ai_tokens', usage?.total_tokens ?? 0, {
+                model,
+                artistId: artistId ?? null,
+                userId: user?.id ?? null,
+                provider: 'groq',
+                requestId: null
+            });
+
             return { kind: 'ok', answer: insights, model, usage };
         } catch (err) {
             console.error('Groq API Error:', err);
@@ -128,18 +144,21 @@ function createAiService({ client = groqClient, cacheService = cache, repo = art
         const lowerQuery = String(query).toLowerCase();
         let response = "I'm analyzing your request...";
 
+        // PHASE 4CF: keyword-path canned copy is label intelligence, now
+        // sourced from the profile. mau5trap strings and the roster-order
+        // dependent {artist} read compose byte-identically to the originals.
         if (lowerQuery.includes('roi')) {
             const bestRoi = repo.topByRoi();
-            response = `Based on current data, ${bestRoi.name} has the highest ROI at ${bestRoi.roi}x. Rezz is second at 6.5x.`;
+            response = `Based on current data, ${bestRoi.name} has the highest ROI at ${bestRoi.roi}x. ${profile.ai.keywordInsights.roiSecondPlace}`;
         } else if (lowerQuery.includes('tour') || lowerQuery.includes('revenue')) {
             const topTouring = repo.topByTouringRevenue();
             const artists = repo.getMockArtists();
-            response = `${topTouring.name} is leading touring revenue with $${topTouring.revenue.touring.toLocaleString()}. Suggest increasing ticket prices for ${artists[1].name} to match demand.`;
+            response = `${topTouring.name} is leading touring revenue with $${topTouring.revenue.touring.toLocaleString()}. ${profile.ai.keywordInsights.touringAdvice.replace('{artist}', artists[1].name)}`;
         } else if (lowerQuery.includes('growth') || lowerQuery.includes('trend')) {
             const topGrower = repo.topByGrowthRate();
-            response = `${topGrower.name} is the fastest growing artist (${topGrower.growthRate}%). This aligns with the viral TikTok trend observed last week.`;
+            response = `${topGrower.name} is the fastest growing artist (${topGrower.growthRate}%). ${profile.ai.keywordInsights.growthContext}`;
         } else {
-            response = "I've analyzed the label metrics. Overall revenue is up 15% YoY. Would you like a breakdown by genre?";
+            response = profile.ai.keywordInsights.defaultInsight;
         }
 
         return { response };

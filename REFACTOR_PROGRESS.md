@@ -1,8 +1,10 @@
 # REFACTOR_PROGRESS.md
 
 Running log of the incremental refactor. Phases 1–3 (backend) and 4A–4B
-(frontend planning + first vertical slice) are complete. Phase 4C has not been
-authorized.
+(frontend planning + first vertical slice) are complete. Phases 4C and 4CF are
+COMPLETE (uncommitted, pending operator review). Post-4CF roadmap and execution
+mechanics are documented in `NEXT_STEPS_PLAN.md` (13 steps) and
+`EXECUTION_GUIDE.md`; three decisions await sign-off (rows below).
 
 Reference commit for all "original"/"pre-refactor" claims: `c0281d8`.
 
@@ -17,11 +19,58 @@ Reference commit for all "original"/"pre-refactor" claims: `c0281d8`.
 | 3 | Defect remediation, security fixes, validation, logging redaction | COMPLETE — see PHASE_3_VALIDATION.md |
 | 4A | Frontend architecture, visual design contract, independent design audit + reconciliation, brand-portability audit | COMPLETE — `FRONTEND_ARCHITECTURE.md`, `MAU5TRAP_VISUAL_DESIGN_CONTRACT.md`, `PHASE_4A_DESIGN_AUDIT.md`, `PHASE_4A_HANDOFF.md` (§22 reconciles the audit), `BRAND_PORTABILITY_AUDIT*.md` |
 | 4B | `web/` Vite+React reference slice: brand layer, API client, auth, shell, Login + Dashboard against live `/v3/label/overview`; two-profile portability gate | COMPLETE — `PHASE_4B_HANDOFF.md`; independently re-verified in `PHASE_4B_VALIDATION.md` (live gate, `cd web && npm run gate`) and `PHASE_4B_STATIC_AUDIT.md` |
-| 4C | Remaining page migration (Artists first) | NOT AUTHORIZED |
+| 4C-pre | Contract alignment: pageAccess in login+/me, /me 404 session handling, scope-aware portability gate, baseline investigation, RR6 retained | COMPLETE (uncommitted, pending operator review) — see PHASE_4C_PREREQUISITE_VALIDATION.md |
+| 4C | Remaining page migration: Artists, Artist detail (9 tabs), A&R Room + Scouting, Intelligence, Marketing, Fans, Operations, Settings (Integrations + AI), Admin, 404, and dashboard completion (forecast chart, heatmap, command console, exports) | COMPLETE (uncommitted, pending operator review) — see PHASE_4C_HANDOFF.md |
+| 4CF | Commercial foundation / CRUD truth: user CRUD truth, delete guards + session revocation, artist canonical source of truth, persist-or-demo contract, minimal customer/label ownership seam (Label Intelligence Profile), minimal audit + usage seams | COMPLETE (uncommitted, pending operator review) — see PHASE_4CF_COMMERCIAL_FOUNDATION.md |
+| PLANNING | Next-step roadmap (13 steps) + execution mechanics (pin ledger, per-step recipes) | COMPLETE (docs only) — see NEXT_STEPS_PLAN.md, EXECUTION_GUIDE.md |
+| D0 | Checkpoint strategy for the uncommitted 4C+4CF tree | APPROVED A — DECISION_D0_CHECKPOINT.md; first validation blocked on B1/B2/B3/FE-01/FE-02; checkpoint taken 2026-09-18 after those integrity repairs |
+| D7 | Password reset flow (Step 7) | PENDING SIGN-OFF — STEP7_PASSWORD_RESET_DECISION.md |
+| D12F | /health truth (Step 12F) | PENDING SIGN-OFF — DECISION_D12F_HEALTH.md |
 
 Backend after Phase 3: `npm test` = 121 pass / 0 fail / 26 suites (re-run
 2026-09-16 during 4B validation; backend untouched by 4A/4B). Legacy HTML
 frontends remain in place until their replacement passes its own gate.
+
+Backend after pre-4C contract alignment (2026-09-17, uncommitted): `npm test` =
+**123 pass / 0 fail / 26 suites** (+2 Decision 1 `pageAccess` contract tests in
+`tests/regression/snapshot.test.js`; 4 deterministic snapshot cases re-baselined
+additively in `tests/snapshots/phase2_baseline.json`); `npm run verify` on a fresh
+DB = 54 passed / 0 failed; `cd web && npm run gate` = 66 pass / 0 fail (was 54).
+See `PHASE_4C_PREREQUISITE_VALIDATION.md`.
+
+Backend after Phase 4C (2026-09-17, uncommitted): `npm test` = **127 pass / 0 fail /
+27 suites** (+4 `pageAccess` WRITE-path tests in a new describe block). `npm run verify`
+on a fresh process/DB = **54 passed / 0 failed**. `cd web && npm run gate` = **70 pass /
+0 fail** (was 66: `F20`, `F21`, `F22`, `P11` added; `F15` and `V16` amended from 4B scope
+to the 4A §4 route map). Static portability gate = 9/9, `--self-test` 23/23. Frontend
+production build passes. `npm audit --omit=dev` still reports **2 moderate React Router 6
+advisories — not suppressed, not fixed** (RR7 remains deferred).
+
+Backend after Phase 4CF (2026-09-17, uncommitted): `npm test` = **141 pass / 0 fail /
+32 suites** (+14: user CRUD truth, DELETE guards, deleted-user JWT revocation, request-id
+header, model-shape pins, profile preservation, usage/audit seams, and the full
+restart-durability test `tests/regression/durability.test.js`). `npm run verify` on a
+fresh process/DB = **54 passed / 0 failed**. `cd web && npm run gate` = **70 pass / 0
+fail** against the new backend; static portability gate 9/9, `--self-test` 23/23;
+frontend production build passes; legacy HTML md5-identical to HEAD. Snapshot baseline:
+exactly ONE deliberate change (`users_delete_nonexistent` 200→404 — the reachable DELETE
+now reads the row before destroying). Deliberate API changes: duplicate artist → 409;
+integration `quotaUsed` → null; ghost-artistId sales → 404; deleted-user JWTs → 401;
+`X-Request-Id` on every response. New tables auto-created on boot: `AuditEvents`,
+`AnrSubmissions`, `SalesEntries` (via `sync({alter:true})`). New profile seam:
+`src/profile/` (`LABEL_SLUG` / `DB_STORAGE` env). Root-tree `npm audit` now reports 23
+transitive advisories (registry-refreshed: axios/tar/body-parser/brace-expansion/dottie/
+follow-redirects/form-data/ip-address) — zero dependency changes this phase, not
+suppressed, not fixed (bumps deferred). Full detail: `PHASE_4CF_COMMERCIAL_FOUNDATION.md`.
+
+One backend fix was required and is the only `src/` change in 4C: the reachable
+`POST /v3/users` dropped `pageAccess` entirely, and the reachable `PUT /v3/users/:id`
+assigned a raw array to a STRING column with no `try/catch`, so Sequelize's rejection
+escaped and **shut the whole API process down** — editing any user's permissions took the
+backend offline. Both reachable handlers now serialize `pageAccess` and the PUT is guarded;
+the shadowed duplicates are untouched and no response contract changed (no re-baseline:
+`tests/snapshots/phase2_baseline.json` still shows only the pre-4C +14/−0).
+See `PHASE_4C_HANDOFF.md` §3.
 
 Monolith size: **3207 → 82 lines** (`mau5trap-production-api.js` is now an app
 assembler). 39 modules under `src/`, 5249 lines total.
@@ -330,6 +379,65 @@ Full detail in `PHASE_3_VALIDATION.md`.
   token.
 - Legacy files retained by instruction: `Server v5.js`, `package1.json`,
   `package-production.json`, committed PDFs/images, 18 ad-hoc scripts.
+
+### Recorded pre-4C (2026-09-17) — see PHASE_4C_PREREQUISITE_VALIDATION.md §7 and §9
+- **`web/` dependency debt — react-router / react-router-dom 6.30.6**: `npm audit
+  --omit=dev --audit-level=moderate` reports 2 moderate advisories
+  (GHSA-wrjc-x8rr-h8h6 open redirect via backslash in `<Link>`/`useNavigate`,
+  CVE-2025-68470 bypass; GHSA-337j-9hxr-rhxg constructor injection in SSR
+  `deserializeErrors()`), fix = react-router-dom 7.18.4 (breaking). Decision 2:
+  DEFERRED, stay on 6.x for 4C; audit is not suppressed and is NOT clean.
+- **ADMIN_EMAIL/ADMIN_PASS override token has no `id` claim** (`src/routes/auth.js`
+  L74), so `GET /v3/auth/me` (and `DELETE /v3/auth/me`, change-password) answer
+  404 `User not found` for that session (confirmed live pre-4C). Decision 5 makes
+  the frontend keep the session on 404; the backend gap itself is unfixed — no
+  admin model invented.
+- **`pageAccess` write side is defective**: the live `POST /v3/users`
+  (`src/routes/users.js` L48-88) validates `pageAccess` but never persists it
+  (model default `'["overview"]'` always wins); the live `PUT /v3/users/:id`
+  (L111-127) assigns the raw array to the STRING column without `JSON.stringify`
+  (Sequelize `string violation`), and has no try/catch. The two shadowed later
+  registrations (L91-108, L148-159 / L162-179) that do it right are unreachable.
+  A 4C Admin › Team UI must not rely on these routes as-is.
+- **`tests/regression/units.test.js` L140** "PINS: tokens signed by the live login
+  handlers carry no `id` claim" is stale as a description (the DB login path has
+  carried `id` since Phase 3; only the override path omits it) and inspects only
+  hand-signed tokens.
+- **`tests/snapshots/baseline.json`** is a Phase-1 capture of the pre-refactor
+  monolith read by no test; its name invites confusion with the real
+  deterministic baseline `phase2_baseline.json` (Decision 4 investigation).
+
+### Resolved in Phase 4C (2026-09-17) — see PHASE_4C_HANDOFF.md §3
+
+- **`pageAccess` write side — FIXED, and the pre-4C severity was understated.** The
+  bullet above correctly identified the missing `JSON.stringify` and the missing
+  try/catch on `PUT /v3/users/:id` but not their combined consequence: the Sequelize
+  `string violation` escaped as an unhandled rejection and the process-level handler
+  **shut the entire API down**, so editing any user's permissions took the backend
+  offline. Reproduced on a throwaway DB, then reproduced again unintentionally when a
+  gate run drove the UI against a server still running the pre-fix code. Both reachable
+  handlers now serialize through a shared `serializePageAccess()` and the PUT is wrapped
+  in try/catch (a bad value is a 400, never a process exit). The shadowed registrations
+  remain untouched and unreachable, as recorded. No response contract changed, so no
+  snapshot was re-baselined. Pinned by 4 tests in `tests/regression/snapshot.test.js`
+  (including a `/health` liveness assertion after the write) and by gate box `F22`.
+
+### Recorded in Phase 4C (still open)
+
+- **Reachable `DELETE /v3/users/:id` (L130-134) has no self-delete guard**; its shadowed
+  twin (L182+) does. The Admin UI does not offer self-deletion and the server remains
+  authoritative. MINOR, untouched.
+- **`tests/support/verify_phase2.js` is not idempotent**: it creates a
+  `Verify Artist <timestamp>` row per run (L123) and never removes it, so its
+  `total === 29` assertion (L109) fails on any second run against a persistent DB.
+  A clean single run passes 54/54. Its artifacts were removed from `mau5trap_v5.sqlite`.
+- **Frontend bundle is ~617 kB (~200 kB gzipped)** after the chart/map additions; Vite
+  warns above 500 kB. No code splitting was introduced in 4C.
+- **`useApiQuery(query)` requires a memoized `query`** or it re-fetches forever. All ~25
+  Phase 4C call sites use `useCallback`; the hook was deliberately not changed, because
+  ref-ing the function would break legitimate re-fetching when a dependency changes.
+- **Basemap tiles are watermarked** by the legacy provider unless a keyed URL is supplied
+  via `profile.map.tileUrl` or `VITE_MAP_TILE_URL`. Markers and data are unaffected.
 
 ---
 

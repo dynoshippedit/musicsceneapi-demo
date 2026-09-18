@@ -34,7 +34,9 @@ function buildQueryMessages({ userPrompt, contextData }) {
     return [
         {
             role: 'system',
-            content: 'AI analyst for mau5trap. Concise, data-driven insights.'
+            // PHASE 4CF: system prompt from the Label Intelligence Profile
+            // (pinned byte-for-byte by services.test.js for mau5trap).
+            content: require('../profile').ai.systemContext
         },
         {
             role: 'user',

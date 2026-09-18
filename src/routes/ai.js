@@ -35,7 +35,7 @@ function register(app, ctx) {
         prospects, anrSubmissions, anrState, userIntegrations, salesData, apiCache,
         aiService, performLinearRegression, generateSyntheticHistory,
         integrationFacade, fetchArtistData, getIntegrationStatus, SERVICES, limiters,
-        generateMonthlyReport, validateBody
+        generateMonthlyReport, validateBody, profile
     } = ctx;
 
     // AI Analysis Endpoint (Grok Mock)
@@ -113,7 +113,8 @@ function register(app, ctx) {
             if (process.env.NODE_ENV === 'development') {
                 return res.json({
                     success: true,
-                    answer: "[Dev Fallback] Growth is stable at 2.5%. Recommend increasing tour frequency in EU.",
+                    // PHASE 4CF: single profile source (deduped from aiService).
+                    answer: profile.ai.devFallback,
                     source: 'fallback'
                 });
             }

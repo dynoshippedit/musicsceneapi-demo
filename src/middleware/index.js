@@ -48,10 +48,37 @@ function applyRequestPipeline(app, { logger }) {
 
     // api L253-256 — Request logger (with token redaction added in Phase 3).
     app.use((req, res, next) => {
+        // PHASE 4CF: stable request identity for attribution, audit
+        // correlation and future metering. Honours an upstream request id
+        // (gateways/load balancers) and echoes it to the client.
+        const crypto = require('crypto');
+        const upstream = req.headers['x-request-id'];
+        const requestId = (typeof upstream === 'string' && /^[A-Za-z0-9_.-]{8,64}$/.test(upstream))
+            ? upstream
+            : crypto.randomUUID();
+        req.requestId = requestId;
+        res.setHeader('X-Request-Id', requestId);
+        const startedAt = Date.now();
+
         // Redact any Authorization header and query-string tokens before
         // logging; log only method + clean path + ip.
         const url = req.url.replace(/([?&](token|api_key|apikey|access_token|refresh_token|code|password)=)[^&]*/gi, '$1[REDACTED]');
         logger.info(`${req.method} ${url}`, { ip: req.ip });
+
+        // PHASE 4CF: completion log with post-auth identity. This hook runs on
+        // response finish, AFTER route-level authenticateToken has populated
+        // req.user — the request log above cannot see the user yet. userId is
+        // null for unauthenticated/401 paths, which is correct attribution.
+        res.on('finish', () => {
+            logger.info('request', {
+                requestId,
+                userId: req.user?.id ?? null,
+                method: req.method,
+                path: req.path,
+                status: res.statusCode,
+                durationMs: Date.now() - startedAt
+            });
+        });
         next();
     });
 

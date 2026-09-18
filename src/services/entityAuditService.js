@@ -28,19 +28,22 @@ const cache = require('./cacheService');
 const integrations = require('../integrations');
 const aiService = require('../ai/aiService');
 const artistRepo = require('../repositories/artistRepository');
+const usage = require('./usageService');
 
 function createEntityAuditService({
     cacheService = cache,
     integrationFacade = integrations,
     ai = aiService,
-    repo = artistRepo
+    repo = artistRepo,
+    usageService = usage
 } = {}) {
     /**
      * @param {string} artistId
      * @param {boolean} forceRefresh
+     * @param {object|null} [actor] the requesting principal (req.user) — PHASE 4CF
      * @returns {Promise<{kind:'ok', result:object} | {kind:'not_found'}>}
      */
-    async function audit(artistId, forceRefresh) {
+    async function audit(artistId, forceRefresh, actor = null) {
         const cacheKey = cacheService.keys.entityAudit(artistId);
         const cached = cacheService.get(cacheKey);
 
@@ -69,6 +72,15 @@ function createEntityAuditService({
             integrationFacade.auditFandom(artist.name)
         ]);
 
+        // PHASE 4CF: usage-attribution seam at the external-provider spend
+        // point (Objective 7). One record per fresh audit pass; cached
+        // responses return above and cost nothing.
+        usageService.recordUsage('provider_call', 4, {
+            artistId,
+            userId: actor?.id ?? null,
+            providers: ['googleKG', 'wikipedia', 'discogs', 'fandom']
+        });
+
         const genius = geniusResult;
 
         const auditResults = {
@@ -91,6 +103,14 @@ function createEntityAuditService({
             googleKgStatus: googleKG.status,
             wikipediaStatus: wikipedia.status,
             healthScore
+        });
+
+        // PHASE 4CF: the LLM call above is a paid-provider spend point.
+        usageService.recordUsage('ai_call', 1, {
+            artistId,
+            userId: actor?.id ?? null,
+            provider: 'groq',
+            purpose: 'entity_audit_analysis'
         });
 
         const issues = inconsistencies.map((inc) => ({

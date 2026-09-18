@@ -74,6 +74,14 @@ Guard: `PUBLIC` = no `authenticateToken`. `admin-only` = inline `req.user.role !
 | 62 | GET | `/v3/analytics/projections` | 3058 | yes | JWT | q:6,artistId,months | 404,500 | mock | WS |
 | 63 | GET | `/health` | 3149 | yes | PUBLIC | — | 404,500 | memory | - |
 
+> Amended pre-4C (Decision 1, 2026-09-17) — rows 1 and 4: `POST /v3/auth/login` (DB path) and `GET /v3/auth/me` now ALSO return the
+>   user's `pageAccess` as a parsed string array (additive field; every previously served key is unchanged). Login DB path →
+>   `{ token, user: { id, name, email, role, artistAccess, pageAccess } }`; `/me` → `{ id, email, name, role, artistAccess, pageAccess }`.
+>   The ADMIN_EMAIL override login already returned `pageAccess: ['all']`. Source: `src/routes/auth.js` (`parsePageAccess`, one parser
+>   shared by both handlers). Seeded values: admin `["all"]`, artist `["overview","roster"]`; model default `'["overview"]'`. The field
+>   drives frontend nav/UI visibility only — backend route authorization does not consult it. Pinned by
+>   `tests/regression/snapshot.test.js` (Decision 1 tests) and `tests/snapshots/phase2_baseline.json`. See PHASE_4C_PREREQUISITE_VALIDATION.md §3.
+
 ---
 
 ## Auth summary

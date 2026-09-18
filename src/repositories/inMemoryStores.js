@@ -32,65 +32,35 @@
 
 'use strict';
 
+// PHASE 4CF: A&R demo seeds moved VERBATIM into the Label Intelligence
+// Profile (profile.datasets.anr). The stores themselves remain process
+// memory — their persistence status is classified in the persist-or-demo
+// contract (PHASE_4CF_COMMERCIAL_FOUNDATION.md): submissions/shortlist became
+// durable DB state in this phase; demos/whiteboard/nowListening remain
+// EPHEMERAL demo workspace; prospects are DEMO fixtures.
+const profile = require('../profile');
+
 /**
  * A&R prospects. NOTE: declared `let` in the original and referenced by exactly
  * ONE site — the deprecated scout endpoints at original L1394-1395 are
  * commented out, so this is effectively dead data retained for parity.
  */
-const prospects = [
-    { id: 'p1', name: 'Neon Horizon', genre: 'Progressive House', listeners: 12000, engagement: 15000, matchScore: 95, socialGrowth: '+15%' },
-    { id: 'p2', name: 'Glitch Protocol', genre: 'Techno', listeners: 8500, engagement: 9000, matchScore: 88, socialGrowth: '+22%' },
-    { id: 'p3', name: 'Analog Soul', genre: 'Deep House', listeners: 45000, engagement: 55000, matchScore: 72, socialGrowth: '+5%' },
-    { id: 'p4', name: 'Cyber Breath', genre: 'Progressive House', listeners: 15000, engagement: 18000, matchScore: 91, socialGrowth: '+12%' },
-    { id: 'p5', name: 'System 404', genre: 'Techno', listeners: 2000, engagement: 2500, matchScore: 60, socialGrowth: '+8%' },
-    { id: 'p6', name: 'Velvet Coding', genre: 'Electronica', listeners: 32000, engagement: 40000, matchScore: 85, socialGrowth: '+30%' }
-];
+const prospects = profile.datasets.anr.prospects;
 
-/** A&R demo store #1. Scalar vote counter. */
-const anrSubmissions = [
-    {
-        id: 'sub_1',
-        artist: 'Ghost Data',
-        track: 'Void Walker',
-        genre: 'Synthwave',
-        url: 'https://soundcloud.com/ghost-data/void-walker',
-        votes: 15,
-        status: 'pending',
-        submittedAt: new Date().toISOString()
-    },
-    {
-        id: 'sub_2',
-        artist: 'Testpilot',
-        track: 'Sunspot',
-        genre: 'Techno',
-        url: 'https://open.spotify.com/track/0abcdef123456',
-        votes: 42,
-        status: 'shortlisted',
-        submittedAt: new Date().toISOString()
-    }
-];
+/** A&R demo store #1. Scalar vote counter. Seed rows also seed the AnrSubmission table. */
+const anrSubmissions = profile.datasets.anr.anrSubmissions;
 
 /** A&R demo store #2. Per-user `ratings[]`. Also holds collaboration state. */
-const anrState = {
-    whiteboard: 'Currently Reviewing: Q1 2026 Compilation Submissions.\nFocus: Tech House / Minimal.',
-    nowListening: {
-        url: 'https://soundcloud.com/mau5trap/example-demo',
-        updatedBy: 'deadmau5',
-        timestamp: new Date().toISOString()
-    },
-    demos: [
-        { id: 'demo1', title: 'Analog Dreams', artist: 'Unknown Producer', ratings: [], submittedBy: 'admin', status: 'reviewing' },
-        { id: 'demo2', title: 'Cyberpunk Bass', artist: 'Neon Glitch', ratings: [], submittedBy: 'rezz', status: 'high-priority' },
-        { id: 'demo3', title: 'Deep Space', artist: 'Void Walker', ratings: [], submittedBy: 'admin', status: 'new' }
-    ]
-};
+const anrState = profile.datasets.anr.anrState;
 
 /**
  * Per-user integration connection state.
  *
- * PRESERVED DEFECT: keyed by `req.user.id`, which is ALWAYS undefined because
- * neither login branch puts an `id` claim in the JWT. Every user therefore
- * shares the single key `undefined`. See SECURITY_AUDIT.md.
+ * PRESERVED DEFECT (partially fixed Phase 3/4CF): keyed by `req.user.id`.
+ * The DB-login branch now SIGNS `id` (Phase 3) and the 4CF composite auth
+ * re-sources id/role/artistAccess from the row, so normal logins get real
+ * keys. ADMIN_EMAIL/ADMIN_PASS OVERRIDE tokens still omit `id` — those
+ * requests share the single key `undefined`. See SECURITY_AUDIT.md.
  */
 const userIntegrations = {
     // userId -> { serviceId: { connected: bool, token: string, lastSync: date } }

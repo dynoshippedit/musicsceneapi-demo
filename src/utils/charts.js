@@ -12,6 +12,10 @@
 'use strict';
 
 const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
+// PHASE 4CF: chart colors from the Label Intelligence Profile (mau5trap
+// values byte-identical).
+const profile = require('../profile');
+const colors = profile.charts;
 
 // api L28-31
 const chartJSNodeCanvasPie = new ChartJSNodeCanvas({ width: 400, height: 400, backgroundColour: 'white' });
@@ -27,7 +31,7 @@ async function generatePieChart(labels, data) {
             labels,
             datasets: [{
                 data,
-                backgroundColor: ['#00FF00', '#1a1a1a', '#666666', '#999999', '#cccccc', '#333333']
+                backgroundColor: colors.piePalette
             }]
         },
         options: {
@@ -49,7 +53,7 @@ async function generateBarChart(labels, data) {
             datasets: [{
                 label: 'Revenue by Region',
                 data,
-                backgroundColor: '#00FF00'
+                backgroundColor: colors.accent
             }]
         },
         options: {
@@ -75,8 +79,8 @@ async function generateLineChart(labels, data) {
             datasets: [{
                 label: 'Monthly Sales',
                 data,
-                borderColor: '#00FF00',
-                backgroundColor: 'rgba(0, 255, 0, 0.2)',
+                borderColor: colors.accent,
+                backgroundColor: colors.accentSoft,
                 fill: true,
                 tension: 0.4
             }]
@@ -103,7 +107,7 @@ async function generateDonutChart(labels, data) {
             labels,
             datasets: [{
                 data,
-                backgroundColor: ['#00FF00', '#333333'],
+                backgroundColor: colors.donutPalette,
                 borderWidth: 0
             }]
         },

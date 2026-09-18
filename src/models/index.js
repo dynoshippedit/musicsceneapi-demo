@@ -23,6 +23,7 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const bcrypt = require('bcrypt');
 const config = require('../config');
+const profile = require('../profile');
 
 // api L128-142
 let sequelize;
@@ -71,6 +72,54 @@ const Stats = sequelize.define('Stats', {
     recordedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 });
 
+// ---------------------------------------------------------------------------
+// PHASE 4CF — persist-or-demo contract (Objective 4): A&R submissions (store
+// #1, incl. shortlist entries) and sales entries become DURABLE PRODUCT STATE.
+// They were process-memory arrays that silently lost every customer write on
+// restart (live-reproduced in the commercial recheck). voters is the
+// per-user {userId: direction} map, stored as JSON like Artist.data.
+// ---------------------------------------------------------------------------
+const AnrSubmission = sequelize.define('AnrSubmission', {
+    id: { type: DataTypes.STRING, primaryKey: true }, // sub_<ts> | scout_<ts> | sub_1 | sub_2
+    artist: { type: DataTypes.STRING, allowNull: true },
+    track: { type: DataTypes.STRING, allowNull: true },
+    genre: { type: DataTypes.STRING, allowNull: true },
+    url: { type: DataTypes.STRING, allowNull: true },
+    imageUrl: { type: DataTypes.STRING, allowNull: true },
+    followers: { type: DataTypes.INTEGER, allowNull: true },
+    votes: { type: DataTypes.INTEGER, defaultValue: 0 },
+    voters: { type: DataTypes.JSON, allowNull: true },
+    status: { type: DataTypes.STRING, allowNull: true },
+    submittedAt: { type: DataTypes.STRING, allowNull: true }
+}, { timestamps: false });
+
+const SalesEntry = sequelize.define('SalesEntry', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    artistId: { type: DataTypes.STRING, allowNull: false },
+    month: { type: DataTypes.STRING, allowNull: false },
+    revenue: { type: DataTypes.FLOAT, allowNull: false }
+}, { timestamps: false, indexes: [{ unique: true, fields: ['artistId', 'month'] }] });
+
+// ---------------------------------------------------------------------------
+// PHASE 4CF: append-only audit event table (Objective 6 — minimal audit seam).
+// Fields follow the accepted minimal design: actor identity, action, resource,
+// metadata, request correlation, and the ACTIVE LABEL SLUG so that the first
+// owned table establishes the ownership convention for all future tables
+// (owner column from day one — see COMMERCIAL_FOUNDATION_RECHECK.md §10).
+// No UI, no webhooks, no event bus. sync({alter:true}) creates the table.
+// ---------------------------------------------------------------------------
+const AuditEvent = sequelize.define('AuditEvent', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    labelSlug: { type: DataTypes.STRING, allowNull: false },
+    actorId: { type: DataTypes.INTEGER, allowNull: true },
+    actorEmail: { type: DataTypes.STRING, allowNull: true },
+    action: { type: DataTypes.STRING, allowNull: false },
+    resourceType: { type: DataTypes.STRING, allowNull: true },
+    resourceId: { type: DataTypes.STRING, allowNull: true },
+    metadata: { type: DataTypes.JSON, allowNull: false, defaultValue: {} },
+    requestId: { type: DataTypes.STRING, allowNull: true }
+}, { updatedAt: false });
+
 /**
  * Initialization and seeding — api L175-209.
  *
@@ -88,22 +137,24 @@ async function initDB({ logger, labelData } = {}) {
         await sequelize.sync({ alter: true }); // Ensure schema updates are applied
 
         // SEED USERS IF EMPTY — api L182-190
+        // PHASE 4CF: seed identities moved to the Label Intelligence Profile
+        // (profile.seedUsers). Values for the mau5trap profile are verbatim
+        // (admin@mau5trap.com / tours@rezz.com with their original grants).
         const userCount = await User.count();
         if (userCount === 0) {
             if (logger) logger.info('Seeding initial users...');
-            const adminHash = await bcrypt.hash('admin123', 10);
-            const artistHash = await bcrypt.hash('rezz123', 10);
-
-            await User.create({
-                email: 'admin@mau5trap.com', passwordHash: adminHash, name: 'Admin User',
-                role: 'admin', artistAccess: 'all',
-                pageAccess: JSON.stringify(['all']), integrationCount: 10
-            });
-            await User.create({
-                email: 'tours@rezz.com', passwordHash: artistHash, name: 'Isabelle Rezazadeh',
-                role: 'artist', artistAccess: 'art_rezz',
-                pageAccess: JSON.stringify(['overview', 'roster']), integrationCount: 5
-            });
+            for (const seed of profile.seedUsers) {
+                const passwordHash = await bcrypt.hash(seed.password, 10);
+                await User.create({
+                    email: seed.email,
+                    passwordHash,
+                    name: seed.name,
+                    role: seed.role,
+                    artistAccess: seed.artistAccess,
+                    pageAccess: JSON.stringify(seed.pageAccess || ['overview']),
+                    integrationCount: seed.integrationCount || 1
+                });
+            }
         }
 
         // SEED ARTISTS IF EMPTY — api L193-204
@@ -121,6 +172,27 @@ async function initDB({ logger, labelData } = {}) {
             }
         }
 
+        // PHASE 4CF: seed A&R submissions from the active profile when empty
+        // (mirrors artist seeding; values for mau5trap are the two original
+        // seeds — sub_1 votes:15, sub_2 votes:42).
+        const anrCount = await AnrSubmission.count();
+        if (anrCount === 0 && profile.datasets.anr && Array.isArray(profile.datasets.anr.anrSubmissions)) {
+            if (logger) logger.info('Seeding initial A&R submissions...');
+            for (const seed of profile.datasets.anr.anrSubmissions) {
+                await AnrSubmission.create({
+                    id: seed.id,
+                    artist: seed.artist,
+                    track: seed.track,
+                    genre: seed.genre,
+                    url: seed.url,
+                    votes: seed.votes,
+                    status: seed.status,
+                    submittedAt: seed.submittedAt,
+                    voters: null
+                });
+            }
+        }
+
         return true;
     } catch (error) {
         // api L206-208 — error is logged and swallowed; boot continues.
@@ -129,4 +201,4 @@ async function initDB({ logger, labelData } = {}) {
     }
 }
 
-module.exports = { sequelize, User, Artist, Stats, initDB };
+module.exports = { sequelize, User, Artist, Stats, AuditEvent, AnrSubmission, SalesEntry, initDB };

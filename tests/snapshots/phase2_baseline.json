@@ -61,6 +61,9 @@
         "email": "admin@mau5trap.com",
         "id": "<VOLATILE>",
         "name": "Admin User",
+        "pageAccess": [
+          "all"
+        ],
         "role": "admin"
       }
     }
@@ -75,6 +78,10 @@
         "email": "tours@rezz.com",
         "id": "<VOLATILE>",
         "name": "Isabelle Rezazadeh",
+        "pageAccess": [
+          "overview",
+          "roster"
+        ],
         "role": "artist"
       }
     }
@@ -101,6 +108,9 @@
       "email": "admin@mau5trap.com",
       "id": "<VOLATILE>",
       "name": "Admin User",
+      "pageAccess": [
+        "all"
+      ],
       "role": "admin"
     }
   },
@@ -112,6 +122,10 @@
       "email": "tours@rezz.com",
       "id": "<VOLATILE>",
       "name": "Isabelle Rezazadeh",
+      "pageAccess": [
+        "overview",
+        "roster"
+      ],
       "role": "artist"
     }
   },
@@ -2163,10 +2177,10 @@
     }
   },
   "users_delete_nonexistent": {
-    "status": 200,
+    "status": 404,
     "contentType": "application/json",
     "body": {
-      "success": true
+      "error": "User not found"
     }
   },
   "artists_artist_role": {

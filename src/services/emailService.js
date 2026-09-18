@@ -19,6 +19,7 @@
 const nodemailer = require('nodemailer');
 const config = require('../config');
 const logger = require('../config/logger');
+const profile = require('../profile');
 
 function createEmailService({ transport } = {}) {
     const transporter = transport || nodemailer.createTransport(
@@ -42,7 +43,9 @@ function createEmailService({ transport } = {}) {
     async function sendEmail({ to, subject, html }) {
         try {
             const info = await transporter.sendMail({
-                from: config.email.from,
+                // PHASE 4CF: brand default resolved from the Label
+                // Intelligence Profile when EMAIL_FROM is unset.
+                from: config.email.from || profile.email.from,
                 to,
                 subject,
                 html
@@ -72,13 +75,15 @@ function createEmailService({ transport } = {}) {
         const resetLink = `${config.email.resetLinkBase}?token=${resetToken}`;
         return sendEmail({
             to,
-            subject: 'mau5trap OS - Password Reset Request',
+            // PHASE 4CF: reset-email identity from the profile. Values for
+            // mau5trap are byte-identical to the previous literals.
+            subject: profile.email.resetSubject,
             html: `
                 <div style="font-family: monospace; background: #000; color: #fff; padding: 20px;">
-                    <h2 style="color: #00ff00;">PASSWORD RESET REQUIRED</h2>
+                    <h2 style="color: ${profile.email.resetHeadingColor};">PASSWORD RESET REQUIRED</h2>
                     <p>A request was received to reset the credentials for <strong>${to}</strong>.</p>
                     <p>Click the secure link below to proceed:</p>
-                    <a href="${resetLink}" style="color: #00ff00; font-size: 16px;">${resetLink}</a>
+                    <a href="${resetLink}" style="color: ${profile.email.resetLinkColor}; font-size: 16px;">${resetLink}</a>
                     <p style="margin-top: 20px; color: #666;">If you did not request this, ignore this transmission.</p>
                 </div>
             `
