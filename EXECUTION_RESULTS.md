@@ -208,7 +208,7 @@ D0 Option A checkpoint proceeds on this corrected tree.
 
 ## Final status
 
-EXECUTION SEQUENCE STATUS: IN PROGRESS — D0 + Steps 1–2 complete; Step 3 next
+EXECUTION SEQUENCE STATUS: IN PROGRESS — D0 + Steps 1–3 complete; Step 4 next
 
 D0 CHECKPOINT: `7336323` (Option A after integrity correction)
 
@@ -224,7 +224,7 @@ HEALTH CONTRACT: NOT REACHED; D12F still PENDING SIGN-OFF
 
 DEDICATED-LABEL COMMERCIAL PATH: inherited seams present; Step 5 not started
 
-READY FOR NEXT PRODUCT PHASE: YES — Steps 1–2 complete; Step 3 is next
+READY FOR NEXT PRODUCT PHASE: YES — Steps 1–3 complete; Step 4 is next
 
 ## 12. Step 1 — Deployment truth (2026-09-18)
 
@@ -246,3 +246,11 @@ READY FOR NEXT PRODUCT PHASE: YES — Steps 1–2 complete; Step 3 is next
   occupied `:3000` (copy of operator DB, original file never opened). Operator
   `mau5trap_v5.sqlite` size/mtime/sha256 unchanged.
 - `npm test` 142/142 after the step. `verify_phase2.js` not edited. No pins flipped.
+
+## 14. Step 3 — Error contract (2026-09-18)
+
+- Malformed JSON (`entity.parse.failed`) → 400 `{ error: 'Malformed JSON body' }`.
+- Five `'Internal error'` sites → `'Internal server error'` (unpinned).
+- `API_INVENTORY.md` documents `{error}` / `{error,details}` / `{error,path}` plus `{error,id}` outlier.
+- Additive snapshot test in `snapshot.test.js` (not a cases.js entry — caseCount stays 91).
+- `npm test` **143/143**; `npm run verify:hermetic` **54/54**. Operator DB hash unchanged. No pin flips.

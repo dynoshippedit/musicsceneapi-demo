@@ -205,7 +205,7 @@ function register(app, ctx) {
                 pageAccess: parsePageAccess(user.pageAccess)
             });
         } catch (err) {
-            res.status(500).json({ error: 'Internal error' });
+            res.status(500).json({ error: 'Internal server error' });
         }
     });
 
@@ -229,7 +229,7 @@ function register(app, ctx) {
             await user.save();
             res.json({ message: 'Password changed successfully' });
         } catch (err) {
-            res.status(500).json({ error: 'Internal error' });
+            res.status(500).json({ error: 'Internal server error' });
         }
     });
 }

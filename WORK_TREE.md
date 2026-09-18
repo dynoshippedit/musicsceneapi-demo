@@ -25,7 +25,7 @@ mau5trap / Music Label Intelligence Platform
 ├── CURRENT — Commercial/API foundation execution   EXECUTION_GUIDE.md Steps 1–13
 │   ├── Step 1  deployment truth / PM2 fork         COMPLETE  4b00c8c
 │   ├── Step 2  hermetic verify                     COMPLETE  (npm run verify:hermetic)
-│   ├── Step 3  malformed-JSON error contract
+│   ├── Step 3  malformed-JSON error contract       COMPLETE
 │   ├── Step 4  pagination (users, A&R submissions)
 │   ├── Step 5  labelSlug on AnrSubmission/SalesEntry   (no operator-DB rebuild)
 │   ├── Step 6  campaign/integration persistence, A&R/cache/jobs docs
@@ -118,8 +118,8 @@ These stay debt until a named step or a new operator decision.
 
 ## 5. Recommended next move
 
-1. **Next:** Step 3 — malformed JSON → 400; normalize internal-error strings; document envelopes.
-2. Then Steps 4 → 5 (data-preserving) → 6… Stop at D7 until signed.
+1. **Next:** Step 4 — opt-in pagination on GET /v3/users and GET /v3/anr/submissions.
+2. Then Step 5 (data-preserving) → 6… Stop at D7 until signed.
 3. Remaining Astra integrity (A-GRAPH, A-PAGEACCESS) can interleave; it is not a new phase.
 
-Green baseline now: `npm test` 142/142/32, snapshot 91-case, `npm run verify:hermetic` 54/54, gate 70 for frontend steps.
+Green baseline now: `npm test` 143/143/32, snapshot 91-case, `npm run verify:hermetic` 54/54, gate 70 for frontend steps.

@@ -84,7 +84,7 @@ function register(app, ctx) {
             res.json(result);
         } catch (err) {
             logger.error('Google KG Proxy Error:', err);
-            res.status(500).json({ error: 'Internal error' });
+            res.status(500).json({ error: 'Internal server error' });
         }
     });
 
@@ -95,7 +95,7 @@ function register(app, ctx) {
             res.json(result);
         } catch (err) {
             logger.error('Fandom Roster Error:', err);
-            res.status(500).json({ error: 'Internal error' });
+            res.status(500).json({ error: 'Internal server error' });
         }
     });
 
@@ -109,7 +109,7 @@ function register(app, ctx) {
             res.json(result);
         } catch (err) {
             logger.error('Fandom Audit Error:', err);
-            res.status(500).json({ error: 'Internal error' });
+            res.status(500).json({ error: 'Internal server error' });
         }
     });
 

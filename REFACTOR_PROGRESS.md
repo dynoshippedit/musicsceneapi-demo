@@ -26,6 +26,7 @@ Reference commit for all "original"/"pre-refactor" claims: `c0281d8`.
 | D0 | Checkpoint strategy for the uncommitted 4C+4CF tree | COMPLETE — `7336323` (Option A after integrity correction) |
 | 1 | Deployment truth (`server.js` PM2 fork) | COMPLETE — `4b00c8c` · EXECUTION_RESULTS.md §12 |
 | 2 | Hermetic verify | COMPLETE — `npm run verify:hermetic` 54/54 ×3 · EXECUTION_RESULTS.md §13 |
+| 3 | Error contract (malformed JSON 400) | COMPLETE — EXECUTION_RESULTS.md §14 |
 | MAP | Operator work tree + remaining Astra queue | `WORK_TREE.md` |
 | D7 | Password reset flow (Step 7) | PENDING SIGN-OFF — STEP7_PASSWORD_RESET_DECISION.md |
 | D12F | /health truth (Step 12F) | PENDING SIGN-OFF — DECISION_D12F_HEALTH.md |

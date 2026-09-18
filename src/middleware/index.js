@@ -104,6 +104,9 @@ function applyRequestPipeline(app, { logger }) {
  */
 function applyErrorHandlers(app, { logger } = {}) {
     app.use((err, req, res, next) => {
+        if (err && err.type === 'entity.parse.failed') {
+            return res.status(400).json({ error: 'Malformed JSON body' });
+        }
         // Full detail goes to logs only, never to the response.
         (logger || console).error('Unhandled error:', err);
         res.status(500).json({

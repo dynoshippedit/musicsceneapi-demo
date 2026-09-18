@@ -4,7 +4,7 @@
 **Current HEAD for execution:** Step 2 on D0 `7336323` / Step 1 `4b00c8c`. Historical recipes were written against `7efb44b` + uncommitted 4CF.
 **Authority:** supersedes the per-step recipes produced by 5 planning agents (2026-09-17,
 transcripts on file) and /home/dino/step7-8-recipe.md (fully incorporated here).
-**Status:** IN EXECUTION — D0 + Steps 1–2 complete; Step 3 is next. D7/D12F still unsigned.
+**Status:** IN EXECUTION — D0 + Steps 1–3 complete; Step 4 is next. D7/D12F still unsigned.
 **Operator map:** `WORK_TREE.md` (do not restart D0).
 
 How to use this guide:
@@ -341,7 +341,7 @@ verify boot) + pg_dump backups. Plus THIRD_PARTY_LICENSES.md per-provider note
 ## 13. Rollback + verify discipline (every step)
 
 - One commit per step (after D0); rollback = revert that commit.
-- Green baseline before starting any step: `npm test` 142/142/32 + snapshot 91-case +
+- Green baseline before starting any step: `npm test` 143/143/32 + snapshot 91-case +
   `npm run verify:hermetic` 54/54 + web build + gate 70 (frontend steps).
   Use `npm run verify:hermetic` (absolute URL, isolated env, throwaway SQLite).
 - After every step: re-run the suites named in the step's Verify line, AND the full

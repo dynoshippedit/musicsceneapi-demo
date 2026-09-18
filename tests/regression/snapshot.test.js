@@ -180,6 +180,16 @@ describe('canonical entrypoint', () => {
         });
     });
 
+    test('malformed JSON body returns 400 with the exact error contract', async () => {
+        const res = await fetch(`${BASE}/v3/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{"email":'
+        });
+        assert.strictEqual(res.status, 400);
+        assert.deepStrictEqual(await res.json(), { error: 'Malformed JSON body' });
+    });
+
     test('seeded logins work deterministically after boot (cold-start race fixed)', async () => {
         const admin = await login('admin@mau5trap.com', 'admin123');
         const artist = await login('tours@rezz.com', 'rezz123');

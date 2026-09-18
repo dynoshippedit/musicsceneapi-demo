@@ -148,5 +148,17 @@ No shared envelope. Observed shapes:
 - `{ success: true, answer, insights, model }` — L1285
 - `{ query, response, timestamp, confidence }` — L912
 - `{ submissions: [...] }` — L1423
-- `{ error, message }` — L3163 / `{ error, path }` — L3170
+- `{ error, path }` — 404 fallthrough (`src/middleware/index.js`)
 - raw PDF buffer — L2020
+
+Error envelopes (current `src/`, not the pre-split monolith):
+
+- `{ error }` — default 4xx/5xx body (string `error` only)
+- `{ error, details }` — 400 validation failures (`src/validation/index.js`)
+- `{ error, path }` — 404 unknown route
+- `{ error, id }` — the one deliberate outlier: 409 duplicate artist create (`src/routes/artists.js`)
+
+Malformed JSON (`Content-Type: application/json` + unparseable body) is 400
+`{ error: 'Malformed JSON body' }` via `err.type === 'entity.parse.failed'`.
+Catch-all unhandled errors are 500 `{ error: 'Internal server error' }` (no
+`err.message` leak).
