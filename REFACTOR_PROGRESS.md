@@ -2,9 +2,9 @@
 
 Running log of the incremental refactor. Phases 1–3 (backend) and 4A–4B
 (frontend planning + first vertical slice) are complete. Phases 4C and 4CF are
-COMPLETE (uncommitted, pending operator review). Post-4CF roadmap and execution
-mechanics are documented in `NEXT_STEPS_PLAN.md` (13 steps) and
-`EXECUTION_GUIDE.md`; three decisions await sign-off (rows below).
+COMPLETE and checkpointed at `7336323` (D0 Option A after integrity correction).
+Post-4CF execution is `EXECUTION_GUIDE.md` (Step 1 = `4b00c8c`). Operator map:
+`WORK_TREE.md`. D7 and D12F still await sign-off.
 
 Reference commit for all "original"/"pre-refactor" claims: `c0281d8`.
 
@@ -24,7 +24,8 @@ Reference commit for all "original"/"pre-refactor" claims: `c0281d8`.
 | 4CF | Commercial foundation / CRUD truth: user CRUD truth, delete guards + session revocation, artist canonical source of truth, persist-or-demo contract, minimal customer/label ownership seam (Label Intelligence Profile), minimal audit + usage seams | COMPLETE (uncommitted, pending operator review) — see PHASE_4CF_COMMERCIAL_FOUNDATION.md |
 | PLANNING | Next-step roadmap (13 steps) + execution mechanics (pin ledger, per-step recipes) | COMPLETE (docs only) — see NEXT_STEPS_PLAN.md, EXECUTION_GUIDE.md |
 | D0 | Checkpoint strategy for the uncommitted 4C+4CF tree | COMPLETE — `7336323` (Option A after integrity correction) |
-| 1 | Deployment truth (`server.js` PM2 fork) | COMPLETE — see EXECUTION_RESULTS.md §12 |
+| 1 | Deployment truth (`server.js` PM2 fork) | COMPLETE — `4b00c8c` · EXECUTION_RESULTS.md §12 |
+| MAP | Operator work tree + remaining Astra queue | `WORK_TREE.md` |
 | D7 | Password reset flow (Step 7) | PENDING SIGN-OFF — STEP7_PASSWORD_RESET_DECISION.md |
 | D12F | /health truth (Step 12F) | PENDING SIGN-OFF — DECISION_D12F_HEALTH.md |
 

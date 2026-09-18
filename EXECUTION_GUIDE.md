@@ -1,9 +1,11 @@
 # EXECUTION_GUIDE.md
 
-**Date:** 2026-09-17 · **Repo:** mau5trap-repo (HEAD `7efb44b`, Phase 4CF uncommitted)
+**Date:** 2026-09-17 · **Repo:** mau5trap-repo
+**Current HEAD for execution:** `4b00c8c` (Step 1) on D0 `7336323`. Historical recipes were written against `7efb44b` + uncommitted 4CF.
 **Authority:** supersedes the per-step recipes produced by 5 planning agents (2026-09-17,
 transcripts on file) and /home/dino/step7-8-recipe.md (fully incorporated here).
-**Status:** PLANNING ONLY — nothing in this guide has been implemented.
+**Status:** IN EXECUTION — D0 + Step 1 complete; Step 2 is next. D7/D12F still unsigned.
+**Operator map:** `WORK_TREE.md` (do not restart D0).
 
 How to use this guide:
 1. Resolve the DECISION RECORDS first (D0 is blocking for everything).
@@ -26,8 +28,9 @@ The working tree carries the entire uncommitted Phase 4C+4CF implementation on t
 HEAD `7efb44b` (dozens of modified + untracked files). Every recipe's rollback says
 `git restore …`, which is only safe if the 4C+4CF work is committed first. Decision:
 
-- [ ] A. Commit the current tree as a 4C+4CF checkpoint commit before any new step
+- [x] A. Commit the current tree as a 4C+4CF checkpoint commit before any new step
       (recommended — each step can then be its own commit with clean rollback).
+      Done: `7336323` after B1/B2/B3/FE-01/FE-02. See DECISION_D0_CHECKPOINT.md.
 - [ ] B. Work in-place on the dirty tree (rollback = manual file restores; fragile).
 - [ ] C. Other (state it).
 

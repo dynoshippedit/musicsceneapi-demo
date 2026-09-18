@@ -72,7 +72,10 @@ The parent does not adopt every reviewer severity as a verdict.
 - **Inherited policy/debt, not newly authorized product changes:** sales/projection artist-access policy, fail-open JWT revalidation during database failure, id-less administrator override sessions, navigation-only pageAccess, published seeds, demo integrations, ephemeral room workspace, synthetic data, lack of quotas, migrations and backups. Do not silently redesign these while repairing the reproduced defects.
 - **Other frontend/gate findings remain review inputs:** omitted entity-audit outputs and submission links, hidden campaign errors, calendar-date conversion, mock integration disclosure, weak content assertions in some gate boxes, broad absent-provider error classification, and diagnostic-script output/exit behavior. These are not represented here as independently runtime-proven blockers. The three original review reports are `/tmp/mau5-d0-{backend,frontend,evidence}.json`.
 
-No fix was implemented for any of these findings during this stopped execution pass.
+No fix was implemented for any of these findings during the **first** stopped
+execution pass. The five runtime blockers were repaired in the 2026-09-18
+correction (`7336323`). Remaining §4 items are queued in `WORK_TREE.md` §3 —
+disposition, not an automatic rewrite.
 
 ## 5. Guide/source discrepancies to resolve without discarding the guide
 
