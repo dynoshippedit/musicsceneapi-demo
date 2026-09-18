@@ -25,7 +25,7 @@ mau5trap / Music Label Intelligence Platform
 ├── CURRENT — Commercial/API foundation execution   EXECUTION_GUIDE.md Steps 1–13
 │   ├── Step 1  deployment truth / PM2 fork         COMPLETE  4b00c8c
 │   ├── Step 2  hermetic verify                     COMPLETE  (npm run verify:hermetic)
-│   ├── Step 3  malformed-JSON error contract       COMPLETE
+│   ├── Step 3  malformed-JSON error contract       COMPLETE  d6b692d (review GO in EXECUTION_RESULTS §14)
 │   ├── Step 4  pagination (users, A&R submissions)
 │   ├── Step 5  labelSlug on AnrSubmission/SalesEntry   (no operator-DB rebuild)
 │   ├── Step 6  campaign/integration persistence, A&R/cache/jobs docs

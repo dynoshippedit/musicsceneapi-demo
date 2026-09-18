@@ -254,3 +254,19 @@ READY FOR NEXT PRODUCT PHASE: YES — Steps 1–3 complete; Step 4 is next
 - `API_INVENTORY.md` documents `{error}` / `{error,details}` / `{error,path}` plus `{error,id}` outlier.
 - Additive snapshot test in `snapshot.test.js` (not a cases.js entry — caseCount stays 91).
 - `npm test` **143/143**; `npm run verify:hermetic` **54/54**. Operator DB hash unchanged. No pin flips.
+
+### Step 3 review note (feature-dev:code-reviewer, 2026-09-18)
+
+Scoped to the five Step 3 files. Verdict: **GO**.
+
+- 400 contract: `Content-Type: application/json` + `'{"email":'` is wrapped as
+  `err.type === 'entity.parse.failed'`. New branch returns before the 500 handler
+  with `{ error: 'Malformed JSON body' }`. Catch-all stays `500 { error: 'Internal
+  server error' }` — no `err.message` leak.
+- Five string replacements are string-only; they do not introduce a leak.
+- Pins: `cases.js` / `phase2_baseline.json` / `routes.test.js` untouched →
+  caseCount 91, route count 63, no baseline regen. New test is a live fetch in
+  `snapshot.test.js`, not a catalogue case.
+- Baseline bodies do not contain `'Internal error'` or `'Internal server error'`.
+
+No high-confidence correctness issues. No style nits recorded (filtered).
