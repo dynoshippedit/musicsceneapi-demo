@@ -157,6 +157,15 @@ test('rejected writes, concurrent votes, royalties and sales contract hold on di
     assert.equal(sale.status, 200);
     assert.equal(sale.body.success, true);
 
+    // Same class as B1: non-string month used to unhandled-reject and shut the API down.
+    const badMonth = await api('POST', '/v3/analytics/sales', token, {
+        artistId: 'art_rezz', month: ['2026-09'], revenue: 1
+    });
+    assert.ok(badMonth.status >= 400 && badMonth.status < 500, `bad month status ${badMonth.status}`);
+    const healthAfterSale = await api('GET', '/health');
+    assert.equal(healthAfterSale.status, 200, `API died after non-string month: ${JSON.stringify(healthAfterSale)}`);
+    assert.equal(child.exitCode, null);
+
     // B2: SQLite trigger rejects UPDATE; responses must not claim success.
     const before = (await api('GET', '/v3/artists/art_rezz', token)).body;
     await sql("CREATE TRIGGER d0_reject_artist_update BEFORE UPDATE ON Artists WHEN NEW.id='art_rezz' BEGIN SELECT RAISE(ABORT, 'D0 disposable write rejection'); END");

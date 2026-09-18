@@ -1,7 +1,7 @@
 # EXECUTION_GUIDE.md
 
 **Date:** 2026-09-17 · **Repo:** mau5trap-repo
-**Current HEAD for execution:** Step 2 on D0 `7336323` / Step 1 `4b00c8c`. Historical recipes were written against `7efb44b` + uncommitted 4CF.
+**Current HEAD for execution:** Step 3 `d6b692d` on D0 `7336323`. Historical recipes were written against `7efb44b` + uncommitted 4CF.
 **Authority:** supersedes the per-step recipes produced by 5 planning agents (2026-09-17,
 transcripts on file) and /home/dino/step7-8-recipe.md (fully incorporated here).
 **Status:** IN EXECUTION — D0 + Steps 1–3 complete; Step 4 is next. D7/D12F still unsigned.
@@ -50,7 +50,8 @@ route-adding step increments by its delta; keep this ledger as the running total
 | 11A | gate.mjs:346 V16 `mainChildren.length <= 4` ceiling (+1 section) | 4 → 5 |
 | 12F | /health version pins ×4 (snapshot.test.js:165-170, verify_phase2.js:47-49, tests/snapshots/baseline.json:8, phase2_baseline.json:8) + body-shape reconciliation (add `database` key to baseline health bodies IF the health case is byte-compared — check the NONDETERMINISTIC set in cases.js at implementation time) | '3.0-production' → package.json version '5.0.0' |
 
-Non-flips that MUST stay green (do not edit unless the ledger says so): 141 tests,
+Non-flips that MUST stay green (do not edit unless the ledger says so): 143 tests
+(was 141 at 4CF; +1 integrity +1 Step 3 malformed-JSON),
 91/92-case snapshot bodies, verify 54/54, gate 70 boxes, services.test.js pins,
 units.test.js token-shape pins (140-162), routes.test.js name-guard (148-165) except
 Step 7's documented edit.

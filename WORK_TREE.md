@@ -1,6 +1,6 @@
 # Work tree — current vs Astra findings
 
-**Date:** 2026-09-18 · **HEAD:** Step 2 on `4b00c8c` / D0 `7336323` · **Operator DB:** do not touch
+**Date:** 2026-09-18 · **HEAD:** `d18641b` (Step 3 review note) · D0 `7336323` · **Operator DB:** do not touch
 **Authority:** this file maps the operator work tree onto the repo. Execution recipes stay in `EXECUTION_GUIDE.md`. Evidence of the Astra stop/repair is in `EXECUTION_RESULTS.md`.
 
 ChatGPT's recap described the **Astra stop** (D0 blocked). That stop is closed. Do not restart D0 discovery, do not re-audit the 144-file tree, do not re-run the five failing probes as if they were still open.
@@ -82,6 +82,7 @@ These were **not** D0 blockers. Do not silently turn them into a product rewrite
 
 | ID | Finding | Disposition | Notes |
 |---|---|---|---|
+| A-SALES | non-string `month` on POST /v3/analytics/sales killed the API (B1 class) | **CLOSED this pass** | string month + try/catch; integrity assertion |
 | A-GRAPH | `NetworkGraph.jsx` invents edges from screen proximity; legacy used collaboration IDs and excluded archived artists | **OPEN — real semantic defect** | Not Step 11 (11A is RevenueBarChart). Smallest fix: derive edges from `artist.collaborations`, drop archived. Failure-first test if a deterministic assertion exists; otherwise a unit of the edge builder. |
 | A-PAGEACCESS | malformed `pageAccess` test accepts 200 or 400 | **OPEN** | Pick one contract, pin it, match the handler. Do not leave the ambiguous assertion. |
 | A-MOCKID | AI query context still `findMockById` | **OPEN** | Canonical read is `artistRepo.findById`. Happy-path snapshots may pin mock order — check before flipping. |

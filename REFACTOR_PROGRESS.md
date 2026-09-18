@@ -19,14 +19,14 @@ Reference commit for all "original"/"pre-refactor" claims: `c0281d8`.
 | 3 | Defect remediation, security fixes, validation, logging redaction | COMPLETE — see PHASE_3_VALIDATION.md |
 | 4A | Frontend architecture, visual design contract, independent design audit + reconciliation, brand-portability audit | COMPLETE — `FRONTEND_ARCHITECTURE.md`, `MAU5TRAP_VISUAL_DESIGN_CONTRACT.md`, `PHASE_4A_DESIGN_AUDIT.md`, `PHASE_4A_HANDOFF.md` (§22 reconciles the audit), `BRAND_PORTABILITY_AUDIT*.md` |
 | 4B | `web/` Vite+React reference slice: brand layer, API client, auth, shell, Login + Dashboard against live `/v3/label/overview`; two-profile portability gate | COMPLETE — `PHASE_4B_HANDOFF.md`; independently re-verified in `PHASE_4B_VALIDATION.md` (live gate, `cd web && npm run gate`) and `PHASE_4B_STATIC_AUDIT.md` |
-| 4C-pre | Contract alignment: pageAccess in login+/me, /me 404 session handling, scope-aware portability gate, baseline investigation, RR6 retained | COMPLETE (uncommitted, pending operator review) — see PHASE_4C_PREREQUISITE_VALIDATION.md |
-| 4C | Remaining page migration: Artists, Artist detail (9 tabs), A&R Room + Scouting, Intelligence, Marketing, Fans, Operations, Settings (Integrations + AI), Admin, 404, and dashboard completion (forecast chart, heatmap, command console, exports) | COMPLETE (uncommitted, pending operator review) — see PHASE_4C_HANDOFF.md |
-| 4CF | Commercial foundation / CRUD truth: user CRUD truth, delete guards + session revocation, artist canonical source of truth, persist-or-demo contract, minimal customer/label ownership seam (Label Intelligence Profile), minimal audit + usage seams | COMPLETE (uncommitted, pending operator review) — see PHASE_4CF_COMMERCIAL_FOUNDATION.md |
+| 4C-pre | Contract alignment: pageAccess in login+/me, /me 404 session handling, scope-aware portability gate, baseline investigation, RR6 retained | COMPLETE — in D0 `7336323` — see PHASE_4C_PREREQUISITE_VALIDATION.md |
+| 4C | Remaining page migration: Artists, Artist detail (9 tabs), A&R Room + Scouting, Intelligence, Marketing, Fans, Operations, Settings (Integrations + AI), Admin, 404, and dashboard completion (forecast chart, heatmap, command console, exports) | COMPLETE — in D0 `7336323` — see PHASE_4C_HANDOFF.md |
+| 4CF | Commercial foundation / CRUD truth: user CRUD truth, delete guards + session revocation, artist canonical source of truth, persist-or-demo contract, minimal customer/label ownership seam (Label Intelligence Profile), minimal audit + usage seams | COMPLETE — in D0 `7336323` — see PHASE_4CF_COMMERCIAL_FOUNDATION.md |
 | PLANNING | Next-step roadmap (13 steps) + execution mechanics (pin ledger, per-step recipes) | COMPLETE (docs only) — see NEXT_STEPS_PLAN.md, EXECUTION_GUIDE.md |
 | D0 | Checkpoint strategy for the uncommitted 4C+4CF tree | COMPLETE — `7336323` (Option A after integrity correction) |
 | 1 | Deployment truth (`server.js` PM2 fork) | COMPLETE — `4b00c8c` · EXECUTION_RESULTS.md §12 |
-| 2 | Hermetic verify | COMPLETE — `npm run verify:hermetic` 54/54 ×3 · EXECUTION_RESULTS.md §13 |
-| 3 | Error contract (malformed JSON 400) | COMPLETE — EXECUTION_RESULTS.md §14 |
+| 2 | Hermetic verify | COMPLETE — `fd61bf3` · EXECUTION_RESULTS.md §13 |
+| 3 | Error contract (malformed JSON 400) | COMPLETE — `d6b692d` · review GO `d18641b` · EXECUTION_RESULTS.md §14 |
 | MAP | Operator work tree + remaining Astra queue | `WORK_TREE.md` |
 | D7 | Password reset flow (Step 7) | PENDING SIGN-OFF — STEP7_PASSWORD_RESET_DECISION.md |
 | D12F | /health truth (Step 12F) | PENDING SIGN-OFF — DECISION_D12F_HEALTH.md |

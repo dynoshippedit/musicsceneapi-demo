@@ -92,31 +92,38 @@ function register(app, ctx) {
     // reverted to synthetic random history on every restart. Also adds the
     // ghost-artistId guard (F-7): a sale must reference an existing artist.
     app.post('/v3/analytics/sales', authenticateToken, async (req, res) => {
-        const { artistId, month, revenue } = req.body || {};
-        if (!artistId || !month || !revenue) return res.status(400).json({ error: 'Missing fields' });
+        try {
+            const { artistId, month, revenue } = req.body || {};
+            if (typeof artistId !== 'string' || typeof month !== 'string' || !artistId.trim() || !month.trim() || !revenue) {
+                return res.status(400).json({ error: 'Missing fields' });
+            }
 
-        // NaN/boundless inputs would violate SalesEntry.revenue NOT NULL and
-        // crash the handler → keep the client-format error a 400 (this was
-        // accepted into memory pre-phase; the durable store is stricter).
-        const parsedRevenue = parseFloat(revenue);
-        if (!Number.isFinite(parsedRevenue)) return res.status(400).json({ error: 'Revenue must be a number' });
+            // NaN/boundless inputs would violate SalesEntry.revenue NOT NULL and
+            // crash the handler → keep the client-format error a 400 (this was
+            // accepted into memory pre-phase; the durable store is stricter).
+            const parsedRevenue = parseFloat(revenue);
+            if (!Number.isFinite(parsedRevenue)) return res.status(400).json({ error: 'Revenue must be a number' });
 
-        // Canonical artist resolution (DB-first).
-        const artist = await artistRepo.findById(artistId);
-        if (!artist) return res.status(404).json({ error: 'Artist not found' });
+            // Canonical artist resolution (DB-first).
+            const artist = await artistRepo.findById(artistId);
+            if (!artist) return res.status(404).json({ error: 'Artist not found' });
 
-        // Upsert by (artistId, month): same-month entries replace, matching
-        // the original memory semantics.
-        const existing = await SalesEntry.findOne({ where: { artistId, month } });
-        if (existing) {
-            existing.revenue = parsedRevenue;
-            await existing.save();
-        } else {
-            await SalesEntry.create({ artistId, month, revenue: parsedRevenue });
+            // Upsert by (artistId, month): same-month entries replace, matching
+            // the original memory semantics.
+            const existing = await SalesEntry.findOne({ where: { artistId, month } });
+            if (existing) {
+                existing.revenue = parsedRevenue;
+                await existing.save();
+            } else {
+                await SalesEntry.create({ artistId, month, revenue: parsedRevenue });
+            }
+
+            const count = await SalesEntry.count({ where: { artistId } });
+            res.json({ success: true, count });
+        } catch (err) {
+            logger.error('Sales persist failed:', err);
+            if (!res.headersSent) return res.status(500).json({ error: 'Failed to persist sale' });
         }
-
-        const count = await SalesEntry.count({ where: { artistId } });
-        res.json({ success: true, count });
     });
 
     // Endpoint: Get Revenue Projections

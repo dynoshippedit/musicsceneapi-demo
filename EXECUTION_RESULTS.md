@@ -4,7 +4,7 @@ First validation date: 2026-09-17 (EDT). Integrity correction: 2026-09-18.
 Repository: `/home/dino/mau5trap-repo`.
 Starting HEAD: `7efb44b4ac88f9a512a5370a3c76553dd5e21a72`.
 D0 checkpoint commit: first pass **NONE**; second pass **Option A after B1/B2/B3/FE-01/FE-02 repair** (see §11).
-Numbered execution steps implemented: **Step 1 complete** (see §12).
+Numbered execution steps implemented: **Steps 1–3 complete** (see §12–14). Full-tree re-read: §15.
 
 Sections 1–10 are the first-pass stop record and are retained. Do not treat their
 "BLOCKED / FAILED" footer as current; §11 and the footer below it are current.
@@ -270,3 +270,15 @@ Scoped to the five Step 3 files. Verdict: **GO**.
 - Baseline bodies do not contain `'Internal error'` or `'Internal server error'`.
 
 No high-confidence correctness issues. No style nits recorded (filtered).
+
+## 15. Full-tree re-read (2026-09-18)
+
+Five parallel read-only agents vs `7efb44b`→`d18641b`. Operator DB hash unchanged.
+
+**Closed in current source:** B1/B2/B3/FE-01/FE-02, Steps 1–3, pins caseCount 91 / routes 63.
+
+**NO-GO for Step 4 until this class is closed:** `POST /v3/analytics/sales` with non-string `month` (array/object) threw from Sequelize with no try/catch → `unhandledRejection` shutdown (`analytics.js` + `server.js:112-115`). Same class as B1. Repair in this pass: require string `artistId`/`month`, wrap persist, 4xx/5xx without success, integrity assertion next to FE-01.
+
+**Still OPEN (Astra queue, not Step 4 blockers):** A-GRAPH, A-PAGEACCESS, A-MOCKID, A-REQID, A-VOTEDIR. FE-02 residual: same-resource 403 can keep stale heading if `data.id` already matches.
+
+**Doc drift corrected in this pass:** WORK_TREE/EXECUTION_GUIDE HEAD lines, REFACTOR_PROGRESS 4C “uncommitted”, pin-ledger 141→143.
