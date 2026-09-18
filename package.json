@@ -12,6 +12,7 @@
     "test:services": "node --test --test-force-exit tests/regression/services.test.js",
     "test:snapshot": "node --test --test-force-exit tests/regression/snapshot.test.js",
     "verify": "node tests/support/verify_phase2.js",
+    "verify:hermetic": "node scripts/run-verify-hermetic.js",
     "snapshot:baseline": "node tests/support/probe.js server.js tests/snapshots/phase2_baseline.json"
   },
   "dependencies": {

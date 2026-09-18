@@ -208,7 +208,7 @@ D0 Option A checkpoint proceeds on this corrected tree.
 
 ## Final status
 
-EXECUTION SEQUENCE STATUS: IN PROGRESS — D0 + Step 1 complete; Step 2 next
+EXECUTION SEQUENCE STATUS: IN PROGRESS — D0 + Steps 1–2 complete; Step 3 next
 
 D0 CHECKPOINT: `7336323` (Option A after integrity correction)
 
@@ -224,7 +224,7 @@ HEALTH CONTRACT: NOT REACHED; D12F still PENDING SIGN-OFF
 
 DEDICATED-LABEL COMMERCIAL PATH: inherited seams present; Step 5 not started
 
-READY FOR NEXT PRODUCT PHASE: YES — Step 1 complete; Step 2 is next
+READY FOR NEXT PRODUCT PHASE: YES — Steps 1–2 complete; Step 3 is next
 
 ## 12. Step 1 — Deployment truth (2026-09-18)
 
@@ -233,3 +233,16 @@ READY FOR NEXT PRODUCT PHASE: YES — Step 1 complete; Step 2 is next
 - Isolated PM2 (`PM2_HOME=/tmp/mau5-step1-pm2`, PORT 3992, scratch SQLite): online, fork_mode, health 200, then `pm2 delete` + `pm2 kill` on that home only.
 - Default `~/.pm2` process list stayed `[]`. Operator DB hash/mtime unchanged.
 - `npm test` 142/142 after the step. No pins flipped.
+
+## 13. Step 2 — Hermetic verify (2026-09-18)
+
+- New `scripts/run-verify-hermetic.js` + `"verify:hermetic"` script.
+- Spawns `server.js` on port 3971, isolated cwd, throwaway SQLite, `DB_DIALECT=sqlite`,
+  empty `DATABASE_URL`, ephemeral JWT, jobs/mail/providers off.
+- Refuses an occupied 3971 (no probing a foreign listener). Waits for **this** child's
+  `Server: http://localhost:3971` banner, then `/health` 200.
+- Invokes `tests/support/verify_phase2.js http://127.0.0.1:3971` unchanged.
+- `npm run verify:hermetic` **54/54** twice, then a third time while a disposable API
+  occupied `:3000` (copy of operator DB, original file never opened). Operator
+  `mau5trap_v5.sqlite` size/mtime/sha256 unchanged.
+- `npm test` 142/142 after the step. `verify_phase2.js` not edited. No pins flipped.
