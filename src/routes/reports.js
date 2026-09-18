@@ -66,7 +66,13 @@ function register(app, ctx) {
         }
 
         // PHASE 4CF: canonical DB-first artist read (created artists exportable).
-        const artist = await artistRepo.findById(artistId);
+        let artist;
+        try {
+            artist = await artistRepo.findById(artistId);
+        } catch (error) {
+            logger.error('Monthly report lookup failed:', error);
+            return res.status(500).json({ error: 'Report generation failed' });
+        }
         if (!artist) {
             return res.status(404).json({ error: 'Artist not found' });
         }
@@ -89,41 +95,46 @@ function register(app, ctx) {
             return res.status(403).json({ error: 'Admin access required' });
         }
 
-        const { month } = req.body;
-        if (!month) {
+        const { month } = req.body || {};
+        if (typeof month !== 'string' || !month.trim() || /[\\/]/.test(month)) {
             return res.status(400).json({ error: 'Month parameter required (YYYY-MM)' });
         }
 
-        const reportsDir = path.join(__dirname, 'reports', month);
-        if (!fs.existsSync(reportsDir)) {
-            fs.mkdirSync(reportsDir, { recursive: true });
-        }
-
-        const generatedReports = [];
-
-        // PHASE 4CF: canonical roster (DB-first) so created artists get their
-        // monthly report too. Content for the seeded roster is unchanged.
-        const roster = await artistRepo.findAllHybrid();
-
-        for (const artist of roster) {
-            try {
-                const pdfBuffer = await generateMonthlyReport(artist, month);
-                const filename = `${artist.name.replace(/[\\/:*?"<>|]/g, '_')}_${month}_report.pdf`;
-                const filepath = path.join(reportsDir, filename);
-
-                fs.writeFileSync(filepath, pdfBuffer);
-                generatedReports.push({ artist: artist.name, filename, path: filepath });
-            } catch (error) {
-                console.error(`Failed to generate report for ${artist.name}:`, error);
+        try {
+            const reportsDir = path.join(__dirname, 'reports', month);
+            if (!fs.existsSync(reportsDir)) {
+                fs.mkdirSync(reportsDir, { recursive: true });
             }
-        }
 
-        res.json({
-            message: 'Reports generated successfully',
-            count: generatedReports.length,
-            reports: generatedReports,
-            directory: reportsDir
-        });
+            const generatedReports = [];
+
+            // PHASE 4CF: canonical roster (DB-first) so created artists get their
+            // monthly report too. Content for the seeded roster is unchanged.
+            const roster = await artistRepo.findAllHybrid();
+
+            for (const artist of roster) {
+                try {
+                    const pdfBuffer = await generateMonthlyReport(artist, month);
+                    const filename = `${artist.name.replace(/[\\/:*?"<>|]/g, '_')}_${month}_report.pdf`;
+                    const filepath = path.join(reportsDir, filename);
+
+                    fs.writeFileSync(filepath, pdfBuffer);
+                    generatedReports.push({ artist: artist.name, filename, path: filepath });
+                } catch (error) {
+                    console.error(`Failed to generate report for ${artist.name}:`, error);
+                }
+            }
+
+            res.json({
+                message: 'Reports generated successfully',
+                count: generatedReports.length,
+                reports: generatedReports,
+                directory: reportsDir
+            });
+        } catch (error) {
+            logger.error('Generate-all reports failed:', error);
+            res.status(500).json({ error: 'Report generation failed' });
+        }
     });
 
     // Export Endpoint

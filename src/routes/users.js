@@ -50,8 +50,18 @@ function register(app, ctx) {
     // pageAccess remains frontend nav/UI visibility only: no route authorizes against it.
     function serializePageAccess(value) {
         if (Array.isArray(value)) return JSON.stringify(value.filter((entry) => typeof entry === 'string'));
-        if (typeof value === 'string') return value;   // already serialized by the caller
-        return JSON.stringify([]);
+        const err = new Error('pageAccess must be an array of strings');
+        err.status = 400;
+        throw err;
+    }
+
+    function parsePageAccess(raw) {
+        try {
+            const parsed = JSON.parse(raw || '[]');
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (_) {
+            return [];
+        }
     }
 
     // Create new user
@@ -179,7 +189,7 @@ function register(app, ctx) {
             res.json({ success: true });
         } catch (e) {
             logger.error('Update user failed:', e);
-            res.status(400).json({ error: 'User update failed' });
+            res.status(400).json({ error: e.status === 400 ? e.message : 'User update failed' });
         }
     });
 
@@ -233,7 +243,7 @@ function register(app, ctx) {
         try {
             const users = await User.findAll({ attributes: { exclude: ['passwordHash', 'resetToken', 'resetTokenExpiry'] } });
             // Parse pageAccess for frontend
-            const parsedUsers = users.map(u => ({ ...u.toJSON(), pageAccess: JSON.parse(u.pageAccess || '[]') }));
+            const parsedUsers = users.map(u => ({ ...u.toJSON(), pageAccess: parsePageAccess(u.pageAccess) }));
             res.json(parsedUsers);
         } catch (e) { logger.error('List users failed:', e); res.status(500).json({ error: 'Failed to list users' }); }
     });

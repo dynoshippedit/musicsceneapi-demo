@@ -157,6 +157,26 @@ test('rejected writes, concurrent votes, royalties and sales contract hold on di
     assert.equal(sale.status, 200);
     assert.equal(sale.body.success, true);
 
+    // $0 is a real sale (promo / write-off). `!revenue` used to 400 it.
+    const zeroSale = await api('POST', '/v3/analytics/sales', token, {
+        artistId: 'art_rezz', month: '2026-08', revenue: 0
+    });
+    assert.equal(zeroSale.status, 200, `zero-revenue sale rejected: ${JSON.stringify(zeroSale)}`);
+    assert.equal(zeroSale.body.success, true);
+
+    // Omitted vote direction used to ++votes with userVote null.
+    const noDir = await api('POST', '/v3/anr/submissions/sub_1/vote', token, {});
+    assert.equal(noDir.status, 400, `omitted direction must 400, got ${JSON.stringify(noDir)}`);
+    const healthAfterVote = await api('GET', '/health');
+    assert.equal(healthAfterVote.status, 200, `API died after omitted vote direction: ${JSON.stringify(healthAfterVote)}`);
+
+    // Array month on generate-all used to TypeError path.join and kill the process.
+    const genAll = await api('POST', '/v3/reports/generate-all', token, { month: ['2026-09'] });
+    assert.ok(genAll.status >= 400 && genAll.status < 500, `generate-all status ${genAll.status}`);
+    const healthAfterGen = await api('GET', '/health');
+    assert.equal(healthAfterGen.status, 200, `API died after generate-all array month: ${JSON.stringify(healthAfterGen)}`);
+    assert.equal(child.exitCode, null);
+
     // Same class as B1: non-string month used to unhandled-reject and shut the API down.
     const badMonth = await api('POST', '/v3/analytics/sales', token, {
         artistId: 'art_rezz', month: ['2026-09'], revenue: 1

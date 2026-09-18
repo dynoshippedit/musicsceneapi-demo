@@ -35,14 +35,28 @@ export function NetworkGraph({ artists = [], height = 320 }) {
     };
     resize();
 
-    const nodes = artists.slice(0, 40).map((artist, index) => ({
+    const visible = artists
+      .filter((artist) => artist.tier !== 'archived' && artist.status !== 'archived')
+      .slice(0, 40);
+    const nodes = visible.map((artist, index) => ({
       id: artist.id,
+      name: artist.name,
+      collaborations: artist.collaborations || [],
       tier: artist.tier,
       radius: 4 + Math.min(8, (artist.monthlyListeners || 0) / 1_500_000),
-      angle: (index / Math.max(1, Math.min(artists.length, 40))) * Math.PI * 2,
+      angle: (index / Math.max(1, visible.length)) * Math.PI * 2,
       distance: 0.22 + ((index % 5) * 0.06),
       speed: 0.0009 + ((index % 7) * 0.00012),
     }));
+    const collabKey = (entry) => {
+      if (entry == null) return '';
+      if (typeof entry === 'string') return entry.toLowerCase();
+      return String(entry.id || entry.name || '').toLowerCase();
+    };
+    const linked = (a, b) => {
+      const keys = new Set([String(b.id || '').toLowerCase(), String(b.name || '').toLowerCase()].filter(Boolean));
+      return (a.collaborations || []).some((entry) => keys.has(collabKey(entry)));
+    };
 
     let running = true;
     const draw = () => {
@@ -63,9 +77,7 @@ export function NetworkGraph({ artists = [], height = 320 }) {
       context.lineWidth = 1;
       for (let i = 0; i < placed.length; i += 1) {
         for (let j = i + 1; j < placed.length; j += 1) {
-          const dx = placed[i].x - placed[j].x;
-          const dy = placed[i].y - placed[j].y;
-          if (Math.hypot(dx, dy) < scale * 0.18) {
+          if (linked(placed[i], placed[j]) || linked(placed[j], placed[i])) {
             context.beginPath();
             context.moveTo(placed[i].x, placed[i].y);
             context.lineTo(placed[j].x, placed[j].y);

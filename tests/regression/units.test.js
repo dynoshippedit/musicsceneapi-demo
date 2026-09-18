@@ -467,7 +467,7 @@ describe('src/ai/aiService — usage hook at the paid-provider spend point', () 
         const usageService = { recordUsage: (kind, quantity, meta) => records.push({ kind, quantity, meta }) };
 
         const fakeCache = { keys: { aiQuery: () => 'k' }, get: () => null, set: () => {} };
-        const fakeRepo = { findMockById: () => null, topByRoi: () => ({ name: 'A', roi: 1 }) };
+        const fakeRepo = { findById: async () => null, findMockById: () => null, topByRoi: () => ({ name: 'A', roi: 1 }) };
         const fakeClient = {
             complete: async () => ({ content: 'answer', usage: { total_tokens: 123 }, model: 'test-model' })
         };

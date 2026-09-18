@@ -15,6 +15,7 @@
 
 'use strict';
 
+const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -43,23 +44,25 @@ function applyRequestPipeline(app, { logger }) {
     // file:// still works.
     app.use(cors(config.cors));
 
-    // api L250
-    app.use(express.json());
-
-    // api L253-256 — Request logger (with token redaction added in Phase 3).
+    // Request identity MUST run before express.json(). Body-parser failures
+    // skip later middleware and jump to the error handler; without this, those
+    // 400s have no X-Request-Id and cannot be correlated (A-REQID).
     app.use((req, res, next) => {
-        // PHASE 4CF: stable request identity for attribution, audit
-        // correlation and future metering. Honours an upstream request id
-        // (gateways/load balancers) and echoes it to the client.
-        const crypto = require('crypto');
         const upstream = req.headers['x-request-id'];
         const requestId = (typeof upstream === 'string' && /^[A-Za-z0-9_.-]{8,64}$/.test(upstream))
             ? upstream
             : crypto.randomUUID();
         req.requestId = requestId;
+        req._startedAt = Date.now();
         res.setHeader('X-Request-Id', requestId);
-        const startedAt = Date.now();
+        next();
+    });
 
+    // api L250
+    app.use(express.json());
+
+    // api L253-256 — Request logger (with token redaction added in Phase 3).
+    app.use((req, res, next) => {
         // Redact any Authorization header and query-string tokens before
         // logging; log only method + clean path + ip.
         const url = req.url.replace(/([?&](token|api_key|apikey|access_token|refresh_token|code|password)=)[^&]*/gi, '$1[REDACTED]');
@@ -71,12 +74,12 @@ function applyRequestPipeline(app, { logger }) {
         // null for unauthenticated/401 paths, which is correct attribution.
         res.on('finish', () => {
             logger.info('request', {
-                requestId,
+                requestId: req.requestId,
                 userId: req.user?.id ?? null,
                 method: req.method,
                 path: req.path,
                 status: res.statusCode,
-                durationMs: Date.now() - startedAt
+                durationMs: Date.now() - (req._startedAt || Date.now())
             });
         });
         next();

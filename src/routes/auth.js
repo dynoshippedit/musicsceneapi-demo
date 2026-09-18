@@ -50,7 +50,12 @@ function register(app, ctx) {
     // login expression. Frontend nav/UI visibility ONLY — backend route
     // authorization never consults this field.
     function parsePageAccess(raw) {
-        return JSON.parse(raw || '["overview"]');
+        try {
+            const parsed = JSON.parse(raw || '["overview"]');
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (_) {
+            return [];
+        }
     }
 
     // Login Endpoint

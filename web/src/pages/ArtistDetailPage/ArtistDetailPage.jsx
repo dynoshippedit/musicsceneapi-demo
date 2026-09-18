@@ -47,8 +47,7 @@ export function ArtistDetailPage() {
 
   const tabs = useMemo(() => TAB_IDS.map((id) => ({ id, label: tabLabel(id, text) })), [text]);
 
-  // useApiQuery keeps the previous payload while a new artistId loads. Never render
-  // resource-local controls (image draft, headings) for a stale artist.
+  // Belt-and-suspenders: never render resource-local controls for a mismatched id.
   const shown = artist && artist.id === artistId ? artist : null;
 
   if (loading && !shown) return <LoadingScreen />;

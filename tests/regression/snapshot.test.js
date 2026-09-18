@@ -188,6 +188,7 @@ describe('canonical entrypoint', () => {
         });
         assert.strictEqual(res.status, 400);
         assert.deepStrictEqual(await res.json(), { error: 'Malformed JSON body' });
+        assert.ok(res.headers.get('x-request-id'), 'parser failures still carry X-Request-Id');
     });
 
     test('seeded logins work deterministically after boot (cold-start race fixed)', async () => {
@@ -350,9 +351,11 @@ describe('canonical entrypoint', () => {
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify({ pageAccess: { not: 'an array' } })
             });
-            assert.ok(res.status === 200 || res.status === 400, `expected 200/400, got ${res.status}`);
+            assert.strictEqual(res.status, 400, `expected 400, got ${res.status}`);
             const health = await fetch(`${BASE}/health`);
             assert.strictEqual(health.status, 200, 'server survives a malformed grant');
+            const after = await listUser(token, probe.email);
+            assert.deepStrictEqual(after.pageAccess, ['overview', 'operations'], 'corrupt grant must not overwrite stored array');
         });
     });
 });

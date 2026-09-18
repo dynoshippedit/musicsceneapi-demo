@@ -91,7 +91,13 @@ function register(app, ctx) {
         const { name, tier } = req.body;
         if (typeof name !== 'string' || !name.trim() || typeof tier !== 'string' || !tier.trim()) return res.status(400).json({ error: 'Name/Tier required' });
 
-        const outcome = await artistRepo.createArtist({ name, tier });
+        let outcome;
+        try {
+            outcome = await artistRepo.createArtist({ name, tier });
+        } catch (err) {
+            logger.error('Artist create failed:', err);
+            return res.status(500).json({ error: 'Failed to create artist' });
+        }
 
         if (outcome.conflict) {
             return res.status(409).json({ error: 'Artist already exists', id: outcome.id });

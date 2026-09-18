@@ -68,7 +68,9 @@ function createAiService({ client = groqClient, cacheService = cache, repo = art
         // Access check preserved verbatim (admin OR hasArtistAccess).
         let contextData = {};
         if (artistId) {
-            const artist = repo.findMockById(artistId);
+            const artist = typeof repo.findById === 'function'
+                ? await repo.findById(artistId)
+                : repo.findMockById(artistId);
             if (artist && (user.role === 'admin' || hasArtistAccess(user, artistId))) {
                 contextData = prompts.buildArtistContext(artist);
             }

@@ -226,15 +226,15 @@ async function createArtist({ name, tier }) {
         meta: { dataSource: 'manual_entry', lastUpdated: new Date().toISOString() }
     };
 
-    const existing = await Artist.findByPk(id);
-    if (existing) return { conflict: true, id };
-
-    // A roster artist that never reached the DB (degraded partial seed):
-    // creating under its id would clobber the richer mock in the mirror and
-    // permanently shadow it in the hybrid union (the DB row then wins).
-    if (labelData.artists.some((a) => a.id === id)) return { conflict: true, id };
-
     try {
+        const existing = await Artist.findByPk(id);
+        if (existing) return { conflict: true, id };
+
+        // A roster artist that never reached the DB (degraded partial seed):
+        // creating under its id would clobber the richer mock in the mirror and
+        // permanently shadow it in the hybrid union (the DB row then wins).
+        if (labelData.artists.some((a) => a.id === id)) return { conflict: true, id };
+
         await Artist.create({ id, name, data: newArtist });
     } catch (err) {
         // Concurrent same-name create lost the PK race → same outcome as a

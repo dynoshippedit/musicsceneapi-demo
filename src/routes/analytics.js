@@ -94,7 +94,7 @@ function register(app, ctx) {
     app.post('/v3/analytics/sales', authenticateToken, async (req, res) => {
         try {
             const { artistId, month, revenue } = req.body || {};
-            if (typeof artistId !== 'string' || typeof month !== 'string' || !artistId.trim() || !month.trim() || !revenue) {
+            if (typeof artistId !== 'string' || typeof month !== 'string' || !artistId.trim() || !month.trim() || revenue === undefined || revenue === null || revenue === '') {
                 return res.status(400).json({ error: 'Missing fields' });
             }
 

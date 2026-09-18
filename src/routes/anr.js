@@ -74,8 +74,13 @@ function register(app, ctx) {
 
     // Get Submissions
     app.get('/v3/anr/submissions', authenticateToken, async (req, res) => {
-        const rows = await AnrSubmission.findAll({ order: [['id', 'ASC']] });
-        res.json({ submissions: rows.map(submissionToShape) });
+        try {
+            const rows = await AnrSubmission.findAll({ order: [['id', 'ASC']] });
+            res.json({ submissions: rows.map(submissionToShape) });
+        } catch (e) {
+            logger.error('A&R list failed:', e);
+            res.status(500).json({ error: 'Database error' });
+        }
     });
 
     // Submit Demos
@@ -135,7 +140,17 @@ function register(app, ctx) {
     app.post('/v3/anr/submissions/:id/vote', authenticateToken, async (req, res) => {
         const { id } = req.params;
         const { direction } = req.body || {}; // 'up' or 'down'
-        if (direction !== undefined && direction !== 'up' && direction !== 'down') {
+        if (direction !== 'up' && direction !== 'down') {
+            // Omitted direction used to fall through, ++votes, and store
+            // `undefined` as the voter mark (A-VOTEDIR). Require an explicit
+            // vote. Unknown ids still 404 so the missing-submission pin holds.
+            try {
+                const exists = await AnrSubmission.findByPk(id);
+                if (!exists) return res.status(404).json({ error: 'Submission not found' });
+            } catch (e) {
+                logger.error('A&R vote lookup failed:', e);
+                return res.status(500).json({ error: 'Database error' });
+            }
             return res.status(400).json({ error: 'Direction must be "up" or "down"' });
         }
         const userId = req.user.id;
@@ -254,7 +269,13 @@ function register(app, ctx) {
         }
 
         // Logic: Calculate Stars & Ratio (Real User Count)
-        const totalUsers = await User.count(); // Real Denominator
+        let totalUsers;
+        try {
+            totalUsers = await User.count();
+        } catch (e) {
+            logger.error('A&R rating user count failed:', e);
+            return res.status(500).json({ error: 'Database error' });
+        }
 
         let stars = 0;
         let ratio = 0;
@@ -382,7 +403,13 @@ function register(app, ctx) {
 
         // Calculate Aggregated Stats for Response (Real User Count)
         const votes = demo.ratings.length;
-        const totalUsers = await User.count();
+        let totalUsers;
+        try {
+            totalUsers = await User.count();
+        } catch (e) {
+            logger.error('A&R demo vote user count failed:', e);
+            return res.status(500).json({ error: 'Database error' });
+        }
 
         let stars = 0;
         let ratio = 0;
@@ -483,11 +510,11 @@ function register(app, ctx) {
         };
 
         // PHASE 4CF: durable persistence (AnrSubmission row).
-        const duplicate = artist.name != null
-            ? await AnrSubmission.findOne({ where: { artist: artist.name } })
-            : null;
-        if (!duplicate) {
-            try {
+        try {
+            const duplicate = artist.name != null
+                ? await AnrSubmission.findOne({ where: { artist: artist.name } })
+                : null;
+            if (!duplicate) {
                 await AnrSubmission.create({
                     id: newEntry.id,
                     artist: newEntry.artist ?? null,
@@ -502,12 +529,12 @@ function register(app, ctx) {
                 });
                 console.log(`[A&R] Shortlisted and Persisted: ${artist.name}`);
                 res.json({ success: true, message: `${artist.name} added to shortlist`, entry: newEntry });
-            } catch (err) {
-                logger.error('A&R shortlist persist failed:', err);
-                res.status(500).json({ error: 'Failed to shortlist artist' });
+            } else {
+                res.json({ success: true, message: `${artist.name} is already in the shortlist` });
             }
-        } else {
-            res.json({ success: true, message: `${artist.name} is already in the shortlist` });
+        } catch (err) {
+            logger.error('A&R shortlist persist failed:', err);
+            res.status(500).json({ error: 'Failed to shortlist artist' });
         }
     });
 }

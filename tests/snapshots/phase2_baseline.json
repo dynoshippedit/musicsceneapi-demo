@@ -1802,12 +1802,10 @@
     }
   },
   "anr_submission_vote_sub1": {
-    "status": 200,
+    "status": 400,
     "contentType": "application/json",
     "body": {
-      "success": true,
-      "userVote": null,
-      "votes": 16
+      "error": "Direction must be \"up\" or \"down\""
     }
   },
   "anr_submission_vote_missing": {
