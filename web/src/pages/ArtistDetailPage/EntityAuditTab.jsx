@@ -62,12 +62,20 @@ export function EntityAuditTab({ artist, token }) {
       {(loading || refreshing) && <InlineLoading />}
       {error && !data && <ErrorState variant="panel" message={error.message} status={error.status} onRetry={refetch} />}
 
-      {data && (
+      {data && !refreshing && !refreshError && (
         <>
           <div className={styles.scoreRow}>
             <span className="label">{text.auditScore}</span>
             <span className="kpi value">{formatters.integer(data.healthScore)}</span>
           </div>
+          {data.aiAnalysis && <div className={styles.platformMessage}>
+            <h3>Analysis</h3>
+            <p>{data.aiAnalysis.summary}</p>
+            <p>{data.aiAnalysis.correlationInsight}</p>
+            <ul>{(data.aiAnalysis.criticalActions || []).map((action, index) => <li key={index}>{typeof action === 'string' ? action : JSON.stringify(action)}</li>)}</ul>
+          </div>}
+          {data.issues?.length > 0 && <div><h3>Issues to review</h3><ul>{data.issues.map((issue, index) => <li key={index}>{typeof issue === 'string' ? issue : Object.entries(issue).map(([key, value]) => `${key}: ${typeof value === 'object' ? JSON.stringify(value) : value}`).join(' · ')}</li>)}</ul></div>}
+          {data.schemaLD && <details><summary>Entity schema</summary><pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{typeof data.schemaLD === 'string' ? data.schemaLD : JSON.stringify(data.schemaLD, null, 2)}</pre></details>}
           {platforms.length === 0 ? <EmptyState /> : (
             <ul className={styles.platformList} key={refreshToken}>
               {platforms.map(([name, platform]) => (

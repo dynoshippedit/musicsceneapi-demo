@@ -1,20 +1,4 @@
-/**
- * src/routes/analytics.js
- *
- * Analytics reads and the sales write. Projections regress SYNTHETIC data
- * (src/analytics/regression.js) because the Stats table is never populated.
- *
- * Handler bodies were moved VERBATIM from mau5trap-production-api.js. They are
- * registered in their original relative order, which matters because Express
- * binds the first matching route. Cross-domain shadowing was checked and does
- * not exist: all duplicate registrations fall within a single domain.
- *
- * Routes (3):
- *   GET    /v3/analytics/geography
- *   POST   /v3/analytics/sales
- *   GET    /v3/analytics/projections
- */
-
+// Scoped analytics and durable sales. Forecasts use recorded calendar months.
 'use strict';
 
 /**
@@ -42,19 +26,8 @@ function register(app, ctx) {
         try {
             const geography = {};
 
-            // NOTE (PHASE 4CF): this aggregate intentionally reads the
-            // profile roster (memory) rather than the canonical hybrid list.
-            // Two reasons: (1) API-created artists have no
-            // streamingBreakdown.byLocation, so they contribute nothing to
-            // geography today; (2) `regions` is built in FIRST-ENCOUNTER
-            // order, which depends on artist iteration order — the baseline
-            // captures this case AFTER the AI keyword cases have reordered
-            // the shared roster array, so a DB-order read would return a
-            // different region sequence (verified: the integer sums are
-            // order-invariant; region ORDER is the parity-sensitive part).
-            // Reading the same array preserves byte parity. Documented
-            // residual.
-            labelData.artists.forEach(artist => {
+            const roster = (await artistRepo.findAllHybrid()).filter(artist => hasArtistAccess(req.user, artist.id));
+            roster.forEach(artist => {
                 if (artist.revenue && artist.revenue.streamingBreakdown && artist.revenue.streamingBreakdown.byLocation) {
                     artist.revenue.streamingBreakdown.byLocation.forEach(loc => {
                         if (!geography[loc.region]) {
@@ -69,10 +42,11 @@ function register(app, ctx) {
             // Normalize percentages (just relative to total tracked value)
             const totalValue = Object.values(geography).reduce((acc, curr) => acc + curr.value, 0);
             Object.keys(geography).forEach(key => {
-                geography[key].percent = parseFloat(((geography[key].value / totalValue) * 100).toFixed(1));
+                geography[key].percent = parseFloat((totalValue ? (geography[key].value / totalValue) * 100 : 0).toFixed(1));
             });
 
             res.json({
+                source: config.useRealData ? 'roster' : 'fixture',
                 regions: Object.entries(geography).map(([region, data]) => ({
                     region,
                     value: data.value,
@@ -101,8 +75,10 @@ function register(app, ctx) {
             // NaN/boundless inputs would violate SalesEntry.revenue NOT NULL and
             // crash the handler → keep the client-format error a 400 (this was
             // accepted into memory pre-phase; the durable store is stricter).
-            const parsedRevenue = parseFloat(revenue);
-            if (!Number.isFinite(parsedRevenue)) return res.status(400).json({ error: 'Revenue must be a number' });
+            if (!require('../services/salesService').validMonth(month)) return res.status(400).json({ error: 'Month must be YYYY-MM' });
+            if (!hasArtistAccess(req.user, artistId)) return res.status(403).json({ error: 'Access denied for this artist' });
+            const parsedRevenue = (typeof revenue === 'number' || typeof revenue === 'string' && revenue.trim() !== '') ? Number(revenue) : NaN;
+            if (!Number.isFinite(parsedRevenue) || parsedRevenue < 0) return res.status(400).json({ error: 'Revenue must be a number' });
 
             // Canonical artist resolution (DB-first).
             const artist = await artistRepo.findById(artistId);
@@ -110,13 +86,7 @@ function register(app, ctx) {
 
             // Upsert by (artistId, month): same-month entries replace, matching
             // the original memory semantics.
-            const existing = await SalesEntry.findOne({ where: { artistId, month } });
-            if (existing) {
-                existing.revenue = parsedRevenue;
-                await existing.save();
-            } else {
-                await SalesEntry.create({ artistId, month, revenue: parsedRevenue });
-            }
+            await SalesEntry.upsert({ artistId, month, revenue: parsedRevenue });
 
             const count = await SalesEntry.count({ where: { artistId } });
             res.json({ success: true, count });
@@ -126,100 +96,36 @@ function register(app, ctx) {
         }
     });
 
-    // Endpoint: Get Revenue Projections
     app.get('/v3/analytics/projections', authenticateToken, async (req, res) => {
-        const { artistId, months = 6 } = req.query;
-
+        const { artistId, months = '6' } = req.query;
+        const horizon = Number(months);
+        if (!Number.isInteger(horizon) || horizon < 1 || horizon > 24) return res.status(400).json({ error: 'months must be between 1 and 24' });
+        if (artistId && !hasArtistAccess(req.user, artistId)) return res.status(403).json({ error: 'Access denied for this artist' });
         try {
-            let currentRevenue = 0;
-            let growthRate = 0;
-            let name = "Label Wide";
-            let historyValues = [];
-
-            if (artistId) {
-                // PHASE 4CF: canonical DB-first artist read.
-                const artist = await artistRepo.findById(artistId);
-                if (!artist) return res.status(404).json({ error: 'Artist not found' });
-
-                name = artist.name;
-                growthRate = artist.growthRate || 5;
-
-                // USE REAL DATA IF AVAILABLE
-                // PHASE 4CF: sales history is now durable DB state.
-                const salesEntries = await SalesEntry.findAll({
-                    where: { artistId },
-                    order: [['month', 'ASC']]
-                });
-                if (salesEntries.length >= 3) {
-                    historyValues = salesEntries.map((s) => s.revenue);
-                    currentRevenue = historyValues[historyValues.length - 1]; // Last known
-                } else {
-                    // Fallback to Synthetic
-                    currentRevenue = (artist.revenue.streaming || 0) + (artist.revenue.touring || 0) + (artist.revenue.merch || 0);
-                    historyValues = generateSyntheticHistory(currentRevenue, growthRate);
-                }
-
-            } else {
-                // PHASE 4CF: canonical roster (DB-first).
-                const roster = await artistRepo.findAllHybrid();
-                // Check if labelData exists and has artists
-                if (roster && roster.length) {
-                    // Calculate Sum manually to avoid dependency on getLabelOverview if undefined here
-                    currentRevenue = roster.reduce((sum, a) =>
-                        sum + ((a.revenue.streaming || 0) + (a.revenue.touring || 0) + (a.revenue.merch || 0)), 0);
-                } else {
-                    currentRevenue = 500000;
-                }
-                growthRate = 12; // Assumed label growth
-                historyValues = generateSyntheticHistory(currentRevenue, growthRate);
-            }
-
-            // If we didn't get history from real data (or it wasn't enough points), we generated it above.
-            const xHistory = Array.from({ length: historyValues.length }, (_, i) => i + 1);
-
-            // 2. Perform Regression
-            const model = performLinearRegression(xHistory, historyValues);
-
-            // 3. Project Future (Next 'months')
-            const projections = [];
-            for (let i = 1; i <= parseInt(months); i++) {
-                const nextMonthIndex = 12 + i;
-                projections.push(Math.round(model.predict(nextMonthIndex)));
-            }
-
-            // 4. Format for Chart.js
-            res.json({
-                entity: name,
-                stats: { slope: model.slope, intercept: model.intercept },
-                chartData: {
-                    labels: [...Array.from({ length: 12 }, (_, i) => `M${i + 1}`), ...Array.from({ length: parseInt(months) }, (_, i) => `Fut${i + 1}`)],
-                    datasets: [
-                        {
-                            label: 'Historical',
-                            data: [...historyValues, ...Array(parseInt(months)).fill(null)],
-                            borderColor: '#666666',
-                            backgroundColor: 'rgba(255,255,255,0.1)',
-                            fill: true,
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Projection (Linear)',
-                            data: [...Array(11).fill(null), historyValues[11], ...projections],
-                            // PHASE 4CF: accent from the Label Intelligence Profile.
-                            borderColor: profile.charts.projectionAccent,
-                            borderDash: [5, 5],
-                            fill: false,
-                            tension: 0
-                        }
-                    ]
-                }
-            });
-
+            const sales = require('../services/salesService');
+            const artist = artistId ? await artistRepo.findById(artistId) : null;
+            if (artistId && !artist) return res.status(404).json({ error: 'Artist not found' });
+            const roster = artist ? [artist] : (await artistRepo.findAllHybrid()).filter(a => hasArtistAccess(req.user, a.id));
+            const rows = await sales.history(roster.map(a => a.id));
+            const result = sales.forecast(rows, horizon);
+            const future = result.future;
+            const byMonth = new Map(rows.map(r => [r.month, r.revenue]));
+            const first = rows.length ? sales.monthIndex(rows[0].month) : 0;
+            const last = rows.length ? sales.monthIndex(rows.at(-1).month) : -1;
+            const labels = Array.from({ length: last - first + 1 }, (_, i) => sales.monthLabel(first + i));
+            const historyValues = labels.map(month => byMonth.get(month) ?? null);
+            const n = labels.length;
+            res.json({ entity: artist?.name || 'Accessible artists', source: 'recorded_sales',
+                note: rows.length < 3 ? 'Record at least three months to calculate a forecast.' : 'Forecast based on recorded sales. Missing months are gaps, not zero sales.',
+                stats: { slope: result.slope, intercept: result.intercept },
+                chartData: { labels: [...labels, ...future.map(r => r.month)], datasets: [
+                    { label: 'Recorded sales', data: [...historyValues, ...future.map(() => null)], fill: true, tension: 0, spanGaps: false },
+                    { label: 'Forecast (linear)', data: future.length ? [...Array(Math.max(0, n - 1)).fill(null), historyValues.at(-1), ...future.map(r => r.revenue)] : Array(n).fill(null), borderDash: [5, 5], fill: false, tension: 0 }
+                ] } });
         } catch (err) {
             logger.error('Projection error:', err);
             res.status(500).json({ error: 'Projection failed' });
         }
     });
 }
-
 module.exports = { register };

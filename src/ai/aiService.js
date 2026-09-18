@@ -1,26 +1,4 @@
-/**
- * src/ai/aiService.js
- *
- * Business-level AI operations. Route handlers call ONLY this module; they
- * never see groq-sdk, prompt strings, JSON.parse, or cache keys.
- *
- * Response contracts are preserved exactly, including two behaviors the audit
- * flagged and which are DELIBERATELY retained:
- *
- *   1. DEV FALLBACK FABRICATES DATA (audit AI #3). When a Groq call fails and
- *      NODE_ENV is not 'production', the original returned HTTP 200 with
- *      success:true and the invented sentence
- *        "[Dev Fallback] Growth is stable at 2.5%. Recommend increasing tour
- *         frequency in EU."
- *      A consumer cannot tell it from a real answer except via source:'fallback'.
- *      Preserved verbatim. Flagged in BACKEND_ARCHITECTURE.md.
- *
- *   2. KEYWORD "AI" (audit AI #4). POST /v3/ai/analyze performs no model call;
- *      it is an if/else chain over substrings with a hardcoded
- *      confidence: 0.98. It is implemented here as analyzeByKeyword() so the
- *      fake is named and obvious rather than masquerading as AI inside a route.
- */
-
+// AI queries enforce access before cache/provider work; provider failure never fabricates an answer.
 'use strict';
 
 const config = require('../config');
@@ -51,29 +29,30 @@ function createAiService({ client = groqClient, cacheService = cache, repo = art
      * @returns {Promise<
      *   {kind:'cached',  answer:string} |
      *   {kind:'ok',      answer:string, model:string, usage?:object} |
-     *   {kind:'fallback',answer:string} |
      *   {kind:'error',   message:string}
      * >}
      */
     async function query({ prompt, artistId, forceRefresh, user }) {
         const userPrompt = prompt;
-        const cacheKey = cacheService.keys.aiQuery(userPrompt, artistId);
-
+        if (artistId && !hasArtistAccess(user, artistId)) return { kind: 'forbidden' };
+        let contextData = {};
+        if (artistId) {
+            const artist = typeof repo.findById === 'function' ? await repo.findById(artistId) : repo.findMockById(artistId);
+            if (!artist) return { kind: 'not_found' };
+            contextData = prompts.buildArtistContext(artist);
+        } else if (typeof repo.findAllHybrid === 'function') {
+            const roster = (await repo.findAllHybrid()).filter(artist => hasArtistAccess(user, artist.id));
+            contextData = { artists: roster.map(prompts.buildArtistContext) };
+        }
+        const scope = require('node:crypto').createHash('sha256')
+            .update(JSON.stringify([user?.id, user?.role, user?.artistAccess, contextData])).digest('hex');
+        const cacheKey = `${cacheService.keys.aiQuery(userPrompt, artistId)}:${scope}`;
+        if (typeof client.isConfigured === 'function' && !client.isConfigured()) {
+            return { kind: 'error', message: 'AI provider is not configured' };
+        }
         if (!forceRefresh) {
             const cached = cacheService.get(cacheKey);
             if (cached) return { kind: 'cached', answer: cached };
-        }
-
-        // Context is attached only when the caller may see that artist.
-        // Access check preserved verbatim (admin OR hasArtistAccess).
-        let contextData = {};
-        if (artistId) {
-            const artist = typeof repo.findById === 'function'
-                ? await repo.findById(artistId)
-                : repo.findMockById(artistId);
-            if (artist && (user.role === 'admin' || hasArtistAccess(user, artistId))) {
-                contextData = prompts.buildArtistContext(artist);
-            }
         }
 
         try {
@@ -84,7 +63,8 @@ function createAiService({ client = groqClient, cacheService = cache, repo = art
                 maxTokens: 300
             });
 
-            const insights = content || 'No insights generated.';
+            if (!content?.trim()) throw new Error('Provider returned an empty response');
+            const insights = content;
             cacheService.set(cacheKey, insights);
 
             // Original logged token usage to stdout; retained.
@@ -105,11 +85,7 @@ function createAiService({ client = groqClient, cacheService = cache, repo = art
         } catch (err) {
             console.error('Groq API Error:', err);
 
-            // PRESERVED: fabricated answer outside production (see header #1).
-            if (config.env === 'development') {
-                return { kind: 'fallback', answer: DEV_FALLBACK_ANSWER };
-            }
-            return { kind: 'error', message: err.message };
+            return { kind: 'error', message: err.message, timeout: err.name === 'AiTimeoutError' };
         }
     }
 
@@ -136,7 +112,7 @@ function createAiService({ client = groqClient, cacheService = cache, repo = art
     }
 
     /**
-     * POST /v3/ai/analyze — NOT AI. Keyword substring matching, verbatim from
+     * Legacy offline helper (not exposed by /v3/ai/analyze). Retained for old consumers from
      * the original handler including the hardcoded "Rezz is second at 6.5x"
      * and confidence 0.98.
      *

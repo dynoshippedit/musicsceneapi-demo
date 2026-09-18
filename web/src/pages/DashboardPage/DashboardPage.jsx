@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getLabelOverview, getProjections, getGeography, getArtists, postSales } from '../../api/endpoints.js';
 import { useAuth } from '../../auth/useAuth.js';
 import { useBrand } from '../../brand/BrandContext.jsx';
@@ -54,6 +54,7 @@ export function DashboardPage() {
       </div>
       {error && <ErrorState variant="panel" message={errorMessage} status={error.status} onRetry={retryAll} />}
 
+      <p className="label">RECORDED SALES{data.month ? ` · LATEST MONTH ${data.month}` : ' · NO SALES RECORDED'}</p>
       <div className={styles.mainRow}>
         <Section
           title={text.forecastTitle}
@@ -64,10 +65,11 @@ export function DashboardPage() {
           {projections.error && !projections.data && (
             <ErrorState variant="panel" message={projections.error.message} status={projections.error.status} onRetry={projections.refetch} />
           )}
-          {projections.data?.chartData
+          {projections.data?.note && <p>{projections.data.note}</p>}
+          {projections.data?.chartData?.labels?.length > 0
             ? <RevenueForecastChart chartData={projections.data.chartData} />
             : projections.data && <EmptyState />}
-          <LogSaleForm token={token} artists={roster.data?.artists ?? []} onLogged={projections.refetch} />
+          <LogSaleForm token={token} artists={roster.data?.artists ?? []} onLogged={retryAll} />
         </Section>
 
         <CommandConsole artists={roster.data?.artists ?? []} onRosterChange={roster.refetch} />
@@ -78,7 +80,7 @@ export function DashboardPage() {
         {geography.error && !geography.data && (
           <ErrorState variant="panel" message={geography.error.message} status={geography.error.status} onRetry={geography.refetch} />
         )}
-        {geography.data && <GeoHeatmap dataset={geography.data.regions ?? []} />}
+        {geography.data && <GeoHeatmap dataset={geography.data.regions ?? []} source={geography.data.source} />}
       </Section>
     </>
   );
@@ -95,6 +97,7 @@ function LogSaleForm({ token, artists, onLogged }) {
   const [amount, setAmount] = useState('');
   const [month, setMonth] = useState(currentMonth);
   const [artistId, setArtistId] = useState('');
+  useEffect(() => { if (artistId && !artists.some(a => a.id === artistId)) setArtistId(''); }, [artists, artistId]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
@@ -103,6 +106,7 @@ function LogSaleForm({ token, artists, onLogged }) {
     setBusy(true);
     setError(null);
     try {
+      if (!artists.some(a => a.id === artistId)) throw new Error('Select an available artist');
       await postSales(token, { artistId, month, revenue: Number(amount) });
       setAmount('');
       onLogged();

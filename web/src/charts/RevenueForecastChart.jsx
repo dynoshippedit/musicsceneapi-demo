@@ -19,7 +19,8 @@ export function RevenueForecastChart({ chartData, height = 260 }) {
 
   const data = useMemo(() => ({
     labels: chartData?.labels ?? [],
-    datasets: reskinDatasets(chartData?.datasets, tokens),
+    // Individual recorded months must remain visible even with no adjacent data.
+    datasets: reskinDatasets(chartData?.datasets, tokens).map(dataset => ({ ...dataset, pointRadius: 3, pointHitRadius: 6 })),
   }), [chartData, tokens]);
 
   const options = useMemo(() => {

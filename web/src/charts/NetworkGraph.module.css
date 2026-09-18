@@ -1,9 +1,19 @@
 .wrap { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
-.canvas { width: 100%; display: block; background: var(--color-bg-deep); border: var(--border-panel); border-radius: var(--radius-panel); }
-.legend { list-style: none; display: flex; gap: var(--space-4); margin: 0; padding: 0; font: var(--text-2xs)/1 var(--font-mono); letter-spacing: var(--tracking-label); color: var(--color-text-dim); }
-.legend li { display: inline-flex; align-items: center; gap: var(--space-2); }
-.swatch { width: 8px; height: 8px; border-radius: var(--radius-pill); display: inline-block; }
-/* The ONE place the restricted tier hues may be rendered (tokens.css). */
-.flagship { background: var(--color-accent); }
-.core { background: var(--color-info); }
-.developing { background: var(--color-tier-dev); }
+.toolbar, .detail { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); }
+.toolbar input { max-width: 100%; padding: var(--space-2); background: var(--color-input-bg); color: var(--color-text); border: var(--border-panel); }
+.toolbar span, .note { color: var(--color-text-muted); font-size: var(--text-sm); }
+.note { margin: 0; }
+.viewport { overflow-x: auto; border: var(--border-panel); background: var(--color-bg-deep); }
+.graph { width: 100%; min-width: 680px; display: block; }
+.edge { stroke: var(--color-accent); stroke-opacity: 0.3; stroke-width: 2; }
+.node { fill: var(--color-bg); stroke: var(--color-text-faint); stroke-opacity: 0.4; }
+.graph a:hover .node, .graph a:focus .node, .selected { stroke: var(--color-accent); stroke-opacity: 1; }
+.name { fill: var(--color-text); font: 14px var(--font-mono); }
+.detail { padding: var(--space-3); border: var(--border-panel); }
+.detail a { color: var(--color-accent); }
+.legend { list-style: none; display: flex; flex-wrap: wrap; gap: var(--space-4); margin: 0; padding: 0; font: var(--text-2xs)/1 var(--font-mono); color: var(--color-text-muted); }
+.legend li { display: flex; align-items: center; gap: var(--space-2); }
+.swatch { width: 8px; height: 8px; border-radius: 50%; }
+.flagship { fill: var(--color-accent); background: var(--color-accent); }
+.core { fill: var(--color-info); background: var(--color-info); }
+.developing { fill: var(--color-tier-dev); background: var(--color-tier-dev); }

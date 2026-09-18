@@ -23,6 +23,7 @@ jspm_packages/
 .pnp.js
 
 # Database
+backups/
 *.sqlite
 *.sqlite3
 *.sqlite-journal
@@ -39,3 +40,6 @@ Thumbs.db
 # Build output (if any)
 dist/
 build/
+
+# Disposable browser workflow output
+execution-validation/browser-workflows/

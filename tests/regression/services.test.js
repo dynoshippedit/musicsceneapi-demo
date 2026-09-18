@@ -138,10 +138,11 @@ describe('src/ai/aiService', () => {
         assert.strictEqual(out.answer, 'insight text');
     });
 
-    test('query substitutes the original placeholder for empty content', async () => {
+    test('query treats empty provider content as a failure', async () => {
         const svc = createAiService({ client: fakeClient(''), cacheService: createCacheService() });
         const out = await svc.query({ prompt: 'p', user: { role: 'admin' } });
-        assert.strictEqual(out.answer, 'No insights generated.');
+        assert.strictEqual(out.kind, 'error');
+        assert.strictEqual(out.answer, undefined);
     });
 
     test('second identical query is served from cache', async () => {

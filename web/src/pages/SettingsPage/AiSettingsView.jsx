@@ -21,12 +21,12 @@ export function AiSettingsView() {
     <Section title={text.settingsAi}>
       <dl className={styles.definition}>
         <Row label={text.aiProviderLabel}>
-          {providers.selectable
+          {providers.defaultProvider
             ? <span className="value">{providers.defaultProvider}</span>
             : <span className={styles.systemLine}>{text.aiCatalogUnavailable}</span>}
         </Row>
         <Row label={text.aiModelLabel}>
-          {providers.selectable
+          {providers.defaultProvider
             ? <span className="value">{providers.defaultModel}</span>
             : <span className={styles.systemLine}>{text.aiCatalogUnavailable}</span>}
         </Row>
@@ -37,14 +37,14 @@ export function AiSettingsView() {
         <Row label={text.aiStatusLabel}>
           {providers.providers.length === 0 ? (
             <span className={`value ${styles.statusLine}`}>
-              <span className="status-dot status-dot--on" aria-hidden="true" />
-              {text.consoleSystemDefault} · {text.consoleReady}
+              <span className="status-dot status-dot--warn" aria-hidden="true" />
+              {String(providers.status).toUpperCase()}
             </span>
           ) : (
             <span className={styles.statusStack}>
               {providers.providers.map((provider) => (
                 <span key={provider.id} className={`value ${styles.statusLine}`}>
-                  <span className={`status-dot ${provider.status === 'ready' ? 'status-dot--on' : 'status-dot--warn'}`} aria-hidden="true" />
+                  <span className={`status-dot ${provider.status === 'configured' ? 'status-dot--on' : 'status-dot--warn'}`} aria-hidden="true" />
                   {provider.id} · {String(provider.status || '').toUpperCase()}
                 </span>
               ))}

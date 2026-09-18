@@ -8,9 +8,8 @@ import { aiQuery } from '../api/endpoints.js';
  * key, and no direct call to any model host anywhere in web/ — every AI request goes to this
  * application's own backend, which owns the credentials.
  *
- * `GET /v3/ai/providers` does not exist on the current backend. Asking for it and treating a
- * 404 as `selectable: false` is the documented degradation path, and it is what lets the
- * frontend flip to a real provider catalogue with no rewrite once that route ships.
+ * The authenticated catalogue reports configuration, not a successful provider call.
+ * A missing catalogue degrades to unavailable and never claims readiness.
  */
 export async function listProviders(token, { signal } = {}) {
   try {
@@ -18,7 +17,8 @@ export async function listProviders(token, { signal } = {}) {
     if (response.status === 404) return unsupported();
     const payload = await readJson(response);
     return {
-      selectable: Array.isArray(payload.providers) && payload.providers.length > 0,
+      selectable: payload.selectable === true,
+      status: payload.status || 'unknown',
       defaultProvider: payload.defaultProvider ?? null,
       defaultModel: payload.defaultModel ?? null,
       providers: payload.providers ?? [],
@@ -30,7 +30,7 @@ export async function listProviders(token, { signal } = {}) {
 }
 
 function unsupported() {
-  return { selectable: false, defaultProvider: null, defaultModel: null, providers: [] };
+  return { status: 'unavailable', selectable: false, defaultProvider: null, defaultModel: null, providers: [] };
 }
 
 /**

@@ -31,8 +31,7 @@ const ENV = {
     PORT,
     NODE_ENV: 'test',
     JWT_SECRET: 'probe-fixed-secret-for-snapshot-determinism',
-    // Deliberately NOT setting ADMIN_EMAIL / ADMIN_PASS: that is the default
-    // operator state and the one that exposes CRITICAL-1.
+    ADMIN_EMAIL: '', ADMIN_PASS: '', DATABASE_URL: '', SCHEDULE_JOBS: 'false',
     USE_REAL_DATA: 'false',
     DB_DIALECT: 'sqlite',
     GROQ_API_KEY: '',
@@ -133,14 +132,9 @@ async function run() {
         process.exit(2);
     }
 
-    // Fresh DB per probe run so seeding is deterministic.
-    const dbFile = path.join(process.cwd(), 'mau5trap_v5.sqlite');
-    const backup = `${dbFile}.probe-backup`;
-    let restored = false;
-    if (fs.existsSync(dbFile)) { fs.renameSync(dbFile, backup); restored = true; }
-
-    const child = spawn(process.execPath, [ENTRY], {
-        env: ENV, cwd: process.cwd(), stdio: ['ignore', 'pipe', 'pipe']
+    const scratch = fs.mkdtempSync(path.join(require('os').tmpdir(), 'mau5-probe-'));
+    const child = spawn(process.execPath, [path.resolve(ENTRY)], {
+        env: { ...ENV, DB_STORAGE: path.join(scratch, 'test.sqlite') }, cwd: scratch, stdio: ['ignore', 'pipe', 'pipe']
     });
     let stdout = '';
     let stderr = '';
@@ -153,8 +147,8 @@ async function run() {
         console.error('[probe] server never became healthy');
         console.error('--- stdout ---\n' + stdout.slice(0, 4000));
         console.error('--- stderr ---\n' + stderr.slice(0, 4000));
-        try { if (fs.existsSync(dbFile)) fs.unlinkSync(dbFile); } catch (_) {}
-        if (restored) { try { fs.renameSync(backup, dbFile); } catch (_) {} }
+        await new Promise(r => child.once('exit', r));
+        fs.rmSync(scratch, { recursive: true, force: true });
         process.exit(1);
     }
 
@@ -182,8 +176,7 @@ async function run() {
     fs.writeFileSync(OUT, JSON.stringify(results, null, 2) + '\n');
     console.log(`[probe] wrote ${OUT} (${CASES.length} cases)`);
 
-    try { if (fs.existsSync(dbFile)) fs.unlinkSync(dbFile); } catch (_) {}
-    if (restored) { try { fs.renameSync(backup, dbFile); } catch (_) {} }
+    fs.rmSync(scratch, { recursive: true, force: true });
 }
 
 run().catch((e) => { console.error(e); process.exit(1); });

@@ -1,23 +1,4 @@
-/**
- * src/models/index.js
- *
- * Sequelize instance + model definitions extracted verbatim from
- * mau5trap-production-api.js L128-172, plus initDB() from L175-209.
- *
- * Preserved exactly, including:
- *   - sync({ alter: true }) on every boot (audit R4) — Phase 2 concern
- *   - pageAccess stored as stringified JSON in a STRING column (L152)
- *   - resetTokenExpiry as STRING (L155)
- *   - no associations between Artist and Stats (audit: no FK)
- *   - seeded users admin@mau5trap.com / tours@rezz.com (L188-189)
- *
- * ONE ordering bug fixed (audit R2): the original called initDB() at L212,
- * before `logger` (L221) and `labelData` (L343) were initialized. It only
- * worked because the first `await` deferred the body past module evaluation.
- * Here initDB takes its dependencies as arguments, so the latent
- * ReferenceError trap is removed without changing observable behavior.
- */
-
+// Persistent models. Startup runs explicit migrations, then creates missing tables.
 'use strict';
 
 const { Sequelize, DataTypes } = require('sequelize');
@@ -100,13 +81,42 @@ const SalesEntry = sequelize.define('SalesEntry', {
     revenue: { type: DataTypes.FLOAT, allowNull: false }
 }, { timestamps: false, indexes: [{ unique: true, fields: ['artistId', 'month'] }] });
 
+// Room and Scouting have separate durable models and vote semantics.
+const RoomDemo = sequelize.define('RoomDemo', {
+    id: { type: DataTypes.STRING, primaryKey: true },
+    title: { type: DataTypes.STRING, allowNull: false },
+    artist: { type: DataTypes.STRING, allowNull: false },
+    url: { type: DataTypes.TEXT, allowNull: true },
+    genre: { type: DataTypes.STRING, allowNull: true },
+    submittedBy: { type: DataTypes.STRING, allowNull: false },
+    status: { type: DataTypes.STRING, defaultValue: 'new' }
+});
+const RoomVote = sequelize.define('RoomVote', {
+    demoId: { type: DataTypes.STRING, primaryKey: true },
+    userId: { type: DataTypes.INTEGER, primaryKey: true }
+}, { timestamps: false });
+const RoomSetting = sequelize.define('RoomSetting', {
+    key: { type: DataTypes.STRING, primaryKey: true },
+    value: { type: DataTypes.JSON, allowNull: false }
+}, { timestamps: false });
+const Campaign = sequelize.define('Campaign', {
+    id: { type: DataTypes.STRING, primaryKey: true },
+    userId: { type: DataTypes.INTEGER, allowNull: false },
+    artistId: { type: DataTypes.STRING, allowNull: true },
+    name: { type: DataTypes.STRING, allowNull: false },
+    type: { type: DataTypes.STRING, allowNull: false },
+    platforms: { type: DataTypes.JSON, allowNull: false },
+    plan: { type: DataTypes.JSON, allowNull: false },
+    status: { type: DataTypes.STRING, defaultValue: 'draft' }
+});
+
 // ---------------------------------------------------------------------------
 // PHASE 4CF: append-only audit event table (Objective 6 — minimal audit seam).
 // Fields follow the accepted minimal design: actor identity, action, resource,
 // metadata, request correlation, and the ACTIVE LABEL SLUG so that the first
 // owned table establishes the ownership convention for all future tables
 // (owner column from day one — see COMMERCIAL_FOUNDATION_RECHECK.md §10).
-// No UI, no webhooks, no event bus. sync({alter:true}) creates the table.
+// No UI, no webhooks, no event bus. sync() creates an absent table.
 // ---------------------------------------------------------------------------
 const AuditEvent = sequelize.define('AuditEvent', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -134,7 +144,8 @@ async function initDB({ logger, labelData } = {}) {
     try {
         await sequelize.authenticate();
         if (logger) logger.info('Database connection established.');
-        await sequelize.sync({ alter: true }); // Ensure schema updates are applied
+        await require('./migrations').repairSalesSchema(sequelize);
+        await sequelize.sync(); // Create absent tables; existing schema changes use explicit migrations.
 
         // SEED USERS IF EMPTY — api L182-190
         // PHASE 4CF: seed identities moved to the Label Intelligence Profile
@@ -193,12 +204,30 @@ async function initDB({ logger, labelData } = {}) {
             }
         }
 
+        // The marker prevents deleted room records from being reseeded on restart.
+        if (!await RoomSetting.findByPk('initialized')) {
+            await sequelize.transaction(async transaction => {
+                const room = profile.datasets.anr?.anrState || {};
+                for (const demo of room.demos || []) {
+                    const { ratings, ...data } = demo;
+                    await RoomDemo.findOrCreate({ where: { id: data.id }, defaults: data, transaction });
+                    for (const rating of ratings || []) {
+                        const voter = await User.findOne({ where: { email: rating.user }, transaction });
+                        if (voter) await RoomVote.findOrCreate({ where: { demoId: data.id, userId: voter.id }, transaction });
+                    }
+                }
+                await RoomSetting.upsert({ key: 'whiteboard', value: room.whiteboard || '' }, { transaction });
+                await RoomSetting.upsert({ key: 'nowListening', value: room.nowListening || {} }, { transaction });
+                await RoomSetting.create({ key: 'initialized', value: true }, { transaction });
+            });
+        }
+
         return true;
     } catch (error) {
-        // api L206-208 — error is logged and swallowed; boot continues.
+        // Return failure; the entrypoint refuses to listen after a failed initialization.
         if (logger) logger.error('Unable to connect to the database:', error);
         return false;
     }
 }
 
-module.exports = { sequelize, User, Artist, Stats, AuditEvent, AnrSubmission, SalesEntry, initDB };
+module.exports = { sequelize, User, Artist, Stats, AuditEvent, AnrSubmission, SalesEntry, RoomDemo, RoomVote, RoomSetting, Campaign, initDB };

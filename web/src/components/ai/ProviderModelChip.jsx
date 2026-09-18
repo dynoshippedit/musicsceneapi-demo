@@ -10,14 +10,14 @@ import styles from './CommandConsole.module.css';
  */
 export function ProviderModelChip({ providers }) {
   const { text } = useBrand();
-  const label = providers?.selectable && providers.defaultProvider
+  const label = providers?.defaultProvider
     ? `${providers.defaultProvider}${providers.defaultModel ? ` · ${providers.defaultModel}` : ''}`
     : text.consoleSystemDefault;
 
   return (
     <Link to="/settings/ai" className={`label ${styles.chip}`}>
-      <span className="status-dot status-dot--on" aria-hidden="true" />
-      {label} · {text.consoleReady}
+      <span className={`status-dot ${providers?.status === 'configured' ? 'status-dot--on' : 'status-dot--warn'}`} aria-hidden="true" />
+      {label} · {String(providers?.status || 'checking').toUpperCase()}
     </Link>
   );
 }

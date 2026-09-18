@@ -243,58 +243,7 @@ function register(app, ctx) {
         res.json({ success: true });
     });
 
-    // Get Detailed Stats (Aggregated/Privacy-Safe)
-    // Get Demo Rating (Public/Aggregated)
-    app.get('/v3/anr/demos/:demoId/rating', authenticateToken, async (req, res) => {
-        const { demoId } = req.params;
-        const includeTally = req.query.includeTally === 'true';
-
-        // Look in active state
-        let demo = anrState.demos.find(s => s.id === demoId);
-        let votes = 0;
-
-        if (demo) {
-            votes = (demo.ratings || []).length;
-        } else {
-            // Fallback to legacy submissions (PHASE 4CF: now DB-backed).
-            let sub;
-            try {
-                sub = await AnrSubmission.findByPk(demoId);
-            } catch (e) {
-                logger.error('A&R rating fallback lookup failed:', e);
-                return res.status(500).json({ error: 'Database error' });
-            }
-            if (!sub) return res.status(404).json({ error: 'Not found' });
-            votes = sub.votes || 0;
-        }
-
-        // Logic: Calculate Stars & Ratio (Real User Count)
-        let totalUsers;
-        try {
-            totalUsers = await User.count();
-        } catch (e) {
-            logger.error('A&R rating user count failed:', e);
-            return res.status(500).json({ error: 'Database error' });
-        }
-
-        let stars = 0;
-        let ratio = 0;
-
-        if (votes > 0 && totalUsers > 0) {
-            ratio = votes / totalUsers;
-            stars = Math.round(ratio * 5);
-        }
-
-        const response = { stars };
-
-        if (includeTally) {
-            response.artistVotes = votes;
-            response.totalVotes = totalUsers;
-            response.ratio = parseFloat(ratio.toFixed(4));
-        }
-
-        res.json(response);
-    });
+    require('./anrRoom').register(app, ctx);
 
     // AI Competitive Evaluation
     app.post('/v3/anr/evaluate', authenticateToken, (req, res) => {
@@ -306,6 +255,7 @@ function register(app, ctx) {
             : profile.anr.evaluate.unknownProspectName;
 
         const report = {
+            source: 'fixture',
             prospect: prospectName,
             benchmark: profile.anr.benchmarkArtist,
             signabilityScore: Math.floor(Math.random() * (95 - 70) + 70),
@@ -318,162 +268,6 @@ function register(app, ctx) {
         setTimeout(() => res.json(report), 1000);
     });
 
-    // Get Full State (Sanitized)
-    app.get('/v3/anr/state', authenticateToken, (req, res) => {
-        // Deep copy to avoid mutating shared state
-        const safeState = JSON.parse(JSON.stringify(anrState));
-
-        // Sanitize demos: Remove raw ratings, add user context
-        safeState.demos = safeState.demos.map(d => {
-            const hasVoted = d.ratings ? d.ratings.some(r => r.user === req.user.email) : false;
-            // aggregate counts are meant to be hidden until toggle, 
-            // but we can send basic status or just strip ratings.
-            // The user requirement says "Votes remain hidden by default", implies we shouldn't even send the count?
-            // "When the current user clicks that icon it reveals... Sends a request to the API"
-            // This implies the count is NOT present in the initial state load.
-
-            const { ratings, ...demoData } = d; // Destructure to exclude ratings
-            return {
-                ...demoData,
-                hasVoted
-            };
-        });
-
-        res.json(safeState);
-    });
-
-    // Update Whiteboard
-    app.post('/v3/anr/whiteboard', authenticateToken, (req, res) => {
-        const { message } = req.body;
-        if (typeof message === 'string') {
-            anrState.whiteboard = message;
-            res.json({ success: true, whiteboard: anrState.whiteboard });
-        } else {
-            res.status(400).json({ error: 'Invalid message format' });
-        }
-    });
-
-    // Update Now Listening
-    app.post('/v3/anr/listening', authenticateToken, (req, res) => {
-        const { url } = req.body;
-        if (url) {
-            anrState.nowListening = {
-                url,
-                updatedBy: req.user.email.split('@')[0],
-                timestamp: new Date().toISOString()
-            };
-            res.json({ success: true, nowListening: anrState.nowListening });
-        } else {
-            res.status(400).json({ error: 'URL is required' });
-        }
-    });
-
-    // Vote on Demo (5-Star Rating)
-    // Vote Toggle (Binary Support)
-    // Vote on Demo (Explicit Action)
-    app.post('/v3/anr/vote/:demoId', authenticateToken, async (req, res) => {
-        const { demoId } = req.params;
-        const { action } = req.body; // 'add' or 'remove'
-        const userEmail = req.user.email;
-
-        const demo = anrState.demos.find(d => d.id === demoId);
-        if (!demo) return res.status(404).json({ error: 'Demo not found' });
-
-        if (!demo.ratings) demo.ratings = [];
-
-        const existingVoteIndex = demo.ratings.findIndex(r => r.user === userEmail);
-        let hasVoted = existingVoteIndex >= 0;
-
-        if (action === 'add') {
-            if (existingVoteIndex >= 0) {
-                // Already voted
-                demo.ratings[existingVoteIndex].timestamp = new Date().toISOString();
-            } else {
-                demo.ratings.push({ user: userEmail, timestamp: new Date().toISOString() });
-            }
-            hasVoted = true; // Ensure hasVoted is true after adding/updating
-        } else if (action === 'remove') {
-            if (existingVoteIndex >= 0) {
-                demo.ratings.splice(existingVoteIndex, 1);
-            }
-            hasVoted = false;
-        } else {
-            return res.status(400).json({ error: 'Invalid action. Use "add" or "remove".' });
-        }
-
-        // Calculate Aggregated Stats for Response (Real User Count)
-        const votes = demo.ratings.length;
-        let totalUsers;
-        try {
-            totalUsers = await User.count();
-        } catch (e) {
-            logger.error('A&R demo vote user count failed:', e);
-            return res.status(500).json({ error: 'Database error' });
-        }
-
-        let stars = 0;
-        let ratio = 0;
-
-        if (votes > 0 && totalUsers > 0) {
-            ratio = votes / totalUsers;
-            stars = Math.round(ratio * 5);
-        }
-
-        res.json({
-            success: true,
-            hasVoted,
-            demo: {
-                id: demo.id,
-                artistVotes: votes,
-                totalVotes: totalUsers,
-                ratio: parseFloat(ratio.toFixed(4)),
-                stars
-            }
-        });
-    });
-
-    // Get Vote Stats (Reveal)
-    app.get('/v3/anr/stats/:demoId', authenticateToken, async (req, res) => {
-        const { demoId } = req.params;
-        const demo = anrState.demos.find(d => d.id === demoId);
-        if (!demo) return res.status(404).json({ error: 'Demo not found' });
-
-        const artistVotes = demo.ratings ? demo.ratings.length : 0;
-
-        // Get total active users for ratio context
-        let totalVotes = 10;
-        try {
-            const dbCount = await User.count();
-            if (dbCount > 0) totalVotes = dbCount;
-        } catch (e) { console.error('Error counting users:', e.message); }
-
-        // Ratio and Stars Calculation
-        const ratio = totalVotes > 0 ? (artistVotes / totalVotes) : 0;
-        const stars = Math.min(5, parseFloat((ratio * 5).toFixed(1)));
-
-        res.json({
-            artistVotes,
-            totalVotes,
-            ratio: parseFloat(ratio.toFixed(2)),
-            stars
-        });
-    });
-
-    // Submit Demo (Mock)
-    app.post('/v3/anr/demos', authenticateToken, (req, res) => {
-        const { title, artist } = req.body;
-        const newDemo = {
-            id: `demo${Date.now()}`,
-            title: title || 'Untitled',
-            artist: artist || 'Unknown',
-            ratings: [], // Initialize empty ratings
-            submittedBy: req.user.email.split('@')[0],
-            status: 'new'
-        };
-        anrState.demos.unshift(newDemo);
-        res.json({ success: true, demos: anrState.demos });
-    });
-
     // GET /v3/anr/scout
     app.get('/v3/anr/scout', authenticateToken, async (req, res) => {
         // PHASE 2: mock fixtures, the 500ms simulated latency and the filter moved
@@ -484,7 +278,7 @@ function register(app, ctx) {
 
         try {
             const result = await integrationFacade.searchScouts(query);
-            res.json(result);
+            res.json({ ...result, source: 'fixture' });
         } catch (err) {
             console.error('Spotify Search Error:', err);
             res.status(500).json({ error: 'Failed to access Spotify Scouting Network' });

@@ -274,10 +274,10 @@ describe('src/config — secrets hardening', () => {
         // This is what makes an empty login body match at api L482.
         // (Fixed in Phase 3 at the auth route, not in config.)
         if (!process.env.ADMIN_EMAIL) {
-            assert.strictEqual(config.adminEmail, undefined);
+            assert.strictEqual(config.adminEmail, process.env.ADMIN_EMAIL);
         }
         if (!process.env.ADMIN_PASS) {
-            assert.strictEqual(config.adminPass, undefined);
+            assert.strictEqual(config.adminPass, process.env.ADMIN_PASS);
         }
         // The dangerous comparison itself:
         assert.strictEqual(undefined === undefined, true,

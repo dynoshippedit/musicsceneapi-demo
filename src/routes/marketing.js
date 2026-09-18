@@ -1,82 +1,38 @@
-/**
- * src/routes/marketing.js
- *
- * Campaign creation and stats. Campaigns live in process memory only.
- *
- * Handler bodies were moved VERBATIM from mau5trap-production-api.js. They are
- * registered in their original relative order, which matters because Express
- * binds the first matching route. Cross-domain shadowing was checked and does
- * not exist: all duplicate registrations fall within a single domain.
- *
- * Routes (2):
- *   POST   /v3/marketing/campaigns
- *   GET    /v3/campaigns/stats
- */
-
 'use strict';
-
-/**
- * @param {object} app Express application
- * @param {object} ctx dependency bundle from src/routes/context.js
- */
-function register(app, ctx) {
-    const {
-        config, logger, JWT_SECRET, bcrypt, jwt, fs, path,
-        sequelize, User, Artist, Stats,
-        authenticateToken, hasArtistAccess, filterDataByAccess, checkExportAccess, generateToken,
-        calculateTotalRevenue, flattenData, filterMetrics,
-        generatePieChart, generateBarChart, generateLineChart, generateDonutChart,
-        cache, emailService, sendEmail, entityAuditService,
-        artistRepo, labelData, getArtistData, getAllArtists,
-        operationsRepo, operationsData,
-        prospects, anrSubmissions, anrState, userIntegrations, salesData, apiCache,
-        aiService, performLinearRegression, generateSyntheticHistory,
-        integrationFacade, fetchArtistData, getIntegrationStatus, SERVICES, limiters,
-        generateMonthlyReport
-    } = ctx;
-
-    app.post('/v3/marketing/campaigns', authenticateToken, (req, res) => {
-        const { artistId, type, platforms } = req.body;
-
-        const strategies = {
-            'playlist-push': ['Submit to Spotify Editorial', 'Hire independent curators', 'Run marquee ads'],
-            'social-growth': ['Post 15s clips daily', 'Collaborate with influencers', 'Host AMA'],
-            'tour-promo': ['Run geo-targeted ads', 'Email presale codes', 'Ticket giveaways']
-        };
-
-        const plan = strategies[type] || ['General brand awareness ads'];
-
-        res.json({
-            campaignId: `cmp_${Date.now()}`,
-            status: 'created',
-            plan: plan.map((step, i) => ({ step: i + 1, action: step, platform: platforms ? platforms[i % platforms.length] : 'all' })),
-            budget: 'Pending Approval'
-        });
-    });
-
-    app.get('/v3/campaigns/stats', authenticateToken, (req, res) => {
-        // Aggregate global CRM stats
-        const stats = labelData.artists.reduce((acc, artist) => {
-            if (artist.crm) {
-                acc.totalEmails += artist.crm.emailCount;
-                acc.totalSMS += artist.crm.smsCount;
-                acc.presaleSignups += artist.crm.presaleSignups;
+const { randomUUID } = require('node:crypto');
+const strategies = {
+    'playlist-push': ['Submit to editorial playlists', 'Contact independent curators', 'Plan marquee ads'],
+    'social-growth': ['Post short clips daily', 'Plan influencer collaborations', 'Host an AMA'],
+    'tour-promo': ['Plan geo-targeted ads', 'Prepare presale emails', 'Plan ticket giveaways']
+};
+const allowedPlatforms = ['spotify', 'tiktok', 'instagram', 'youtube', 'email'];
+function register(app, { authenticateToken, Campaign, artistRepo, hasArtistAccess, logger }) {
+    const canRead = (user, campaign) => campaign.artistId ? hasArtistAccess(user, campaign.artistId) : user.role === 'admin' || campaign.userId === user.id;
+    app.post('/v3/marketing/campaigns', authenticateToken, async (req, res) => {
+        try {
+            const { name, artistId = '', type, platforms } = req.body;
+            if (typeof name !== 'string' || !name.trim() || name.length > 255 || !Object.hasOwn(strategies, type) || !Array.isArray(platforms) || !platforms.length || platforms.some(p => !allowedPlatforms.includes(p))) {
+                return res.status(400).json({ error: 'A campaign name, supported strategy and platforms are required' });
             }
-            return acc;
-        }, { totalEmails: 0, totalSMS: 0, presaleSignups: 0 });
-
-        // Mock Database Health History (last 6 months)
-        const history = [
-            { month: 'Jul', email: Math.floor(stats.totalEmails * 0.7), sms: Math.floor(stats.totalSMS * 0.6) },
-            { month: 'Aug', email: Math.floor(stats.totalEmails * 0.75), sms: Math.floor(stats.totalSMS * 0.7) },
-            { month: 'Sep', email: Math.floor(stats.totalEmails * 0.8), sms: Math.floor(stats.totalSMS * 0.8) },
-            { month: 'Oct', email: Math.floor(stats.totalEmails * 0.85), sms: Math.floor(stats.totalSMS * 0.85) },
-            { month: 'Nov', email: Math.floor(stats.totalEmails * 0.9), sms: Math.floor(stats.totalSMS * 0.9) },
-            { month: 'Dec', email: stats.totalEmails, sms: stats.totalSMS }
-        ];
-
-        res.json({ stats, history });
+            if (artistId) {
+                if (!hasArtistAccess(req.user, artistId)) return res.status(403).json({ error: 'Access denied for this artist' });
+                if (!await artistRepo.findById(artistId)) return res.status(404).json({ error: 'Artist not found' });
+            } else if (req.user.role !== 'admin') return res.status(403).json({ error: 'Choose an artist you can access' });
+            const plan = strategies[type].map((action, i) => ({ step: i + 1, action, platform: platforms[i % platforms.length] }));
+            const campaign = await Campaign.create({ id: `cmp_${randomUUID()}`, userId: req.user.id, name: name.trim(), artistId: artistId || null, type, platforms, plan, status: 'draft' });
+            res.status(201).json({ ...campaign.toJSON(), campaignId: campaign.id, budget: 'Pending approval', message: 'Draft plan saved. No ads or messages have been sent.' });
+        } catch (err) { logger.error('Campaign create failed:', err); res.status(500).json({ error: 'Campaign could not be saved' }); }
+    });
+    app.get('/v3/marketing/campaigns', authenticateToken, async (req, res) => {
+        try { res.json({ campaigns: (await Campaign.findAll({ order: [['createdAt', 'DESC']] })).filter(c => canRead(req.user, c)) }); }
+        catch (err) { logger.error('Campaign list failed:', err); res.status(500).json({ error: 'Campaigns could not be loaded' }); }
+    });
+    app.get('/v3/campaigns/stats', authenticateToken, async (req, res) => {
+        try {
+            const roster = (await artistRepo.findAllHybrid()).filter(a => hasArtistAccess(req.user, a.id));
+            const stats = roster.reduce((sum, a) => ({ totalEmails: sum.totalEmails + (a.crm?.emailCount || 0), totalSMS: sum.totalSMS + (a.crm?.smsCount || 0), presaleSignups: sum.presaleSignups + (a.crm?.presaleSignups || 0) }), { totalEmails: 0, totalSMS: 0, presaleSignups: 0 });
+            res.json({ stats, history: [], source: 'roster_reference', note: 'Reference CRM counts. No historical campaign performance has been recorded.' });
+        } catch (err) { logger.error('Campaign statistics failed:', err); res.status(500).json({ error: 'Campaign statistics could not be loaded' }); }
     });
 }
-
 module.exports = { register };

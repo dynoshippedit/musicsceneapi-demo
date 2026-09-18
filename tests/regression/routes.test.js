@@ -60,8 +60,8 @@ describe('route table — registration invariants', () => {
     });
 
     test('registers the expected number of routes', () => {
-        assert.strictEqual(TABLE.length, 63,
-            `expected 63 registered routes, found ${TABLE.length}`);
+        assert.strictEqual(TABLE.length, 64,
+            `expected 64 registered routes, found ${TABLE.length}`);
     });
 
     test('PINS: the known shadowed duplicate routes are still present', () => {
@@ -69,7 +69,7 @@ describe('route table — registration invariants', () => {
         assert.strictEqual(counts['POST /v3/users'], 3, 'POST /v3/users shadowed x3');
         assert.strictEqual(counts['PUT /v3/users/:id'], 2, 'PUT /v3/users/:id shadowed x2');
         assert.strictEqual(counts['DELETE /v3/users/:id'], 2, 'DELETE /v3/users/:id shadowed x2');
-        assert.strictEqual(counts['POST /v3/ai/analyze'], 2, 'POST /v3/ai/analyze shadowed x2');
+        assert.strictEqual(counts['POST /v3/ai/analyze'], 1, 'one authenticated AI analyze handler');
     });
 
     test('duplicate routes keep their original RELATIVE order after the split', () => {
@@ -78,7 +78,7 @@ describe('route table — registration invariants', () => {
         // promote a previously-dead handler.
         const indexOfAll = (key) => KEYS.reduce((acc, k, i) => (k === key ? [...acc, i] : acc), []);
 
-        for (const key of ['POST /v3/users', 'PUT /v3/users/:id', 'DELETE /v3/users/:id', 'POST /v3/ai/analyze']) {
+        for (const key of ['POST /v3/users', 'PUT /v3/users/:id', 'DELETE /v3/users/:id']) {
             const idxs = indexOfAll(key);
             assert.ok(idxs.length > 1, `${key} should still be duplicated`);
             const sorted = [...idxs].sort((a, b) => a - b);

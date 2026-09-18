@@ -38,17 +38,9 @@ const app = api.app || api;
 const PORT = config.port;
 
 async function start() {
-    // 2. Database init + seeding. The original swallowed errors and continued
-    //    serving; that behavior is preserved (initDB resolves false on failure).
-    try {
-        const ok = await api.initializeDatabase();
-        if (!ok) {
-            logger.error('Database initialization reported failure; continuing to serve.');
-        }
-    } catch (err) {
-        // Defensive: initDB already catches internally.
-        logger.error('Unexpected database initialization error; continuing to serve.', err);
-    }
+    // A listener must never claim readiness when schema initialization failed.
+    const ok = await api.initializeDatabase();
+    if (!ok) throw new Error('Database initialization failed; refusing to serve');
 
     // 2b. Scheduled jobs. PHASE 2: previously registered as a side effect of
     //     requiring the API module; now explicit so tests can require the app
@@ -122,7 +114,7 @@ ${seedLines}
 }
 
 if (require.main === module) {
-    start();
+    start().catch(err => { logger.error(err.message); process.exit(1); });
 }
 
 module.exports = { app, start };

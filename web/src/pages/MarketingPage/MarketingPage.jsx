@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { getCampaignStats, createCampaign, getArtists } from '../../api/endpoints.js';
+import { useCallback, useEffect, useState } from 'react';
+import { getCampaignStats, createCampaign, getArtists, getCampaigns } from '../../api/endpoints.js';
 import { useAuth } from '../../auth/useAuth.js';
 import { useBrand } from '../../brand/BrandContext.jsx';
 import { useApiQuery } from '../../hooks/useApiQuery.js';
@@ -23,13 +23,9 @@ const TYPES = [
 ];
 const PLATFORMS = ['spotify', 'tiktok', 'instagram', 'youtube', 'email'];
 
-/**
- * Restored from orphan status (legacy `CampaignsView`, never reachable). The wizard is fully
- * functional, but `POST /v3/marketing/campaigns` returns a CANNED plan and persists nothing —
- * so the result carries a PROTOTYPE provenance badge (PHASE_4A_HANDOFF.md §3 row 3 / row 24).
- */
+// Saves strategy drafts and retrieves them from the server.
 export function MarketingPage() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { text, formatters } = useBrand();
 
   const statsQuery = useCallback(({ signal }) => getCampaignStats(token, { signal }), [token]);
@@ -37,11 +33,15 @@ export function MarketingPage() {
   const rosterQuery = useCallback(({ signal }) => getArtists(token, { signal }), [token]);
   const { data: roster } = useApiQuery(rosterQuery);
 
+  const campaignQuery = useCallback(({ signal }) => getCampaigns(token, { signal }), [token]);
+  const campaigns = useApiQuery(campaignQuery);
   const [step, setStep] = useState(1);
   const [values, setValues] = useState({ name: '', artistId: '', type: 'playlist-push', platforms: ['spotify'] });
   const [plan, setPlan] = useState(null);
   const [busy, setBusy] = useState(false);
   const [planError, setPlanError] = useState(null);
+
+  useEffect(() => { if (values.artistId && roster && !roster.artists?.some(a => a.id === values.artistId)) setValues(v => ({ ...v, artistId: '' })); }, [roster, values.artistId]);
 
   if (loading && !data) return <LoadingScreen />;
   if (error && !data) return <ErrorState variant="fullscreen" message={error.message} status={error.status} onRetry={refetch} />;
@@ -53,8 +53,10 @@ export function MarketingPage() {
     setBusy(true);
     setPlanError(null);
     try {
-      setPlan(await createCampaign(token, { artistId: values.artistId, type: values.type, platforms: values.platforms }));
+      if (values.artistId && !roster?.artists?.some(a => a.id === values.artistId)) throw new Error('Select an available artist');
+      setPlan(await createCampaign(token, { name: values.name, artistId: values.artistId, type: values.type, platforms: values.platforms }));
       setStep(3);
+      campaigns.refetch();
     } catch (failure) {
       setPlanError(failure);
     } finally {
@@ -70,6 +72,7 @@ export function MarketingPage() {
         <StatCard label={text.marketingPresale} value={formatters.compact(stats.presaleSignups)} />
       </div>
 
+      <p>{data?.note}</p>
       <Section title={text.marketingHistory}>
         <DataTable
           columns={[
@@ -83,6 +86,7 @@ export function MarketingPage() {
       </Section>
 
       <Section title={text.marketingWizard} note={`${text.marketingStep} ${step}/3`}>
+        {planError && <ErrorState variant="panel" message={planError.message} status={planError.status} />}
         {step === 1 && (
           <div className={styles.form}>
             <TextInput label={text.marketingName} value={values.name} onChange={(event) => setValues({ ...values, name: event.target.value })} />
@@ -90,7 +94,7 @@ export function MarketingPage() {
               label={text.marketingAudience}
               value={values.artistId}
               onChange={(event) => setValues({ ...values, artistId: event.target.value })}
-              options={[{ value: '', label: 'ALL ARTISTS' }, ...(roster?.artists ?? []).map((artist) => ({ value: artist.id, label: artist.name }))]}
+              options={[{ value: '', label: user.role === 'admin' ? 'ALL ARTISTS' : 'SELECT ARTIST' }, ...(roster?.artists ?? []).map((artist) => ({ value: artist.id, label: artist.name }))]}
             />
             <div className={styles.stepActions}>
               <Button variant="primary" onClick={() => setStep(2)} disabled={!values.name.trim()}>{text.marketingNext}</Button>
@@ -121,13 +125,13 @@ export function MarketingPage() {
 
         {step === 3 && (
           <div className={styles.form}>
-            {planError && <ErrorState variant="panel" message={planError.message} status={planError.status} />}
             {plan ? (
               <>
                 <div className={styles.planHead}>
                   <span className="label label--accent">{text.marketingPlan}</span>
-                  <ProvenanceBadge>{text.provenancePrototype}</ProvenanceBadge>
+                  <ProvenanceBadge>SAVED DRAFT</ProvenanceBadge>
                 </div>
+                <p>{plan.message}</p>
                 <DataTable
                   columns={[
                     { key: 'step', header: text.marketingStep, mono: true, width: '80px' },
@@ -148,6 +152,12 @@ export function MarketingPage() {
             </div>
           </div>
         )}
+      </Section>
+      <Section title="SAVED CAMPAIGN PLANS">
+        {campaigns.error && <ErrorState variant="panel" message={campaigns.error.message} onRetry={campaigns.refetch} />}
+        <DataTable columns={[{ key: 'name', header: 'NAME', render: row => <Button onClick={() => { setPlan({ ...row, campaignId: row.id, budget: 'Pending approval', message: 'Saved draft plan.' }); setStep(3); }}>{row.name}</Button> }, { key: 'type', header: 'STRATEGY' }, { key: 'status', header: 'STATUS' }]}
+          rows={campaigns.data?.campaigns ?? []} rowKey={row => row.id} />
+        <p>Saved plans are drafts. Ads and messages are not sent automatically.</p>
       </Section>
     </div>
   );

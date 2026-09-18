@@ -96,7 +96,7 @@ function register(app, ctx) {
         }
 
         const { month } = req.body || {};
-        if (typeof month !== 'string' || !month.trim() || /[\\/]/.test(month)) {
+        if (!require('../services/salesService').validMonth(month)) {
             return res.status(400).json({ error: 'Month parameter required (YYYY-MM)' });
         }
 
@@ -107,6 +107,7 @@ function register(app, ctx) {
             }
 
             const generatedReports = [];
+            const failures = [];
 
             // PHASE 4CF: canonical roster (DB-first) so created artists get their
             // monthly report too. Content for the seeded roster is unchanged.
@@ -122,11 +123,14 @@ function register(app, ctx) {
                     generatedReports.push({ artist: artist.name, filename, path: filepath });
                 } catch (error) {
                     console.error(`Failed to generate report for ${artist.name}:`, error);
+                    failures.push({ artistId: artist.id, artist: artist.name, error: 'Report could not be generated or saved' });
                 }
             }
 
-            res.json({
-                message: 'Reports generated successfully',
+            const status = failures.length ? (generatedReports.length ? 'partial' : 'failed') : (generatedReports.length ? 'complete' : 'empty');
+            res.status(status === 'failed' ? 500 : 200).json({
+                status, failures,
+                message: status === 'complete' ? 'Reports generated successfully' : status === 'empty' ? 'No artists to report on' : 'Some reports could not be generated',
                 count: generatedReports.length,
                 reports: generatedReports,
                 directory: reportsDir

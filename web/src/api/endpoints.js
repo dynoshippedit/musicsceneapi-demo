@@ -178,3 +178,16 @@ export function exportPath({ format = 'pdf', artistId, timeframe = '30d' } = {})
   if (artistId) params.set('artistId', artistId);
   return `/v3/exports?${params.toString()}`;
 }
+
+export async function getCampaigns(token, { signal } = {}) {
+  return readJson(await apiFetch('/v3/marketing/campaigns', { token, signal }));
+}
+export async function createRoomDemo(token, body) {
+  return readJson(await apiFetch('/v3/anr/demos', { token, method: 'POST', body }));
+}
+export async function saveWhiteboard(token, message) {
+  return readJson(await apiFetch('/v3/anr/whiteboard', { token, method: 'POST', body: { message } }));
+}
+export async function saveListening(token, url) {
+  return readJson(await apiFetch('/v3/anr/listening', { token, method: 'POST', body: { url } }));
+}

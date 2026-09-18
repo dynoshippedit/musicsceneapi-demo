@@ -29,9 +29,11 @@ const ROOT = path.resolve(__dirname, '..', '..');
 const PORT = process.env.TEST_PORT || '3998';
 const BASE = `http://127.0.0.1:${PORT}`;
 const BASELINE = path.join(ROOT, 'tests', 'snapshots', 'phase2_baseline.json');
+// Explicit repairs override only reviewed contracts; preserve the historical baseline.
+const expectedSnapshot = () => ({ ...JSON.parse(fs.readFileSync(BASELINE, 'utf8')), ...JSON.parse(fs.readFileSync(path.join(ROOT, 'tests/snapshots/repaired_contracts.json'), 'utf8')) });
 
 let child;
-let dbBackup = null;
+const scratch = fs.mkdtempSync(path.join(require('os').tmpdir(), 'mau5-snapshot-'));
 
 const ENV = {
     ...process.env,
@@ -40,6 +42,9 @@ const ENV = {
     JWT_SECRET: 'probe-fixed-secret-for-snapshot-determinism',
     USE_REAL_DATA: 'false',
     DB_DIALECT: 'sqlite',
+    DB_STORAGE: path.join(scratch, 'test.sqlite'),
+    DATABASE_URL: '',
+    ADMIN_EMAIL: '', ADMIN_PASS: '',
     GROQ_API_KEY: '',
     AUTO_PRINT: 'false',
     SCHEDULE_JOBS: 'false'
@@ -58,15 +63,10 @@ async function waitForHealth(timeoutMs = 40000) {
 }
 
 before(async () => {
-    const dbFile = path.join(ROOT, 'mau5trap_v5.sqlite');
-    if (fs.existsSync(dbFile)) {
-        dbBackup = `${dbFile}.test-backup`;
-        fs.renameSync(dbFile, dbBackup);
-    }
-
-    child = spawn(process.execPath, ['server.js'], {
-        cwd: ROOT, env: ENV, stdio: ['ignore', 'pipe', 'pipe']
+    child = spawn(process.execPath, [path.join(ROOT, 'server.js')], {
+        cwd: scratch, env: ENV, stdio: ['ignore', 'pipe', 'pipe']
     });
+    child.stdout.resume();
     let err = '';
     child.stderr.on('data', (d) => { err += d.toString(); });
 
@@ -80,9 +80,7 @@ before(async () => {
 after(async () => {
     if (child) child.kill('SIGKILL');
     await new Promise((r) => setTimeout(r, 200));
-    const dbFile = path.join(ROOT, 'mau5trap_v5.sqlite');
-    try { if (fs.existsSync(dbFile)) fs.unlinkSync(dbFile); } catch (_) {}
-    if (dbBackup) { try { fs.renameSync(dbBackup, dbFile); } catch (_) {} }
+    fs.rmSync(scratch, { recursive: true, force: true });
 });
 
 async function login(email, password) {
@@ -116,7 +114,7 @@ describe('behavioral equivalence with the pre-refactor baseline', () => {
             p.on('exit', (code) => (code === 0 ? resolve() : reject(new Error(`probe exited ${code}`))));
         });
 
-        const baseline = JSON.parse(fs.readFileSync(BASELINE, 'utf8'));
+        const baseline = expectedSnapshot();
         const live = JSON.parse(fs.readFileSync(out, 'utf8'));
 
         const mismatches = [];
@@ -134,7 +132,7 @@ describe('behavioral equivalence with the pre-refactor baseline', () => {
     });
 
     test('status codes match the baseline on ALL cases, including nondeterministic ones', () => {
-        const baseline = JSON.parse(fs.readFileSync(BASELINE, 'utf8'));
+        const baseline = expectedSnapshot();
         const live = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests', 'snapshots', '.live.json'), 'utf8'));
         const bad = Object.keys(baseline)
             .filter((k) => k !== '__meta')

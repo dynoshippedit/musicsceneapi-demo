@@ -3,7 +3,7 @@
 .overlay {
   position: absolute;
   top: var(--space-4);
-  left: var(--space-4);
+  left: 56px;
   z-index: 900;
   display: flex;
   flex-direction: column;

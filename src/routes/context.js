@@ -55,18 +55,14 @@ const path = require('path');
  *     email are re-sourced from the row, so permission changes take effect
  *     immediately instead of living 24h in the token.
  *
- * Tokens WITHOUT an `id` claim — the ADMIN_EMAIL/ADMIN_PASS override branch
- * (src/routes/auth.js) — skip the lookup and keep their claim-based behavior
- * exactly as today (documented debt; no behavioral pin exists for it).
- *
- * A database failure during revalidation fails OPEN (claims used, error
- * logged): during a DB outage every DB-backed route is unusable anyway, and a
- * hard auth failure would take even the health path down. Documented tradeoff.
+ * A token needs a persisted user ID. Database lookup failures return 503;
+ * stale claims never authorize access during an outage.
  */
 function authenticateToken(req, res, next) {
     auth.authenticateToken(req, res, async () => {
         try {
-            if (req.user && req.user.id != null) {
+            if (!req.user || req.user.id == null) return res.status(401).json({ error: 'Please sign in again' });
+            if (req.user.id != null) {
                 const user = await models.User.findByPk(req.user.id);
                 if (!user) {
                     return res.status(401).json({ error: 'User not found' });
@@ -79,8 +75,8 @@ function authenticateToken(req, res, next) {
             }
             next();
         } catch (err) {
-            logger.error('Auth revalidation failed; continuing with token claims:', err);
-            next();
+            logger.error('Auth revalidation failed:', err);
+            return res.status(503).json({ error: 'Unable to verify access. Please retry.' });
         }
     });
 }
@@ -106,6 +102,7 @@ function buildContext() {
         // PHASE 4CF: durable product-state models (persist-or-demo contract).
         AnrSubmission: models.AnrSubmission,
         SalesEntry: models.SalesEntry,
+        Campaign: models.Campaign,
 
         // auth
         authenticateToken,

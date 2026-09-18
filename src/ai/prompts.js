@@ -22,7 +22,7 @@ function buildArtistContext(artist) {
     return {
         name: artist.name,
         stats: `Listeners: ${artist.monthlyListeners}, Streams: ${artist.totalStreams}, Growth: ${artist.growthRate}%`,
-        revenue: `Total: $${calculateTotalRevenue(artist)} (Top: ${Object.entries(artist.revenue).sort((a, b) => b[1] - a[1])[0]?.[0]})`
+        revenue: `Total: $${calculateTotalRevenue(artist)} (Top: ${Object.entries(artist.revenue || {}).sort((a, b) => b[1] - a[1])[0]?.[0]})`
     };
 }
 

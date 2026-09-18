@@ -76,11 +76,19 @@ function register(app, ctx) {
         const adminEmail = config.adminEmail;
         const adminPass = config.adminPass;
         if (adminEmail && adminPass && email === adminEmail && password === adminPass) {
-            const token = jwt.sign({ email, role: 'admin', artistAccess: 'all', integrationCount: 10 }, JWT_SECRET, { expiresIn: '24h' });
-            return res.json({
-                token,
-                user: { name: 'Admin', email, role: 'admin', pageAccess: ['all'] }
-            });
+            try {
+                let user = await User.findOne({ where: { email } });
+                if (!user) user = await User.create({ email, name: 'Admin', role: 'admin', artistAccess: 'all',
+                    pageAccess: JSON.stringify(['all']), passwordHash: await bcrypt.hash(password, 10), integrationCount: 10 });
+                if (user.role !== 'admin') return res.status(403).json({ error: 'Admin override is not allowed for this account' });
+                const token = jwt.sign({ id: user.id, email: user.email, role: user.role, artistAccess: user.artistAccess,
+                    integrationCount: user.integrationCount }, JWT_SECRET, { expiresIn: '24h' });
+                return res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role,
+                    artistAccess: user.artistAccess, pageAccess: parsePageAccess(user.pageAccess) } });
+            } catch (err) {
+                logger.error('Admin login failed:', err);
+                return res.status(503).json({ error: 'Login is temporarily unavailable' });
+            }
         }
 
         try {

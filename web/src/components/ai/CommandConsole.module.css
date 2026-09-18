@@ -40,3 +40,5 @@
 .failed { color: var(--color-danger); }
 .idle { color: var(--color-text-dim); }
 .compact .output { min-height: 64px; }
+.context { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.context select { min-width: 0; max-width: 100%; padding: var(--space-2); background: var(--color-input-bg); color: var(--color-text); border: var(--border-panel); font: var(--text-sm)/1 var(--font-mono); }

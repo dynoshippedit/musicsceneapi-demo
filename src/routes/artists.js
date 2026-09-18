@@ -237,6 +237,7 @@ function register(app, ctx) {
     });
 
     app.get('/v3/artists/:id/entity-audit', authenticateToken, async (req, res) => {
+        if (!hasArtistAccess(req.user, req.params.id)) return res.status(403).json({ error: 'Access denied for this artist' });
         // PHASE 2: orchestration (2-tier caching, 5 providers, AI analysis, issue
         // mapping) moved to src/services/entityAuditService.js. Status codes and
         // response bodies are unchanged, including `cached: true|false`.
@@ -285,6 +286,7 @@ function register(app, ctx) {
 
     // Development Report (AI) - Legacy Endpoint (Keep for compatibility)
     app.get('/v3/artists/:id/development', authenticateToken, async (req, res) => {
+        if (!hasArtistAccess(req.user, req.params.id)) return res.status(403).json({ error: 'Access denied for this artist' });
         // PHASE 4CF: canonical DB-first read + profile-owned canned insights
         // (mau5trap values byte-identical).
         const artist = await artistRepo.findById(req.params.id);

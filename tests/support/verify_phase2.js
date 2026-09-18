@@ -176,9 +176,9 @@ async function req(method, path, { token, body } = {}) {
     console.log('\n[7] AI boundary (no GROQ_API_KEY configured)');
     const aiAnalyze = await req('POST', '/v3/ai/analyze',
         { token: adminToken, body: { query: 'who has the best roi' } });
-    check('POST /v3/ai/analyze -> 200 (keyword path, no model call)', aiAnalyze.status === 200);
-    check('hardcoded confidence preserved', aiAnalyze.body.confidence === 0.98);
-    check('ROI answer shape preserved', /highest ROI at/.test(aiAnalyze.body.response || ''));
+    check('POST /v3/ai/analyze -> 503 when no provider is configured', aiAnalyze.status === 503);
+    check('unavailable AI returns no invented confidence', !('confidence' in aiAnalyze.body));
+    check('unavailable AI has an explicit error and no invented answer', /unavailable/i.test(aiAnalyze.body.error || '') && !('response' in aiAnalyze.body));
 
     const aiNoPrompt = await req('POST', '/v3/ai/query', { token: adminToken, body: {} });
     check('POST /v3/ai/query without prompt -> 400', aiNoPrompt.status === 400);
@@ -186,7 +186,7 @@ async function req(method, path, { token, body } = {}) {
     const aiQuery = await req('POST', '/v3/ai/query',
         { token: adminToken, body: { prompt: 'summarise the label' } });
     check('AI query degrades without a key instead of hanging',
-        [200, 500].includes(aiQuery.status), `status ${aiQuery.status}`);
+        aiQuery.status === 503, `status ${aiQuery.status}`);
 
     // ---- 8. reports / exports ----
     console.log('\n[8] Reports and exports');
@@ -211,12 +211,12 @@ async function req(method, path, { token, body } = {}) {
     check('sales write -> 200', sales.status === 200);
 
     // ---- 10. A&R split-brain still intact ----
-    console.log('\n[10] A&R stores (split-brain preserved)');
+    console.log('\n[10] Separate A&R Room and Scouting stores');
     const subs = await req('GET', '/v3/anr/submissions', { token: adminToken });
     check('submissions store readable', subs.status === 200 && Array.isArray(subs.body.submissions));
     const state = await req('GET', '/v3/anr/state', { token: adminToken });
     check('anrState store readable', state.status === 200 && Array.isArray(state.body.demos));
-    check('PRESERVED: the two stores hold different demos',
+    check('Room and Scouting keep distinct demo catalogues',
         subs.body.submissions[0].id !== state.body.demos[0].id);
 
     // ---- summary ----

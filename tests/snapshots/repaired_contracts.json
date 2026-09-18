@@ -1,0 +1,383 @@
+{
+  "label_overview_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "activeArtists": 29,
+      "annualProjection": null,
+      "month": null,
+      "monthlyRevenue": null,
+      "quarterlyProjection": null,
+      "source": "recorded_sales",
+      "timestamp": "<VOLATILE>",
+      "topArtists": []
+    }
+  },
+  "label_overview_artist_role": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "activeArtists": 1,
+      "annualProjection": null,
+      "month": null,
+      "monthlyRevenue": null,
+      "quarterlyProjection": null,
+      "source": "recorded_sales",
+      "timestamp": "<VOLATILE>",
+      "topArtists": []
+    }
+  },
+  "campaigns_stats_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "history": [],
+      "note": "Reference CRM counts. No historical campaign performance has been recorded.",
+      "source": "roster_reference",
+      "stats": {
+        "presaleSignups": 1782772,
+        "totalEmails": 11218910,
+        "totalSMS": 1010297
+      }
+    }
+  },
+  "rights_contracts_admin": {
+    "status": 501,
+    "contentType": "application/json",
+    "body": {
+      "error": "Contract generation is not available. No contract has been created."
+    }
+  },
+  "rights_contracts_no_artist": {
+    "status": 404,
+    "contentType": "application/json",
+    "body": {
+      "error": "Artist not found"
+    }
+  },
+  "ai_analyze_roi": {
+    "status": 503,
+    "contentType": "application/json",
+    "body": {
+      "error": "AI is unavailable. Check the server provider configuration or try again later."
+    }
+  },
+  "ai_analyze_tour": {
+    "status": 503,
+    "contentType": "application/json",
+    "body": {
+      "error": "AI is unavailable. Check the server provider configuration or try again later."
+    }
+  },
+  "ai_analyze_growth": {
+    "status": 503,
+    "contentType": "application/json",
+    "body": {
+      "error": "AI is unavailable. Check the server provider configuration or try again later."
+    }
+  },
+  "ai_analyze_other": {
+    "status": 503,
+    "contentType": "application/json",
+    "body": {
+      "error": "AI is unavailable. Check the server provider configuration or try again later."
+    }
+  },
+  "ai_analyze_no_query": {
+    "status": 400,
+    "contentType": "application/json",
+    "body": {
+      "error": "Prompt required"
+    }
+  },
+  "anr_state_initial": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "demos": [
+        {
+          "artist": "Void Walker",
+          "createdAt": "<VOLATILE>",
+          "genre": null,
+          "hasVoted": false,
+          "id": "<VOLATILE>",
+          "status": "new",
+          "submittedBy": "admin",
+          "title": "Deep Space",
+          "updatedAt": "<VOLATILE>",
+          "url": null
+        },
+        {
+          "artist": "Neon Glitch",
+          "createdAt": "<VOLATILE>",
+          "genre": null,
+          "hasVoted": false,
+          "id": "<VOLATILE>",
+          "status": "high-priority",
+          "submittedBy": "rezz",
+          "title": "Cyberpunk Bass",
+          "updatedAt": "<VOLATILE>",
+          "url": null
+        },
+        {
+          "artist": "Unknown Producer",
+          "createdAt": "<VOLATILE>",
+          "genre": null,
+          "hasVoted": false,
+          "id": "<VOLATILE>",
+          "status": "reviewing",
+          "submittedBy": "admin",
+          "title": "Analog Dreams",
+          "updatedAt": "<VOLATILE>",
+          "url": null
+        }
+      ],
+      "nowListening": {
+        "timestamp": "<VOLATILE>",
+        "updatedBy": "deadmau5",
+        "url": "https://soundcloud.com/mau5trap/example-demo"
+      },
+      "whiteboard": "Currently Reviewing: Q1 2026 Compilation Submissions.\nFocus: Tech House / Minimal."
+    }
+  },
+  "anr_vote_missing_demo": {
+    "status": 400,
+    "contentType": "application/json",
+    "body": {
+      "error": "Invalid action. Use \"add\" or \"remove\"."
+    }
+  },
+  "marketing_campaign_create": {
+    "status": 400,
+    "contentType": "application/json",
+    "body": {
+      "error": "A campaign name, supported strategy and platforms are required"
+    }
+  },
+  "integrations_auth_spotify": {
+    "status": 501,
+    "contentType": "application/json",
+    "body": {
+      "error": "Account connection is not implemented. No account was connected."
+    }
+  },
+  "analytics_geography": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "regions": [
+        {
+          "percent": 0.7,
+          "region": "Los Angeles, US",
+          "value": 82000
+        },
+        {
+          "percent": 0.3,
+          "region": "Toronto, CA",
+          "value": 40000
+        },
+        {
+          "percent": 0.6,
+          "region": "London, UK",
+          "value": 70500
+        },
+        {
+          "percent": 0.5,
+          "region": "Berlin, DE",
+          "value": 67000
+        },
+        {
+          "percent": 0.8,
+          "region": "Amsterdam, NL",
+          "value": 101100
+        },
+        {
+          "percent": 0.9,
+          "region": "New York, US",
+          "value": 106500
+        },
+        {
+          "percent": 0.7,
+          "region": "Sydney, AU",
+          "value": 80300
+        },
+        {
+          "percent": 0.1,
+          "region": "Tokyo, JP",
+          "value": 12000
+        },
+        {
+          "percent": 0.5,
+          "region": "Mexico City, MX",
+          "value": 67000
+        },
+        {
+          "percent": 0.4,
+          "region": "Paris, FR",
+          "value": 54000
+        },
+        {
+          "percent": 1,
+          "region": "Chicago, US",
+          "value": 118000
+        },
+        {
+          "percent": 0.3,
+          "region": "Detroit, US",
+          "value": 32000
+        },
+        {
+          "percent": 0.7,
+          "region": "Miami, US",
+          "value": 86000
+        },
+        {
+          "percent": 0.1,
+          "region": "Ibiza, ES",
+          "value": 15000
+        },
+        {
+          "percent": 0.6,
+          "region": "San Francisco, US",
+          "value": 70000
+        },
+        {
+          "percent": 0.1,
+          "region": "Austin, US",
+          "value": 6500
+        },
+        {
+          "percent": 0,
+          "region": "Vancouver, CA",
+          "value": 4500
+        },
+        {
+          "percent": 0,
+          "region": "Seattle, US",
+          "value": 4000
+        },
+        {
+          "percent": 0.1,
+          "region": "Manchester, UK",
+          "value": 8500
+        },
+        {
+          "percent": 0,
+          "region": "Glasgow, UK",
+          "value": 5200
+        },
+        {
+          "percent": 0.9,
+          "region": "Space, Ibiza",
+          "value": 110000
+        },
+        {
+          "percent": 0.9,
+          "region": "Guvernment, Toronto",
+          "value": 105000
+        },
+        {
+          "percent": 0.8,
+          "region": "Ministry of Sound, London",
+          "value": 95000
+        },
+        {
+          "percent": 0.7,
+          "region": "Womb, Tokyo",
+          "value": 85000
+        },
+        {
+          "percent": 0.7,
+          "region": "Zouk, Singapore",
+          "value": 80000
+        },
+        {
+          "percent": 0.6,
+          "region": "Sao Paulo, BR",
+          "value": 78000
+        },
+        {
+          "percent": 0.6,
+          "region": "Warung, Brazil",
+          "value": 76000
+        },
+        {
+          "percent": 0.6,
+          "region": "Buenos Aires, AR",
+          "value": 75000
+        },
+        {
+          "percent": 0.6,
+          "region": "D-Edge, Sao Paulo",
+          "value": 72000
+        },
+        {
+          "percent": 0.6,
+          "region": "Palladium, Los Angeles",
+          "value": 70000
+        },
+        {
+          "percent": 0.5,
+          "region": "Berghain, Berlin",
+          "value": 65000
+        },
+        {
+          "percent": 0.5,
+          "region": "Seoul, KR",
+          "value": 60000
+        },
+        {
+          "percent": 0.5,
+          "region": "Mumbai, IN",
+          "value": 55000
+        },
+        {
+          "percent": 0.4,
+          "region": "Dubai, AE",
+          "value": 52000
+        },
+        {
+          "percent": 0.4,
+          "region": "Red Rocks, Denver",
+          "value": 50000
+        },
+        {
+          "percent": 0.4,
+          "region": "Fabric, London",
+          "value": 48000
+        },
+        {
+          "percent": 0.3,
+          "region": "Montreal, CA",
+          "value": 40000
+        },
+        {
+          "percent": 1.1,
+          "region": "Oceania",
+          "value": 140000
+        },
+        {
+          "percent": 1.8,
+          "region": "South America",
+          "value": 220000
+        },
+        {
+          "percent": 39.3,
+          "region": "North America",
+          "value": 4789848
+        },
+        {
+          "percent": 23.6,
+          "region": "Europe",
+          "value": 2873901
+        },
+        {
+          "percent": 15.7,
+          "region": "Asia",
+          "value": 1915930
+        }
+      ],
+      "source": "fixture"
+    }
+  }
+}

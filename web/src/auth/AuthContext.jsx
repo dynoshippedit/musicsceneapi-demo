@@ -7,8 +7,8 @@ const AuthContext = createContext(null);
 function readStoredSession() {
   try {
     const token = localStorage.getItem('authToken');
-    const user = JSON.parse(localStorage.getItem('userData') || 'null');
-    return token && user ? { token, user } : { token: null, user: null };
+    // Stored profile fields cannot grant access to authenticated UI.
+    return { token: token || null, user: null };
   } catch {
     return { token: null, user: null };
   }
@@ -16,7 +16,9 @@ function readStoredSession() {
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(readStoredSession);
-  const [status, setStatus] = useState(session.token ? 'authenticated' : 'anonymous');
+  const [status, setStatus] = useState(session.token ? 'checking' : 'anonymous');
+  const [revision, setRevision] = useState(0);
+  const retrySession = useCallback(() => setRevision(value => value + 1), []);
 
   const logout = useCallback(() => {
     localStorage.removeItem('authToken');
@@ -30,24 +32,25 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!session.token) return;
     const controller = new AbortController();
+    setStatus('checking');
     getMe(session.token, { signal: controller.signal })
       .then((canonicalUser) => {
-        const user = { ...session.user, ...canonicalUser };
+        if (controller.signal.aborted) return;
+        const user = canonicalUser;
         localStorage.setItem('userData', JSON.stringify(user));
         setSession((current) => current.token === session.token ? { token: current.token, user } : current);
+        setStatus('authenticated');
       })
       .catch((error) => {
-        if (error.name === 'AbortError') return;
+        if (controller.signal.aborted || error.name === 'AbortError') return;
         // PHASE_4A_HANDOFF.md §9 / FRONTEND_ARCHITECTURE.md §6: only 401/403 from /me end the session
         // (the backend answers 401 to a missing bearer and 403 to an invalid/expired one — src/auth/index.js).
         if (error.status === 401 || error.status === 403) { logout(); return; }
-        // Anything else (network failure, 5xx, 404 "User not found") is a reconciliation failure, not a
-        // session failure: the locally stored token/user stay in place and the backend still authorizes
-        // every request. Pre-4C Decision 5 — a /me 404 previously called logout() here, which destroyed
-        // the ADMIN_EMAIL override login whose JWT carries no `id` claim (PHASE_4B_STATIC_AUDIT.md F-10).
+        // Preserve the token for retry; protected UI waits for verified user data.
+        setStatus('error');
       });
     return () => controller.abort();
-  }, [session.token, logout]);
+  }, [session.token, logout, revision]);
 
   const login = useCallback(async (credentials) => {
     const result = await requestLogin(credentials);
@@ -60,7 +63,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ ...session, status, login, logout }}>
+    <AuthContext.Provider value={{ ...session, status, login, logout, retrySession }}>
       {children}
     </AuthContext.Provider>
   );

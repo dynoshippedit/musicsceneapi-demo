@@ -55,7 +55,7 @@ export function IntegrationsView() {
               <div className={styles.cardHead}>
                 <span className={styles.serviceName}>{service.name}</span>
                 <Badge tone={service.connected ? 'accent' : 'muted'} dot>
-                  {service.connected ? text.integrationsConnected : text.integrationsDisconnected}
+                  {service.available === false ? 'NOT AVAILABLE' : service.connected ? text.integrationsConnected : text.integrationsDisconnected}
                 </Badge>
               </div>
               <div className={styles.quota}>
@@ -73,7 +73,9 @@ export function IntegrationsView() {
                 )}
               </div>
               <span className={`label ${styles.muted}`}>{text.integrationsLastSync} {formatters.dateTime(service.lastSync)}</span>
+              {service.message && <p className={styles.note}>{service.message}</p>}
               <Button
+                disabled={service.available === false}
                 variant={service.connected ? 'outline' : 'primary'}
                 busy={pending === service.id}
                 onClick={() => toggle(service)}

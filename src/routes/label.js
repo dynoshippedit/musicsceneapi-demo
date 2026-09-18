@@ -41,7 +41,7 @@ function register(app, ctx) {
         const { artistId } = req.query;
         try {
             const artists = await Artist.findAll();
-            let relevantArtists = artists.map(a => a.data);
+            let relevantArtists = artists.map(a => a.data).filter(a => hasArtistAccess(req.user, a.id));
 
             if (artistId) {
                 relevantArtists = relevantArtists.filter(a => a.id === artistId);
@@ -65,7 +65,7 @@ function register(app, ctx) {
         // PHASE 4CF: roster reads resolve through the canonical hybrid list so
         // API-created artists are included; the demographic fixture itself is
         // profile-owned reference data (was an inline literal).
-        const roster = await artistRepo.findAllHybrid();
+        const roster = (await artistRepo.findAllHybrid()).filter(a => hasArtistAccess(req.user, a.id));
 
         // 1. Calculate Top Movers (highest growth rate)
         const validArtists = roster.filter(a => typeof a.growthRate === 'number');
@@ -87,35 +87,20 @@ function register(app, ctx) {
     });
 
     app.get('/v3/label/overview', authenticateToken, async (req, res) => {
-        // PHASE 4CF: canonical roster (DB-first) so created artists count.
-        const roster = await artistRepo.findAllHybrid();
-
-        // Filter artists by access
-        const accessibleArtists = roster.filter(artist =>
-            hasArtistAccess(req.user, artist.id)
-        );
-
-        const topArtists = [...accessibleArtists]
-            .sort((a, b) => calculateTotalRevenue(b) - calculateTotalRevenue(a))
-            .slice(0, 5)
-            .map(a => ({
-                name: a.name,
-                revenue: calculateTotalRevenue(a),
-                roi: a.roi
-            }));
-
-        // Calculate totals for accessible artists only
-        const totalRevenue = accessibleArtists.reduce((sum, a) => sum + calculateTotalRevenue(a), 0);
-
-        res.json({
-            monthlyRevenue: req.user.role === 'admin' ? labelData.labelTotals.monthlyRevenue : totalRevenue,
-            quarterlyProjection: totalRevenue * 3,
-            annualProjection: totalRevenue * 12,
-            activeArtists: accessibleArtists.length,
-            topArtists,
-            timestamp: new Date().toISOString()
-        });
+        try {
+            const sales = require('../services/salesService');
+            const roster = (await artistRepo.findAllHybrid()).filter(a => hasArtistAccess(req.user, a.id));
+            const rows = await sales.history(roster.map(a => a.id));
+            const { future } = sales.forecast(rows, 12);
+            res.json({ monthlyRevenue: rows.at(-1)?.revenue ?? null, month: rows.at(-1)?.month ?? null,
+                quarterlyProjection: future.length ? future.slice(0, 3).reduce((sum, r) => sum + r.revenue, 0) : null,
+                annualProjection: future.length ? future.reduce((sum, r) => sum + r.revenue, 0) : null,
+                activeArtists: roster.filter(a => a.status !== 'archived' && a.tier !== 'archived').length,
+                topArtists: [], source: 'recorded_sales', timestamp: new Date().toISOString() });
+        } catch (err) {
+            logger.error('Overview failed:', err);
+            res.status(503).json({ error: 'Revenue data is unavailable' });
+        }
     });
 }
-
 module.exports = { register };

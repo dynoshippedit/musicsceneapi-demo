@@ -71,6 +71,7 @@ export function AnrScoutingView() {
 
   return (
     <>
+      <p className="label">SCOUT SEARCH · DEMO FIXTURES</p>
       <Section
         title={text.anrScoutTitle}
         actions={

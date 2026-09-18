@@ -115,43 +115,14 @@ function register(app, ctx) {
 
     // Get integration status
     app.get('/v3/integrations/status', authenticateToken, (req, res) => {
-        const userId = req.user.id;
-        const integrations = userIntegrations[userId] || {};
-
-        // Return status for all supported services
-        const status = Object.keys(SERVICES).map(key => ({
-            id: key,
-            name: SERVICES[key].name,
-            connected: integrations[key]?.connected || false,
-            lastSync: integrations[key]?.lastSync || null,
-            // PHASE 4CF (persist-or-demo): quotaUsed was Math.random() per
-            // call — simulated numbers presented as operational metering.
-            // Now explicit null = "no metering data"; the UI renders '—'.
-            quotaUsed: null
-        }));
-
-        res.json({ services: status });
+        res.json({ services: Object.keys(SERVICES).map(id => ({ id, name: SERVICES[id].name,
+            connected: false, available: false, status: 'not_implemented', lastSync: null, quotaUsed: null,
+            message: 'Account connection is not available yet.' })) });
     });
 
-    // Start OAuth flow (Mock / Stub)
     app.get('/v3/integrations/auth/:service', authenticateToken, (req, res) => {
-        const service = req.params.service;
-        if (!SERVICES[service]) return res.status(404).json({ error: 'Service not found' });
-
-        // In a real app, this would redirect to the provider's OAuth page
-        // For now, we'll simulate the mock connection immediately
-
-        // Initialize user store if needed
-        if (!userIntegrations[req.user.id]) userIntegrations[req.user.id] = {};
-
-        // Simulate success
-        userIntegrations[req.user.id][service] = {
-            connected: true,
-            token: `mock_token_${Date.now()}`,
-            lastSync: new Date().toISOString()
-        };
-
-        res.json({ success: true, message: `Connected to ${SERVICES[service].name} (Mock)` });
+        if (!SERVICES[req.params.service]) return res.status(404).json({ error: 'Service not found' });
+        res.status(501).json({ error: 'Account connection is not implemented. No account was connected.' });
     });
 
     // Disconnect

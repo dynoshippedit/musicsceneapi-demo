@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../auth/useAuth.js';
 import { useBrand } from '../../brand/BrandContext.jsx';
 import { useAiProviders } from '../../ai/useAiProviders.js';
@@ -22,6 +22,8 @@ export function CommandConsole({ artists = [], onRosterChange, compact = false }
   const { token } = useAuth();
   const { text } = useBrand();
   const providers = useAiProviders();
+  const [artistId, setArtistId] = useState('');
+  useEffect(() => { if (artistId && !artists.some(a => a.id === artistId)) setArtistId(''); }, [artists, artistId]);
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -76,7 +78,7 @@ export function CommandConsole({ artists = [], onRosterChange, compact = false }
       }
 
       // Anything else falls through to the backend AI route.
-      const result = await runAiQuery(token, { prompt: raw, selectable: providers.selectable });
+      const result = await runAiQuery(token, { prompt: raw, artistId, selectable: providers.selectable });
       setOutput(result.answer || text.consoleError);
     } catch (failure) {
       setFailed(true);
@@ -96,6 +98,12 @@ export function CommandConsole({ artists = [], onRosterChange, compact = false }
         <ProviderModelChip providers={providers} />
       </header>
 
+      <label className={`label ${styles.context}`}>ARTIST CONTEXT
+        <select aria-label="Artist context" value={artistId} onChange={event => setArtistId(event.target.value)} disabled={busy}>
+          <option value="">Accessible roster</option>
+          {artists.map(artist => <option key={artist.id} value={artist.id}>{artist.name}</option>)}
+        </select>
+      </label>
       <form className={styles.inputRow} onSubmit={submit}>
         <span className={styles.prompt} aria-hidden="true">&gt;</span>
         <input
@@ -110,7 +118,7 @@ export function CommandConsole({ artists = [], onRosterChange, compact = false }
       </form>
 
       <div className={`panel--well ${styles.output} ${failed ? styles.failed : ''}`.trim()} role="log" aria-live="polite">
-        {output || <span className={styles.idle}>{text.consoleIdle}</span>}
+        {output || <span className={styles.idle}>{providers.status === 'configured' ? text.consoleIdle : '// AI unavailable. Check provider settings. Artist commands remain available.'}</span>}
       </div>
     </Panel>
   );

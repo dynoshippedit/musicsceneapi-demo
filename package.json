@@ -13,7 +13,9 @@
     "test:snapshot": "node --test --test-force-exit tests/regression/snapshot.test.js",
     "verify": "node tests/support/verify_phase2.js",
     "verify:hermetic": "node scripts/run-verify-hermetic.js",
-    "snapshot:baseline": "node tests/support/probe.js server.js tests/snapshots/phase2_baseline.json"
+    "snapshot:baseline": "node tests/support/probe.js server.js tests/snapshots/phase2_baseline.json",
+    "test:workflows": "node scripts/run-browser-workflows.js",
+    "test:all": "npm test && npm --prefix web run build && npm --prefix web run gate -- --static-only && npm run test:workflows"
   },
   "dependencies": {
     "axios": "^1.13.2",
