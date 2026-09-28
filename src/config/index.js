@@ -153,6 +153,27 @@ const config = {
         stub: process.env.STRIPE_STUB === 'true'
     },
 
+    // Label Stripe Connect (2026-09-28): the LABEL's OWN Stripe account,
+    // connected via OAuth so the label sees its direct sales per artist.
+    // THIS IS NOT THE PLATFORM'S BILLING (the `stripe` block above charges
+    // the label for the software). TEST MODE ONLY — the OAuth exchange
+    // refuses livemode accounts and all API calls use the test-mode key.
+    // When unconfigured (and PAYMENTS_STUB is not 'true'), the connect/sync
+    // routes answer 503 and the rest of the app is unaffected.
+    payments: {
+        stripe: {
+            clientId: process.env.LABEL_STRIPE_CLIENT_ID,
+            clientSecret: process.env.LABEL_STRIPE_CLIENT_SECRET,
+            redirectUri: process.env.LABEL_STRIPE_REDIRECT_URI ||
+                'http://localhost:3000/v3/direct-sales/connect/callback',
+            // TEST-ONLY: 'true' swaps the Connect client for an in-memory
+            // stub so the regression suite never touches connect.stripe.com.
+            // Fixtures via PAYMENTS_STUB_CHARGES_FILE (JSON array, re-read
+            // per pull) or PAYMENTS_STUB_CHARGES (inline JSON). Never in prod.
+            stub: process.env.PAYMENTS_STUB === 'true'
+        }
+    },
+
     // api L226-227
     logging: {
         level: 'info',

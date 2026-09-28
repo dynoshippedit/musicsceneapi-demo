@@ -86,6 +86,11 @@ function autoPrintReport(filepath) {
  * Body preserved from the cron callback so a manual run and the scheduled run
  * behave identically.
  *
+ * AI/FINANCIAL LIABILITY POSTURE (2026-09-28, FINANCIAL_DATA_POLICY.md):
+ * the scheduled job passes { aiInsights: false } EXPLICITLY — no scheduled
+ * path may ever send financial data to an AI provider. AI insights in
+ * reports require a per-request user opt-in on the interactive endpoints.
+ *
  * @param {string} month YYYY-MM
  */
 async function generateMonthlyReports(month) {
@@ -98,7 +103,7 @@ async function generateMonthlyReports(month) {
         }
 
         for (const artist of artistRepo.getMockArtists()) {
-            const pdfBuffer = await generateMonthlyReport(artist, month);
+            const pdfBuffer = await generateMonthlyReport(artist, month, { aiInsights: false });
             const filename = `${artist.name}_${month}_report.pdf`;
             const filepath = path.join(reportsDir, filename);
 

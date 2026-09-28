@@ -104,10 +104,23 @@ const MerchSettlement = sequelize.define('MerchSettlement', {
     currency: { type: DataTypes.STRING, allowNull: false }, // 3-letter ISO, uppercase
     attendance: { type: DataTypes.INTEGER, allowNull: true },
     source: { type: DataTypes.STRING, allowNull: false, defaultValue: 'atvenu' },
-    importedBy: { type: DataTypes.STRING, allowNull: true }
+    importedBy: { type: DataTypes.STRING, allowNull: true },
+    // Provenance + review state machine (research correction 2026-09-28).
+    // atVenu's contract is integer cents, so the source precision IS cents;
+    // the hash/row/version prove WHICH file the row came from.
+    sourceFileHash: { type: DataTypes.STRING, allowNull: true },
+    rowRef: { type: DataTypes.STRING, allowNull: true },
+    importVersion: { type: DataTypes.STRING, allowNull: true },
+    reviewState: { type: DataTypes.STRING, allowNull: false, defaultValue: 'reported' },
+    reviewedBy: { type: DataTypes.STRING, allowNull: true },
+    reviewEvidence: { type: DataTypes.TEXT, allowNull: true },
+    reviewedAt: { type: DataTypes.DATE, allowNull: true },
+    supersedesId: { type: DataTypes.INTEGER, allowNull: true }
 }, {
+    // Idempotency + supersede: same dedup key plus the source file hash.
+    // Same file -> duplicate rejection; revised file -> supersede.
     indexes: [
-        { unique: true, name: 'merch_settlements_artist_show_venue', fields: ['artistId', 'showDate', 'venue', 'source'] }
+        { unique: true, name: 'merch_settlements_artist_show_venue_hash', fields: ['artistId', 'showDate', 'venue', 'source', 'sourceFileHash'] }
     ]
 });
 
@@ -245,7 +258,9 @@ async function initDB({ logger, labelData } = {}) {
             await WorkRecording.create({ workId: work1.id, recordingId: rec1.id });
             await RoyaltyLine.create({
                 artistId: 'art_novakin', catalogKey: 'ZZAAA2600001', recordingId: rec1.id, amountCents: 12500,
-                currency: 'USD', period: '2026-08', source: 'demo seed', importedBy: 'seed'
+                amountDecimal: '125.00', amountScale: 2, sourceAmount: '12500',
+                currency: 'USD', period: '2026-08', source: 'demo seed', importedBy: 'seed',
+                sourceFileHash: 'seed', rowRef: 'seed row 1', importVersion: 'seed-v1'
             });
         }
 
@@ -369,19 +384,118 @@ const RoyaltyLine = sequelize.define('RoyaltyLine', {
     catalogKey: { type: DataTypes.STRING, allowNull: false }, // uppercased ISRC or UPC — dedup key
     recordingId: { type: DataTypes.INTEGER, allowNull: true },
     releaseId: { type: DataTypes.INTEGER, allowNull: true },
-    amountCents: { type: DataTypes.INTEGER, allowNull: false }, // integer cents, NEVER float
+    // Money: source precision is preserved EXACTLY (research correction
+    // 2026-09-28). amountDecimal/amountScale hold the source amount as a
+    // scaled integer (never float); sourceAmount is the original string.
+    // amountCents is the settlement/payment BOUNDARY value only:
+    // round-half-up(amountDecimal, 2), applied once per aggregate, never
+    // per line. (DDEX DSR uses decimal fields; 1M lines x $0.003 = $3,000
+    // that line-level cent rounding would zero.)
+    amountDecimal: { type: DataTypes.STRING, allowNull: true },
+    amountScale: { type: DataTypes.INTEGER, allowNull: true },
+    sourceAmount: { type: DataTypes.STRING, allowNull: true },
+    amountCents: { type: DataTypes.INTEGER, allowNull: false }, // boundary value ONLY — see above
     currency: { type: DataTypes.STRING, allowNull: false }, // 3-letter ISO, uppercase
     period: { type: DataTypes.STRING, allowNull: false }, // e.g. '2026-09'
     source: { type: DataTypes.STRING, allowNull: true }, // '' when the CSV left it blank (never NULL from imports)
-    importedBy: { type: DataTypes.STRING, allowNull: true }
+    importedBy: { type: DataTypes.STRING, allowNull: true },
+    // Provenance (research correction 2026-09-28): every imported line
+    // carries its source file hash, row reference, and import version.
+    sourceFileHash: { type: DataTypes.STRING, allowNull: true }, // SHA-256 hex of the source file
+    rowRef: { type: DataTypes.STRING, allowNull: true }, // e.g. 'line 2'
+    importVersion: { type: DataTypes.STRING, allowNull: true }, // import batch id
+    // Review state machine (research correction 2026-09-28): reported ->
+    // reconciled -> approved, plus disputed / estimated / superseded.
+    // Every transition records reviewer identity + evidence.
+    reviewState: { type: DataTypes.STRING, allowNull: false, defaultValue: 'reported' },
+    reviewedBy: { type: DataTypes.STRING, allowNull: true },
+    reviewEvidence: { type: DataTypes.TEXT, allowNull: true },
+    reviewedAt: { type: DataTypes.DATE, allowNull: true },
+    supersedesId: { type: DataTypes.INTEGER, allowNull: true } // the record this one supersedes
 }, {
-    // Royalty import idempotency: re-importing the same statement (same
-    // catalog key + period + source) can never double-count. The import
-    // route pre-checks and reports duplicates per row; this constraint is
-    // the backstop against concurrent imports.
+    // Royalty import idempotency + supersede (research correction
+    // 2026-09-28): the dedup key includes the source file hash.
+    // Re-uploading the SAME file (same hash) is rejected as a duplicate and
+    // can never double-count. Uploading a REVISED file (same catalog key +
+    // period + source, different hash) SUPERSEDES the prior line: the old
+    // row is marked superseded (excluded from totals) and the new row
+    // points at it via supersedesId. The unique constraint backstops
+    // concurrent imports; the route pre-checks and reports per row.
     indexes: [
-        { unique: true, name: 'royalty_lines_catalog_period_source', fields: ['catalogKey', 'period', 'source'] }
+        { unique: true, name: 'royalty_lines_catalog_period_source_hash', fields: ['catalogKey', 'period', 'source', 'sourceFileHash'] }
     ]
 });
 
-module.exports = { sequelize, User, Artist, Stats, AuditEvent, AnrSubmission, SalesEntry, RoomDemo, RoomVote, RoomSetting, Campaign, Subscription, ArtistOAuth, Recording, Release, Work, WorkRecording, RoyaltyLine, MerchSettlement, initDB };
+// ---------------------------------------------------------------------------
+// Direct sales (2026-09-28): the LABEL's own payment accounts (Stripe
+// Connect, test mode) + label-managed product/price -> artist mappings.
+// sync() creates absent tables; no explicit migration needed (new tables).
+//
+// This is NOT the platform's subscription billing (Subscription model
+// above, src/billing/stripeClient.js). These tables read the LABEL's OWN
+// sales so the label sees its direct sales per managed artist.
+// ---------------------------------------------------------------------------
+const PaymentConnection = sequelize.define('PaymentConnection', {
+    provider: { type: DataTypes.STRING, primaryKey: true }, // 'stripe'
+    accountId: { type: DataTypes.STRING, allowNull: false }, // provider's account id
+    displayName: { type: DataTypes.STRING, allowNull: true },
+    accessTokenEnc: { type: DataTypes.TEXT, allowNull: false }, // AES-256-GCM, see src/oauth/tokenCrypto.js
+    refreshTokenEnc: { type: DataTypes.TEXT, allowNull: true },
+    livemode: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false }, // always false: TEST MODE ONLY
+    status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'connected' }, // connected|error
+    connectedBy: { type: DataTypes.STRING, allowNull: true },
+    connectedAt: { type: DataTypes.DATE, allowNull: true },
+    lastSyncAt: { type: DataTypes.DATE, allowNull: true },
+    lastSyncError: { type: DataTypes.STRING, allowNull: true }
+});
+
+// One row = one provider sale, normalized to integer cents + ISO currency.
+// Idempotency key: (provider, providerSaleId) — re-pulling can never
+// double-count; refunds update the original row in place.
+// Stripe's API reports integer cents natively, so the source precision IS
+// cents here. Review state tracks reconciliation against payouts.
+const DirectSale = sequelize.define('DirectSale', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    provider: { type: DataTypes.STRING, allowNull: false, defaultValue: 'stripe' },
+    providerSaleId: { type: DataTypes.STRING, allowNull: false }, // e.g. Stripe charge id
+    artistId: { type: DataTypes.STRING, allowNull: true }, // null = unattributed (reported, never guessed)
+    amountCents: { type: DataTypes.INTEGER, allowNull: false }, // gross, integer cents, NEVER float
+    amountRefundedCents: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    netCents: { type: DataTypes.INTEGER, allowNull: false }, // amountCents - amountRefundedCents
+    currency: { type: DataTypes.STRING, allowNull: false }, // 3-letter ISO, uppercase
+    status: { type: DataTypes.STRING, allowNull: false }, // succeeded|refunded|partially_refunded
+    occurredAt: { type: DataTypes.DATE, allowNull: true },
+    productIds: { type: DataTypes.JSON, allowNull: true },
+    priceIds: { type: DataTypes.JSON, allowNull: true },
+    description: { type: DataTypes.STRING, allowNull: true },
+    rawMetadata: { type: DataTypes.JSON, allowNull: true }, // provider record snapshot (provenance)
+    importedBy: { type: DataTypes.STRING, allowNull: true },
+    reviewState: { type: DataTypes.STRING, allowNull: false, defaultValue: 'reported' },
+    reviewedBy: { type: DataTypes.STRING, allowNull: true },
+    reviewEvidence: { type: DataTypes.TEXT, allowNull: true },
+    reviewedAt: { type: DataTypes.DATE, allowNull: true }
+}, {
+    indexes: [
+        { unique: true, name: 'direct_sales_provider_sale', fields: ['provider', 'providerSaleId'] },
+        { name: 'direct_sales_artist', fields: ['artistId'] }
+    ]
+});
+
+// Label-managed attribution: provider product/price metadata -> artist.
+// matchType: charge_metadata ("key:value" against the sale's metadata),
+// price_id, product_id.
+const ArtistPaymentMapping = sequelize.define('ArtistPaymentMapping', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    provider: { type: DataTypes.STRING, allowNull: false, defaultValue: 'stripe' },
+    matchType: { type: DataTypes.STRING, allowNull: false },
+    matchValue: { type: DataTypes.STRING, allowNull: false },
+    artistId: { type: DataTypes.STRING, allowNull: false },
+    note: { type: DataTypes.STRING, allowNull: true },
+    createdBy: { type: DataTypes.STRING, allowNull: true }
+}, {
+    indexes: [
+        { unique: true, name: 'payment_mappings_provider_match', fields: ['provider', 'matchType', 'matchValue'] }
+    ]
+});
+
+module.exports = { sequelize, User, Artist, Stats, AuditEvent, AnrSubmission, SalesEntry, RoomDemo, RoomVote, RoomSetting, Campaign, Subscription, ArtistOAuth, Recording, Release, Work, WorkRecording, RoyaltyLine, MerchSettlement, PaymentConnection, DirectSale, ArtistPaymentMapping, initDB };

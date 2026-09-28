@@ -124,6 +124,10 @@ function buildContext() {
         WorkRecording: models.WorkRecording,
         RoyaltyLine: models.RoyaltyLine,
         MerchSettlement: models.MerchSettlement,
+        // Direct sales (2026-09-28): label-owned payment accounts + attribution.
+        PaymentConnection: models.PaymentConnection,
+        DirectSale: models.DirectSale,
+        ArtistPaymentMapping: models.ArtistPaymentMapping,
 
         // auth
         authenticateToken,

@@ -28,6 +28,75 @@ data lives in exactly one database that no other customer can reach.
 - Application-level access control (admin vs. artist roles, per-artist
   scoping) still applies *within* a customer's database. The neutrality
   promise is about isolation *between* customers.
+- **Not a financial custodian:** the platform is a lens on the label's own
+  sales and statements, not a custodian of the label's funds. Payment
+  integrations are read-only and opt-in; the label keeps its own source
+  records. See [FINANCIAL_DATA_POLICY.md](FINANCIAL_DATA_POLICY.md).
+
+## Governance: one database is necessary, not sufficient
+
+Physical separation is the foundation. These controls sit on top of it —
+without them, "one database per customer" is an incomplete promise.
+
+### Access controls
+
+- **Authentication on every route.** All API routes require a bearer token
+  except a documented allowlist (health checks, login, OAuth callbacks —
+  each pinned by the route-table test). There is no anonymous access to
+  customer data.
+- **Role separation.** `admin` vs `artist` roles; artists are scoped to
+  their own grants via `hasArtistAccess` (fail-closed: no grants → 403).
+  Financial imports, mapping management, and review transitions are
+  admin-only.
+- **No shared credentials.** Each deployment has its own secrets
+  (`JWT_SECRET`, `OAUTH_TOKEN_KEY`, provider keys). Secrets are
+  environment-provided, never committed, never shared between customers.
+
+### Auditable support access
+
+- Operator/support access to a customer's database is **never implicit**.
+  It requires the customer's consent, is **time-boxed**, **read-only by
+  default**, and every access is written to the append-only `AuditEvent`
+  table (actor, action, resource, timestamp) the customer can export.
+- There is no "god mode" query path: support tooling goes through the same
+  API and the same access controls as everyone else, so the audit trail
+  cannot be bypassed.
+
+### Encryption
+
+- **In transit:** TLS everywhere the deployment terminates HTTP. No
+  plaintext credentials or financial data on the wire.
+- **At rest:** SQLite database files live under the deployment's own
+  filesystem permissions (0600); PostgreSQL deployments use
+  provider-managed encryption at rest. Backup files are encrypted before
+  they leave the host.
+- **Key management:** encryption keys and API secrets are environment-held,
+  rotated on compromise, and never embedded in code, logs, or exports.
+
+### Deletion rules
+
+- **Customer-initiated deletion is complete:** deleting the customer's
+  database (SQLite file) or dropping their database (PostgreSQL) removes
+  everything of theirs — financial records, catalog, credentials — and
+  nothing of anyone else's, because no one else's data is in it.
+- **Backups rotate:** encrypted backups age out on a documented schedule;
+  a deletion request includes backup expiry, not just the live database.
+- **Disconnect ≠ delete:** revoking an integration (e.g. Stripe Connect)
+  destroys the stored credentials immediately; imported records remain
+  because they are the label's own books, not the platform's property.
+
+### Contract terms: no secondary use
+
+The hosting agreement must prohibit secondary use of customer data
+**without the customer's explicit written permission**:
+
+- No training machine-learning models on customer data.
+- No selling, renting, or sharing customer data with third parties.
+- No cross-customer analytics or benchmarking except through the separate,
+  opt-in benchmarking product described below (which has its own
+  contractual permission, aggregation thresholds, and anonymization).
+- Financial records are the label's records; the platform asserts no
+  ownership interest in them.
 
 ## Benchmarking is not part of this promise
 

@@ -1,33 +1,51 @@
 /**
  * src/routes/royalties.js
  *
- * Royalty accounting: CSV import keyed by ISRC/UPC, integer cents + currency.
+ * Royalty accounting: CSV import keyed by ISRC/UPC, source-precision
+ * decimals + currency.
  *
  *   POST /v3/royalties/import           (admin)  multipart CSV upload (field "file")
  *   POST /v3/royalties/import/atvenu     (admin)  atVenu settlement CSV (field "file")
- *   GET  /v3/royalties/summary            (auth)   per-artist totals, integer cents
+ *   GET  /v3/royalties/summary            (auth)   per-artist totals, exact decimals
  *   GET  /v3/royalties/merch-settlements  (auth)   imported merch settlements
+ *   PATCH /v3/royalties/lines/:id/review       (admin) review-state transition
+ *   PATCH /v3/royalties/settlements/:id/review (admin) review-state transition
+ *   GET   /v3/royalties/lines                  (auth)  list lines (filters: artistId,
+ *                                                     period, currency, source, reviewState)
+ *   GET   /v3/royalties/settlements            (auth)  list settlements (filters: artistId,
+ *                                                     currency, source, reviewState)
  *
  * CSV format (header row required):
- *   isrc_or_upc,amount_cents,currency,period,source
+ *   isrc_or_upc,amount,currency,period,source
+ *
+ * The `amount` column is an EXACT DECIMAL string ("125.00", "0.003") —
+ * never a float. Source precision is preserved on the record
+ * (amountDecimal + amountScale + sourceAmount); integer cents appear only
+ * at the settlement/payment boundary via round-half-up (see
+ * src/finance/decimal.js). The legacy `amount_cents` column (integer) is
+ * still accepted and treated as scale-2.
  *
  * Rules:
- *   - amount_cents is an INTEGER (cents). Decimals ("19.99", "199.0") and
- *     non-numeric values are rejected per row — money is never parsed as
- *     float anywhere in this module.
  *   - currency is a 3-letter ISO code, stored uppercase.
  *   - isrc_or_upc must match an existing Recording (ISRC) or Release (UPC);
  *     unmatched rows are reported in the import report, never silently
  *     dropped.
- *   - The summary groups by currency and sums in integer arithmetic. No
- *     cross-currency conversion is performed — per-currency totals only.
+ *   - The summary groups by currency and sums the EXACT decimals, rounding
+ *     once at the boundary. No cross-currency conversion — per-currency
+ *     totals only.
  *   - NO DDEX: CSV is the interchange format until a customer supplies
  *     DDEX files.
- *   - IDEMPOTENCY: a royalty statement is uniquely identified by
- *     (catalogKey, period, source). Re-importing the same CSV — or repeating
- *     a row inside one CSV — reports each repeated row as a "duplicate"
- *     rejection; totals never double-count. A DB-level unique constraint
+ *   - IDEMPOTENCY + SUPERSEDE: a royalty line is identified by
+ *     (catalogKey, period, source, sourceFileHash). Re-uploading the SAME
+ *     file (same SHA-256) reports each repeated row as a "duplicate"
+ *     rejection; totals never double-count. Uploading a REVISED file (same
+ *     key + period + source, different hash) SUPERSEDES the prior line:
+ *     the old row is marked superseded (excluded from totals) and the new
+ *     row links to it via supersedesId. A DB-level unique constraint
  *     backstops concurrent imports.
+ *   - REVIEW STATE: every imported line starts as `reported`. Transitions
+ *     (reported -> reconciled -> approved, plus disputed / estimated) carry
+ *     reviewer identity + evidence via the review endpoints.
  *
  * atVenu settlement CSV format (header row required) — modeled on atVenu's
  * nightly settlement fields (show date, venue, gross, fees, taxes, net,
@@ -39,26 +57,36 @@
  *     (case-insensitive) against the roster; unmatched rows are rejected.
  *   - gross_cents / net_cents required; fees_cents / taxes_cents default 0;
  *     attendance optional. All money is integer cents, never float.
- *   - IDEMPOTENCY: (artistId, showDate, venue, source='atvenu'). Re-imports
- *     report duplicates; the DB unique constraint backstops concurrency.
+ *   - IDEMPOTENCY + SUPERSEDE: (artistId, showDate, venue, source, file
+ *     hash), same semantics as royalty lines.
  */
 
 'use strict';
 
+const crypto = require('crypto');
 const multer = require('multer');
 
 const { ISRC_RE, UPC_RE } = require('./catalog');
 const { Op } = require('sequelize');
 const { normalizeArtistAccess } = require('../auth');
+const { precisionFromSource, precisionFromCents } = require('../finance/decimal');
+const { canTransition, isReviewState } = require('../finance/reviewState');
 
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024, files: 1 }
 });
 
-const REQUIRED_COLUMNS = ['isrc_or_upc', 'amount_cents', 'currency', 'period', 'source'];
+const REQUIRED_COLUMNS = ['isrc_or_upc', 'currency', 'period', 'source'];
+const AMOUNT_COLUMNS = ['amount', 'amount_cents'];
 const CURRENCY_RE = /^[A-Z]{3}$/;
 const CENTS_RE = /^-?\d+$/;
+const DECIMAL_RE = /^[+-]?\d+(\.\d+)?$/;
+
+/** SHA-256 hex of a buffer — the source-file identity for idempotency. */
+function fileHash(buffer) {
+    return crypto.createHash('sha256').update(buffer).digest('hex');
+}
 
 /** Minimal CSV parser: handles quoted fields, embedded commas/quotes, CRLF. */
 function parseCsv(text) {
@@ -101,13 +129,32 @@ function validateRow(raw, lineNo) {
     if (!ISRC_RE.test(key) && !UPC_RE.test(key)) {
         return { error: `isrc_or_upc "${raw.isrc_or_upc}" is neither a valid ISRC nor a 12-digit UPC` };
     }
-    const centsRaw = String(raw.amount_cents || '').trim();
-    if (!CENTS_RE.test(centsRaw)) {
-        return { error: `amount_cents "${raw.amount_cents}" must be an integer number of cents (no decimals)` };
-    }
-    const amountCents = Number(centsRaw);
-    if (!Number.isSafeInteger(amountCents)) {
-        return { error: `amount_cents "${raw.amount_cents}" is out of safe integer range` };
+    // Amount: prefer the exact-decimal `amount` column; fall back to the
+    // legacy integer `amount_cents`. Either way the source precision is
+    // preserved (decimal) and cents are derived once at the boundary.
+    let precision;
+    const amountRaw = String(raw.amount ?? '').trim();
+    const centsRaw = String(raw.amount_cents ?? '').trim();
+    try {
+        if (amountRaw !== '') {
+            if (!DECIMAL_RE.test(amountRaw)) {
+                return { error: `amount "${raw.amount}" must be an exact decimal string (e.g. "125.00"), never a float` };
+            }
+            precision = precisionFromSource(amountRaw);
+        } else if (centsRaw !== '') {
+            if (!CENTS_RE.test(centsRaw)) {
+                return { error: `amount_cents "${raw.amount_cents}" must be an integer number of cents` };
+            }
+            const cents = Number(centsRaw);
+            if (!Number.isSafeInteger(cents)) {
+                return { error: `amount_cents "${raw.amount_cents}" is out of safe integer range` };
+            }
+            precision = precisionFromCents(cents);
+        } else {
+            return { error: 'amount is required (exact decimal, e.g. "125.00"); amount_cents accepted as legacy integer' };
+        }
+    } catch (e) {
+        return { error: `amount "${amountRaw || centsRaw}" is out of safe integer range` };
     }
     const currency = String(raw.currency || '').trim().toUpperCase();
     if (!CURRENCY_RE.test(currency)) {
@@ -118,7 +165,7 @@ function validateRow(raw, lineNo) {
     return {
         value: {
             key,
-            amountCents,
+            ...precision,
             currency,
             period,
             source: String(raw.source || '').trim() || null,
@@ -128,7 +175,7 @@ function validateRow(raw, lineNo) {
 }
 
 function register(app, ctx) {
-    const { authenticateToken, hasArtistAccess, logger, Recording, Release, RoyaltyLine, MerchSettlement } = ctx;
+    const { authenticateToken, hasArtistAccess, logger, Recording, Release, RoyaltyLine, MerchSettlement, DirectSale } = ctx;
 
     const requireAdmin = (req, res, next) => {
         if (!req.user || req.user.role !== 'admin') {
@@ -153,22 +200,23 @@ function register(app, ctx) {
         }
         const header = rows[0].map((h) => String(h).trim().toLowerCase());
         const missing = REQUIRED_COLUMNS.filter((c) => !header.includes(c));
-        if (missing.length > 0) {
+        const hasAmount = AMOUNT_COLUMNS.some((c) => header.includes(c));
+        if (missing.length > 0 || !hasAmount) {
             return res.status(400).json({
-                error: `CSV header is missing required columns: ${missing.join(', ')}. ` +
-                    `Expected: ${REQUIRED_COLUMNS.join(',')}`
+                error: `CSV header is missing required columns: ${[...missing, ...(hasAmount ? [] : ['amount|amount_cents'])].join(', ')}. ` +
+                    `Expected: ${[...REQUIRED_COLUMNS, 'amount'].join(',')} (amount_cents accepted as legacy integer)`
             });
         }
         const idx = {};
-        for (const col of REQUIRED_COLUMNS) idx[col] = header.indexOf(col);
+        for (const col of [...REQUIRED_COLUMNS, ...AMOUNT_COLUMNS]) idx[col] = header.indexOf(col);
 
-        const report = { received: rows.length - 1, imported: 0, rejected: [] };
+        const report = { received: rows.length - 1, imported: 0, superseded: 0, rejected: [] };
         const valid = [];
 
         for (let i = 1; i < rows.length; i++) {
             const lineNo = i + 1;
             const raw = {};
-            for (const col of REQUIRED_COLUMNS) raw[col] = rows[i][idx[col]] ?? '';
+            for (const col of [...REQUIRED_COLUMNS, ...AMOUNT_COLUMNS]) raw[col] = idx[col] >= 0 ? (rows[i][idx[col]] ?? '') : '';
             const checked = validateRow(raw, lineNo);
             if (checked.error) {
                 report.rejected.push({ row: lineNo, reason: checked.error });
@@ -176,6 +224,10 @@ function register(app, ctx) {
             }
             valid.push(checked.value);
         }
+
+        // Source identity for idempotency/supersede (research correction).
+        const hash = fileHash(req.file.buffer);
+        const importVersion = `royalty-${Date.now()}-${hash.slice(0, 12)}`;
 
         // Resolve ISRC/UPC keys against the catalog.
         const toInsert = [];
@@ -199,11 +251,18 @@ function register(app, ctx) {
                 catalogKey: v.key,
                 recordingId,
                 releaseId,
+                amountDecimal: v.amountDecimal,
+                amountScale: v.amountScale,
+                sourceAmount: v.sourceAmount,
                 amountCents: v.amountCents,
                 currency: v.currency,
                 period: v.period,
                 source: v.source || '',
                 importedBy: req.user.email,
+                sourceFileHash: hash,
+                rowRef: `line ${v.lineNo}`,
+                importVersion,
+                reviewState: 'reported',
                 lineNo: v.lineNo
             });
         }
@@ -222,12 +281,34 @@ function register(app, ctx) {
                         continue;
                     }
                     seenInFile.add(dupKey);
+                    // Supersede check: the active (non-superseded) line for
+                    // this key. Same file hash -> duplicate rejection. A
+                    // different hash -> the new line SUPERSEDES the old one;
+                    // revised statements replace, never duplicate.
                     const existing = await RoyaltyLine.findOne({
-                        where: { catalogKey: line.catalogKey, period: line.period, source: line.source },
+                        where: {
+                            catalogKey: line.catalogKey,
+                            period: line.period,
+                            source: line.source,
+                            reviewState: { [Op.ne]: 'superseded' }
+                        },
                         transaction: t
                     });
                     if (existing) {
-                        report.rejected.push({ row: line.lineNo, reason: duplicateReason('already imported') });
+                        if (existing.sourceFileHash === hash) {
+                            report.rejected.push({ row: line.lineNo, reason: duplicateReason('already imported (same file)') });
+                            continue;
+                        }
+                        await existing.update({
+                            reviewState: 'superseded',
+                            reviewedBy: req.user.email,
+                            reviewEvidence: `superseded by import ${importVersion} (revised file ${hash.slice(0, 12)})`,
+                            reviewedAt: new Date()
+                        }, { transaction: t });
+                        const { lineNo: _lineNo, ...row } = line;
+                        await RoyaltyLine.create({ ...row, supersedesId: existing.id }, { transaction: t });
+                        report.imported++;
+                        report.superseded++;
                         continue;
                     }
                     const { lineNo: _lineNo, ...row } = line;
@@ -344,7 +425,7 @@ function register(app, ctx) {
             rosterByName.get(key).push(a);
         }
 
-        const report = { received: rows.length - 1, imported: 0, rejected: [] };
+        const report = { received: rows.length - 1, imported: 0, superseded: 0, rejected: [] };
         const valid = [];
 
         for (let i = 1; i < rows.length; i++) {
@@ -359,6 +440,9 @@ function register(app, ctx) {
             valid.push(checked.value);
         }
 
+        const hash = fileHash(req.file.buffer);
+        const importVersion = `atvenu-${Date.now()}-${hash.slice(0, 12)}`;
+
         try {
             await ctx.sequelize.transaction(async (t) => {
                 const seenInFile = new Set();
@@ -372,16 +456,44 @@ function register(app, ctx) {
                     }
                     seenInFile.add(dupKey);
                     const existing = await MerchSettlement.findOne({
-                        where: { artistId: line.artistId, showDate: line.showDate, venue: line.venue, source: 'atvenu' },
+                        where: {
+                            artistId: line.artistId, showDate: line.showDate, venue: line.venue, source: 'atvenu',
+                            reviewState: { [Op.ne]: 'superseded' }
+                        },
                         transaction: t
                     });
                     if (existing) {
-                        report.rejected.push({ row: line.lineNo, reason: dupReason('already imported') });
+                        if (existing.sourceFileHash === hash) {
+                            report.rejected.push({ row: line.lineNo, reason: dupReason('already imported (same file)') });
+                            continue;
+                        }
+                        await existing.update({
+                            reviewState: 'superseded',
+                            reviewedBy: req.user.email,
+                            reviewEvidence: `superseded by import ${importVersion} (revised file ${hash.slice(0, 12)})`,
+                            reviewedAt: new Date()
+                        }, { transaction: t });
+                        const { lineNo: _lineNo, ...row } = line;
+                        await MerchSettlement.create(
+                            {
+                                ...row, source: 'atvenu', importedBy: req.user.email,
+                                sourceFileHash: hash, rowRef: `line ${line.lineNo}`,
+                                importVersion, reviewState: 'reported',
+                                supersedesId: existing.id
+                            },
+                            { transaction: t }
+                        );
+                        report.imported++;
+                        report.superseded++;
                         continue;
                     }
                     const { lineNo: _lineNo, ...row } = line;
                     await MerchSettlement.create(
-                        { ...row, source: 'atvenu', importedBy: req.user.email },
+                        {
+                            ...row, source: 'atvenu', importedBy: req.user.email,
+                            sourceFileHash: hash, rowRef: `line ${line.lineNo}`,
+                            importVersion, reviewState: 'reported'
+                        },
                         { transaction: t }
                     );
                     report.imported++;
@@ -438,7 +550,10 @@ function register(app, ctx) {
         }
     });
 
-    // Per-artist royalty totals, summed in integer cents per currency.
+    // Per-artist royalty totals. Exact-decimal summation (research
+    // correction 2026-09-28): lines are summed at source precision, then
+    // rounded ONCE at the boundary (round-half-up). Superseded lines are
+    // excluded — revised statements replace, never duplicate.
     app.get('/v3/royalties/summary', authenticateToken, async (req, res) => {
         if (!req.user) return res.status(401).json({ error: 'Authentication required' });
         const where = {};
@@ -465,27 +580,143 @@ function register(app, ctx) {
         if (req.query.currency) where.currency = String(req.query.currency).toUpperCase();
 
         try {
-            const lines = await RoyaltyLine.findAll({ where, order: [['id', 'ASC']] });
-            // Integer accumulation only — no float math on money, ever.
+            const lines = await RoyaltyLine.findAll({
+                where: { ...where, reviewState: { [Op.ne]: 'superseded' } },
+                order: [['id', 'ASC']]
+            });
+            // Exact-decimal accumulation: sum at source precision, round
+            // once at the boundary. Falls back to amountCents for legacy
+            // rows that predate precision preservation.
+            const { sumDecimals, decimalToCents, formatDecimal, parseDecimal } = require('../finance/decimal');
             const byCurrency = new Map();
             for (const line of lines) {
-                const cur = byCurrency.get(line.currency) || { currency: line.currency, totalCents: 0, lineCount: 0 };
-                cur.totalCents += line.amountCents;
-                cur.lineCount += 1;
-                if (!Number.isSafeInteger(cur.totalCents)) {
-                    return res.status(500).json({ error: 'Total exceeds safe integer range' });
+                let d;
+                try {
+                    d = line.amountDecimal
+                        ? parseDecimal(line.amountDecimal)
+                        : { mantissa: BigInt(line.amountCents), scale: 2 };
+                } catch {
+                    return res.status(500).json({ error: 'Corrupt decimal on royalty line' });
                 }
+                const cur = byCurrency.get(line.currency) || { currency: line.currency, exact: { mantissa: 0n, scale: 0 }, lineCount: 0, disputedCount: 0, estimatedCount: 0 };
+                cur.exact = sumDecimals([cur.exact, d]);
+                cur.lineCount += 1;
+                if (line.reviewState === 'disputed') cur.disputedCount += 1;
+                if (line.reviewState === 'estimated') cur.estimatedCount += 1;
                 byCurrency.set(line.currency, cur);
             }
+            const totals = [];
+            for (const cur of byCurrency.values()) {
+                const cents = decimalToCents(cur.exact);
+                if (cents > BigInt(Number.MAX_SAFE_INTEGER)) {
+                    return res.status(500).json({ error: 'Total exceeds safe integer range' });
+                }
+                totals.push({
+                    currency: cur.currency,
+                    totalCents: Number(cents),
+                    totalExact: formatDecimal(cur.exact),
+                    lineCount: cur.lineCount,
+                    disputedCount: cur.disputedCount,
+                    estimatedCount: cur.estimatedCount,
+                    precision: 'exact-decimal sum, round-half-up at the reporting boundary'
+                });
+            }
+            // Direct-sales totals per artist (2026-09-28): the label's own
+            // Stripe sales attributed to the scoped artist(s), surfaced inside
+            // the existing P&L view. ADDITIVE — the `totals`/`lines` shape
+            // above is unchanged. Only attributed sales count here.
+            const directSales = [];
+            if (DirectSale) {
+                const saleWhere = {};
+                if (where.artistId) saleWhere.artistId = where.artistId;
+                if (where.currency) saleWhere.currency = where.currency;
+                const sales = await DirectSale.findAll({
+                    where: { provider: 'stripe', ...saleWhere, artistId: saleWhere.artistId || { [Op.ne]: null } },
+                    order: [['id', 'ASC']]
+                });
+                const byCur = new Map();
+                for (const s of sales) {
+                    if (!s.artistId) continue;
+                    const cur = byCur.get(s.currency) || { currency: s.currency, netCents: 0, saleCount: 0 };
+                    cur.netCents += s.netCents;
+                    cur.saleCount += 1;
+                    if (!Number.isSafeInteger(cur.netCents)) {
+                        return res.status(500).json({ error: 'Total exceeds safe integer range' });
+                    }
+                    byCur.set(s.currency, cur);
+                }
+                directSales.push(...byCur.values());
+            }
             res.json({
-                totals: [...byCurrency.values()],
-                lines: lines.length
+                totals,
+                lines: lines.length,
+                directSales
             });
         } catch (err) {
             if (logger) logger.error(err);
             res.status(500).json({ error: 'Database error' });
         }
     });
+
+    // Review-state transitions (research correction 2026-09-28).
+    // reported -> reconciled -> approved, plus disputed / estimated.
+    // Every transition records reviewer identity + evidence. 'superseded'
+    // is never set here — only the import supersede path sets it.
+    //
+    // Read endpoints: reviewers need to see lines/settlements (with their
+    // review state) before they can transition them.
+    const listRecords = (Model, filters) => async (req, res) => {
+        try {
+            const where = {};
+            for (const f of filters) {
+                if (req.query[f]) where[f] = String(req.query[f]);
+            }
+            if (req.query.reviewState) {
+                if (!isReviewState(req.query.reviewState)) {
+                    return res.status(400).json({ error: 'Invalid reviewState filter' });
+                }
+                where.reviewState = req.query.reviewState;
+            }
+            const rows = await Model.findAll({ where, order: [['id', 'ASC']], limit: 500 });
+            res.json(rows.map((r) => r.toJSON()));
+        } catch (err) {
+            if (logger) logger.error(err);
+            res.status(500).json({ error: 'Database error' });
+        }
+    };
+
+    app.get('/v3/royalties/lines', authenticateToken, listRecords(RoyaltyLine, ['artistId', 'period', 'currency', 'source']));
+    app.get('/v3/royalties/settlements', authenticateToken, listRecords(MerchSettlement, ['artistId', 'currency', 'source']));
+    const reviewTransition = (Model, param) => async (req, res) => {
+        const to = String(req.body?.reviewState || '').trim();
+        const evidence = req.body?.evidence;
+        if (!isReviewState(to) || to === 'superseded') {
+            return res.status(400).json({ error: 'reviewState must be one of: reported, reconciled, approved, disputed, estimated' });
+        }
+        try {
+            const record = await Model.findByPk(req.params.id);
+            if (!record) return res.status(404).json({ error: 'Not found' });
+            const from = record.reviewState || 'reported';
+            if (!canTransition(from, to)) {
+                return res.status(409).json({ error: `invalid review transition: ${from} -> ${to}` });
+            }
+            record.reviewState = to;
+            record.reviewedBy = req.user.email;
+            record.reviewEvidence = evidence ? String(evidence) : null;
+            record.reviewedAt = new Date();
+            await record.save();
+            res.json({
+                id: record.id, reviewState: record.reviewState,
+                reviewedBy: record.reviewedBy, reviewedAt: record.reviewedAt
+            });
+        } catch (err) {
+            if (logger) logger.error(err);
+            res.status(500).json({ error: 'Database error' });
+        }
+    };
+
+    app.patch('/v3/royalties/lines/:id/review', authenticateToken, requireAdmin, reviewTransition(RoyaltyLine));
+    app.patch('/v3/royalties/settlements/:id/review', authenticateToken, requireAdmin, reviewTransition(MerchSettlement));
 
 }
 

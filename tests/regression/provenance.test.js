@@ -6,7 +6,7 @@
  */
 'use strict';
 
-const { describe, it, before } = require('node:test');
+const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { withProvenance, MEASURED, ESTIMATED } = require('../../src/services/provenance');

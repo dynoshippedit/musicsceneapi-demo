@@ -12,7 +12,16 @@
  *   PDFDocument             <- pdfkit-table
  *   chart generators        <- src/utils/charts
  *   calculateTotalRevenue   <- src/utils/dataShape
- *   aiService.reportInsight <- src/ai/aiService  (AI STRATEGIC INSIGHTS block)
+ *   aiService.reportInsight <- src/ai/aiService  (AI STRATEGIC INSIGHTS block,
+ *   ONLY when explicitly opted in — see the options parameter)
+ *
+ * AI/FINANCIAL LIABILITY POSTURE (2026-09-28, see FINANCIAL_DATA_POLICY.md):
+ * AI insights are STRICTLY opt-in. The default (options.aiInsights !== true)
+ * generates the full deterministic report WITHOUT invoking any AI — no
+ * financial data leaves the process toward a model. The scheduled monthly
+ * job uses the default, so no autonomous path sends financials to AI.
+ * Interactive report endpoints pass { aiInsights: true } only when the user
+ * explicitly opts in per request.
  *
  * NATIVE DEPENDENCY NOTE: chart rendering requires the `canvas` native module.
  * If it fails to load, PDF generation throws and the endpoints surface
@@ -31,8 +40,10 @@ const {
 } = require('../utils/charts');
 const { calculateTotalRevenue } = require('../utils/dataShape');
 const aiService = require('../ai/aiService');
+const { AI_FINANCIAL_DISCLAIMER, AI_INSIGHTS_NOT_REQUESTED } = require('../ai/disclaimer');
 
-async function generateMonthlyReport(artist, month) {
+async function generateMonthlyReport(artist, month, options = {}) {
+    const aiInsights = options.aiInsights === true;
     return new Promise(async (resolve, reject) => {
         const doc = new PDFDocument({ size: 'LETTER', margin: 40 });
         const chunks = [];
@@ -86,17 +97,23 @@ async function generateMonthlyReport(artist, month) {
         doc.text(`Growth Rate: ${artist.growthRate || 0}% (${(artist.growthRate || 0) > 0 ? 'Positive' : 'Stable'} Trend)`);
         doc.text(`Top Revenue Source: ${topSource}`);
 
-        // --- AI STRATEGIC INSIGHTS (Groq LPU) ---
+        // --- AI STRATEGIC INSIGHTS (Groq LPU) — STRICTLY OPT-IN ---
+        // Default (no opt-in): no AI is invoked and no financial data is
+        // sent to any AI provider. See the module header / FINANCIAL_DATA_POLICY.md.
         doc.moveDown(1);
         doc.fillColor(colors.primary).fontSize(14).font('Helvetica-Bold').text('AI STRATEGIC INSIGHTS');
         doc.fontSize(10).font('Helvetica').fillColor(colors.text);
 
-        try {
+        if (!aiInsights) {
+            doc.text(AI_INSIGHTS_NOT_REQUESTED, { indent: 10, align: 'justify', width: 500 });
+        } else try {
             // PHASE 2: prompt, model call and the indefinite report cache moved
             // to src/ai/aiService.reportInsight(). On failure it throws and the
             // catch below writes the same offline text into the PDF.
             const insightText = await aiService.reportInsight({ artist, month, totalRevenue });
 
+            doc.text(`AI-generated. ${AI_FINANCIAL_DISCLAIMER}`, { indent: 10, align: 'justify', width: 500 });
+            doc.moveDown(0.5);
             doc.text(insightText, { indent: 10, align: 'justify', width: 500 });
         } catch (err) {
             console.error("PDF AI Error:", err.message);

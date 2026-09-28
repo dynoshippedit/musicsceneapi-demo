@@ -3,7 +3,7 @@
   "info": {
     "title": "The Music Scene \u2014 Label Intelligence Platform (Demo)",
     "version": "0.1.0-step7",
-    "description": "Generated 2026-09-28 from the pinned route table (tests/regression/routes.test.js: 68 registered routes) plus handler reads in src/routes/*.js. Auth is bearer JWT (login returns {token}, 24h). Four routes are public: GET /health, POST /v3/auth/login, POST /v3/auth/forgot-password, POST /v3/auth/reset-password. All other routes require the bearer token; some additionally require the admin role. Error bodies are JSON {error: string}; this API does NOT use RFC 9457 problem details. EXPLICITLY NOT SUPPORTED (despite claims in the legacy HTML docs): API keys, webhooks, /tracks, real-time Spotify data, MCP server, ISRC/UPC/ISWC identifiers, currency-aware royalties. Data-honesty policy (Phase 1B): every metric carries a provenance block {source, observedAt, basis: measured|estimated, note?}. The Spotify integration no longer fabricates monthlyListeners or stream counts; it reports followers and popularity verbatim. Known data-quality caveats: several integrations report not_implemented; the Stats history table is never written so projections run on synthetic history; the artist development projection is a labeled placeholder until grounded in real inputs."
+    "description": "Generated 2026-09-28 from the pinned route table (tests/regression/routes.test.js: 68 registered routes) plus handler reads in src/routes/*.js. Auth is bearer JWT (login returns {token}, 24h). Four routes are public: GET /health, POST /v3/auth/login, POST /v3/auth/forgot-password, POST /v3/auth/reset-password. All other routes require the bearer token; some additionally require the admin role. Error bodies are JSON {error: string}; this API does NOT use RFC 9457 problem details. EXPLICITLY NOT SUPPORTED (despite claims in the legacy HTML docs): API keys, webhooks, /tracks, real-time Spotify data, MCP server, ISRC/UPC/ISWC identifiers, currency-aware royalties. Data-honesty policy (Phase 1B): every metric carries a provenance block {source, observedAt, basis: measured|estimated, note?}. The Spotify integration no longer fabricates monthlyListeners or stream counts; it reports followers and popularity verbatim. Known data-quality caveats: several integrations report not_implemented; the Stats history table is never written so projections run on synthetic history; the artist development projection is a labeled placeholder until grounded in real inputs. Financial-data posture (2026-09-28, FINANCIAL_DATA_POLICY.md): the platform is a lens on the label's own sales/statements, not a financial custodian; payment integrations are read-only and opt-in (Stripe Connect, TEST MODE ONLY - platform subscription billing and label direct sales are separate). Money is integer cents with ISO currency codes. AI financial analysis is strictly user-initiated and opt-in: scheduled monthly reports never invoke AI by default, and dedicated AI financial analysis requires an explicit per-request acknowledgment that it is not financial advice."
   },
   "servers": [
     {
@@ -70,7 +70,7 @@
     "/v3/ai/analyze": {
       "post": {
         "summary": "AI analyze",
-        "description": "Structured analysis (growth/roi/tour prompts). Provider-unavailable without key.",
+        "description": "Structured analysis (growth/roi/tour prompts). Provider-unavailable without key. User-initiated only. Successful responses carry a disclaimer; financial deep analysis requires POST /v3/ai/financial-analysis with explicit opt-in.",
         "tags": [
           "ai"
         ],
@@ -132,7 +132,7 @@
     "/v3/ai/query": {
       "post": {
         "summary": "AI query",
-        "description": "Free-form AI query. Provider-unavailable errors when no key.",
+        "description": "Free-form AI query. Provider-unavailable errors when no key. User-initiated only. Successful responses carry a disclaimer; financial deep analysis requires POST /v3/ai/financial-analysis with explicit opt-in.",
         "tags": [
           "ai"
         ],
@@ -2885,7 +2885,7 @@
     "/v3/royalties/summary": {
       "get": {
         "summary": "Royalty totals per artist",
-        "description": "Authenticated. Sums in INTEGER cents per currency \u2014 no cross-currency conversion. Admin may filter by ?artistId=; artist role sees their own only.",
+        "description": "Authenticated. Sums in INTEGER cents per currency \u2014 no cross-currency conversion. Admin may filter by ?artistId=; artist role sees their own only. Also returns additive directSales totals (attributed label direct sales) per currency; royalties totals shape unchanged.",
         "tags": [
           "royalties"
         ],
@@ -3108,6 +3108,636 @@
             }
           }
         ]
+      }
+    },
+    "/v3/direct-sales/connect/authorize": {
+      "post": {
+        "summary": "Begin Stripe Connect OAuth",
+        "description": "Returns a signed authorize URL for the label admin to connect the LABEL'S OWN Stripe account (read-only charges/refunds scope request). TEST MODE ONLY.",
+        "tags": [
+          "Direct sales"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin required"
+          }
+        }
+      }
+    },
+    "/v3/direct-sales/connect/callback": {
+      "get": {
+        "summary": "Stripe Connect OAuth callback",
+        "description": "Public endpoint completing the OAuth exchange (validates state, refuses livemode accounts, encrypts tokens at rest).",
+        "tags": [
+          "Direct sales"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Connection complete"
+          }
+        }
+      }
+    },
+    "/v3/direct-sales/connect/status": {
+      "get": {
+        "summary": "Stripe Connect status",
+        "description": "Whether the label's Stripe account is connected, last sync time, and sync error. Never exposes tokens.",
+        "tags": [
+          "Direct sales"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin required"
+          }
+        }
+      }
+    },
+    "/v3/direct-sales/connect": {
+      "delete": {
+        "summary": "Disconnect Stripe",
+        "description": "Removes the stored connection (imported sales stay; users keep their source records).",
+        "tags": [
+          "Direct sales"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Disconnected"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin required"
+          }
+        }
+      }
+    },
+    "/v3/direct-sales/mappings": {
+      "get": {
+        "summary": "List attribution mappings",
+        "description": "Product/price/metadata -> artist attribution rules.",
+        "tags": [
+          "Direct sales"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin required"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create attribution mapping",
+        "description": "Create a product_id, price_id, or charge_metadata key:value rule mapping to an artist. Requires provider, matchType, matchValue, artistId. Idempotent per (provider, matchType, matchValue).",
+        "tags": [
+          "Direct sales"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin required"
+          }
+        }
+      }
+    },
+    "/v3/direct-sales/mappings/{id}": {
+      "delete": {
+        "summary": "Delete attribution mapping",
+        "description": "Delete a mapping by id. Existing sales keep their attribution (computed at import).",
+        "tags": [
+          "Direct sales"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin required"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/v3/direct-sales/sync": {
+      "post": {
+        "summary": "Sync direct sales",
+        "description": "Pull charges/refunds/payouts from the connected label Stripe account (or stub fixtures), normalize to integer cents + ISO currency, and upsert by (provider, providerSaleId). Reports created/updated/unattributed counts; payouts are returned as reconciliation evidence. 503 when unconfigured.",
+        "tags": [
+          "Direct sales"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin required"
+          }
+        }
+      }
+    },
+    "/v3/direct-sales": {
+      "get": {
+        "summary": "List direct sales",
+        "description": "Normalized label direct sales with netCents = gross - refunded. Filter by artistId, currency. Unattributed sales are listed explicitly (never guessed).",
+        "tags": [
+          "Direct sales"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not authorized for this artist"
+          }
+        }
+      }
+    },
+    "/v3/direct-sales/summary": {
+      "get": {
+        "summary": "Direct sales summary",
+        "description": "Deterministic (non-AI) totals per currency for the label's direct sales. Includes gross, refunded, and net in integer cents.",
+        "tags": [
+          "Direct sales"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin required"
+          }
+        }
+      }
+    },
+    "/v3/financials/export": {
+      "get": {
+        "summary": "Export financial records (CSV)",
+        "description": "Exports every financial record the API imported or derived - direct sales, royalty lines, merch settlements, and per-artist P&L rows - with source provenance and attribution status. Filter by artistId and currency.",
+        "tags": [
+          "Financials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "text/csv"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/v3/ai/financial-analysis": {
+      "post": {
+        "summary": "AI financial analysis (explicit opt-in)",
+        "description": "The ONLY finance-dedicated AI endpoint. Requires acknowledgeNotAdvice: true in the body - an explicit per-request opt-in that this is not financial advice. Successful responses carry a disclaimer and user-responsibility statement. Financial-data posture (2026-09-28, FINANCIAL_DATA_POLICY.md): the platform is a lens on the label's own sales/statements, not a financial custodian; payment integrations are read-only and opt-in (Stripe Connect, TEST MODE ONLY - platform subscription billing and label direct sales are separate). Money is integer cents with ISO currency codes. AI financial analysis is strictly user-initiated and opt-in: scheduled monthly reports never invoke AI by default, and dedicated AI financial analysis requires an explicit per-request acknowledgment that it is not financial advice.",
+        "tags": [
+          "AI"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Prompt required, or opt-in acknowledgment missing"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "503": {
+            "description": "AI is unavailable"
+          }
+        }
+      }
+    },
+    "/v3/financials/reconciliation": {
+      "get": {
+        "summary": "Income and cash reconciliation",
+        "description": "Income and cash reconciliation (royalties + merch settlements + direct sales), per artist per currency, with a coverage statement. This is NOT a profit-and-loss statement \u2014 costs, expenses, and liabilities are not included. Superseded records are excluded; disputed/estimated records are flagged. Not a credit rating; implies no funder acceptance.",
+        "tags": [
+          "Financials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not authorized for this artist"
+          }
+        }
+      }
+    },
+    "/v3/royalties/lines/{id}/review": {
+      "patch": {
+        "summary": "Transition a royalty line review state",
+        "description": "Admin-only. Moves a royalty line through reported -> reconciled -> approved (+disputed, estimated). Records reviewer identity and evidence. Superseded can only be set by revised imports, never here.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reviewState": {
+                    "type": "string",
+                    "enum": [
+                      "reported",
+                      "reconciled",
+                      "approved",
+                      "disputed",
+                      "estimated"
+                    ]
+                  },
+                  "evidence": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "reviewState"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Review state updated"
+          },
+          "400": {
+            "description": "Invalid reviewState"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Invalid transition"
+          }
+        }
+      }
+    },
+    "/v3/royalties/settlements/{id}/review": {
+      "patch": {
+        "summary": "Transition a merch settlement review state",
+        "description": "Admin-only. Same state machine as royalty lines.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reviewState": {
+                    "type": "string",
+                    "enum": [
+                      "reported",
+                      "reconciled",
+                      "approved",
+                      "disputed",
+                      "estimated"
+                    ]
+                  },
+                  "evidence": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "reviewState"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Review state updated"
+          },
+          "400": {
+            "description": "Invalid reviewState"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Invalid transition"
+          }
+        }
+      }
+    },
+    "/v3/direct-sales/{id}/review": {
+      "patch": {
+        "summary": "Transition a direct-sale review state",
+        "description": "Admin-only. Same state machine as royalty lines.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reviewState": {
+                    "type": "string",
+                    "enum": [
+                      "reported",
+                      "reconciled",
+                      "approved",
+                      "disputed",
+                      "estimated"
+                    ]
+                  },
+                  "evidence": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "reviewState"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Review state updated"
+          },
+          "400": {
+            "description": "Invalid reviewState"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Invalid transition"
+          }
+        }
+      }
+    },
+    "/v3/royalties/lines": {
+      "get": {
+        "summary": "List royalty lines",
+        "description": "Royalty lines with exact-decimal precision, provenance (file hash, row ref, import version), and review state.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "artistId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reviewState",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of records with review state"
+          }
+        }
+      }
+    },
+    "/v3/royalties/settlements": {
+      "get": {
+        "summary": "List merch settlements",
+        "description": "Merch settlements with provenance and review state.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "artistId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reviewState",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of records with review state"
+          }
+        }
       }
     }
   },

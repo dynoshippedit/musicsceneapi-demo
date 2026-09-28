@@ -25,7 +25,8 @@ The system consists of a robust Node.js API backend powering two distinct fronte
 ---
 
 ## ✅ Core Features (v5.0)
-*   **Intelligence Engine**: Real-time revenue aggregation and "Grok" AI integration for querying data.
+*   **Intelligence Engine**: Real-time revenue aggregation and opt-in AI integration for querying data. AI financial analysis is strictly user-initiated and opt-in — see [FINANCIAL_DATA_POLICY.md](FINANCIAL_DATA_POLICY.md).
+*   **Direct Sales**: Optional Stripe Connect integration for the label's own sales (test mode), attributed per managed artist and included in the income and cash reconciliation. Read-only; the platform is a lens on the label's sales, not a financial custodian — see [FINANCIAL_DATA_POLICY.md](FINANCIAL_DATA_POLICY.md).
 *   **A&R Scouting**: Automated genre scanning and prospect scoring (Scouting Tab).
 *   **Operations**: Batch royalty calculations and contract generation (Operations Tab).
 *   **Marketing Automator**: One-click campaign generation for "Playlist Push", "TikTok Growth", etc.

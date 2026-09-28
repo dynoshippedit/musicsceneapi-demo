@@ -66,8 +66,15 @@ describe('route table — registration invariants', () => {
         // Phase 2 (2026-09-28): +21 routes (OAuth x4, catalog x15, royalties x2)
         // Strategy compliance (2026-09-28): +1 route (GET /v3/catalog/integrity)
         // Strategy compliance (2026-09-28): +2 routes (POST /v3/royalties/import/atvenu, GET /v3/royalties/merch-settlements)
-        assert.strictEqual(TABLE.length, 92,
-            `expected 92 registered routes, found ${TABLE.length}`);
+        // Direct sales (2026-09-28): +12 routes (connect x4, mappings x3,
+        //   direct-sales x2, financials pnl + export)
+        // AI/financial posture (2026-09-28): +1 route (POST /v3/ai/financial-analysis)
+        // Financial corrections (2026-09-28): +6 net. REMOVED GET /v3/financials/pnl;
+        //   ADDED GET /v3/financials/reconciliation, PATCH /v3/royalties/lines/:id/review,
+        //   PATCH /v3/royalties/settlements/:id/review, PATCH /v3/direct-sales/:id/review,
+        //   GET /v3/royalties/lines, GET /v3/royalties/settlements.
+        assert.strictEqual(TABLE.length, 110,
+            `expected 110 registered routes, found ${TABLE.length}`);
     });
 
     test('PINS: the known shadowed duplicate routes are still present', () => {
@@ -150,7 +157,7 @@ describe('route table — registration invariants', () => {
             'PINNED: label entity audit still unrouted');
     });
 
-    test('only the six documented routes are unauthenticated', () => {
+    test('only the seven documented routes are unauthenticated', () => {
         const stack = app._router.stack.filter((l) => l.route);
         const unauth = [];
         for (const layer of stack) {
@@ -164,6 +171,11 @@ describe('route table — registration invariants', () => {
         unauth.sort();
         assert.deepStrictEqual(unauth, [
             'GET /health',
+            // Label Stripe Connect (2026-09-28): public by design — Stripe
+            // redirects the browser here without a JWT; authenticity comes
+            // from the single-use state token bound to the admin. This is
+            // the LABEL's sales account, separate from platform billing.
+            'GET /v3/direct-sales/connect/callback',
             // Phase 2 OAuth (2026-09-28): public by design — the provider
             // redirects the browser here without a JWT; authenticity comes
             // from the single-use state token bound to the user.

@@ -50,7 +50,11 @@ const DOMAIN_ORDER = [
     'billing',
     'oauth',
     'catalog',
-    'royalties'
+    'royalties',
+    // Direct sales (2026-09-28): appended, never reordered. The registration
+    // contract pins first-appearance order of the pre-split monolith;
+    // appending a new domain changes no existing binding.
+    'directsales'
 ];
 
 /**

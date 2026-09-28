@@ -78,7 +78,10 @@ function register(app, ctx) {
         }
 
         try {
-            const pdfBuffer = await generateMonthlyReport(artist, month);
+            // AI insights are strictly opt-in (?aiInsights=true). Default:
+            // deterministic report, no AI invoked (FINANCIAL_DATA_POLICY.md).
+            const aiInsights = req.query.aiInsights === 'true';
+            const pdfBuffer = await generateMonthlyReport(artist, month, { aiInsights });
 
             res.setHeader('Content-Type', 'application/pdf');
             res.setHeader('Content-Disposition', `attachment; filename="${artist.name.replace(/[\\/:*?"<>|]/g, '_')}_${month}_report.pdf"`);
@@ -99,6 +102,9 @@ function register(app, ctx) {
         if (!require('../services/salesService').validMonth(month)) {
             return res.status(400).json({ error: 'Month parameter required (YYYY-MM)' });
         }
+        // AI insights are strictly opt-in (body.aiInsights === true).
+        // Default: deterministic reports, no AI invoked.
+        const aiInsights = (req.body || {}).aiInsights === true;
 
         try {
             const reportsDir = path.join(__dirname, 'reports', month);
@@ -115,7 +121,7 @@ function register(app, ctx) {
 
             for (const artist of roster) {
                 try {
-                    const pdfBuffer = await generateMonthlyReport(artist, month);
+                    const pdfBuffer = await generateMonthlyReport(artist, month, { aiInsights });
                     const filename = `${artist.name.replace(/[\\/:*?"<>|]/g, '_')}_${month}_report.pdf`;
                     const filepath = path.join(reportsDir, filename);
 
