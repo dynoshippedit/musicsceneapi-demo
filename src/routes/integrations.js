@@ -138,8 +138,10 @@ function register(app, ctx) {
         res.json({ success: true });
     });
 
-    // Test Rate Limit (Debug Endpoint)
+    // Test Rate Limit (Debug Endpoint) — PHASE 1A: consumes the shared
+    // provider token bucket; admin only so artist roles cannot drain it.
     app.get('/v3/integrations/test-limit/:service', authenticateToken, async (req, res) => {
+        if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         const service = req.params.service;
         if (!limiters[service]) return res.status(404).json({ error: 'Service not found' });
 

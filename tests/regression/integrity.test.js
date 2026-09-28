@@ -214,7 +214,7 @@ test('rejected writes, concurrent votes, royalties and sales contract hold on di
         const email = `integrity-voter-${i}@example.test`;
         const created = await api('POST', '/v3/users', token, {
             email, password: 'integrity-voter-password', name: `Voter ${i}`,
-            role: 'viewer', artistAccess: 'none', pageAccess: ['overview']
+            role: 'admin', artistAccess: 'none', pageAccess: ['overview']
         });
         assert.equal(created.status, 200);
         voters.push(await login(email, 'integrity-voter-password'));

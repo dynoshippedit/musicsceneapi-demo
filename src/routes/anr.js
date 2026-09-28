@@ -73,7 +73,9 @@ function register(app, ctx) {
     }
 
     // Get Submissions
+    // PHASE 1A: A&R pipeline is label-internal — admin only.
     app.get('/v3/anr/submissions', authenticateToken, async (req, res) => {
+        if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         try {
             const rows = await AnrSubmission.findAll({ order: [['id', 'ASC']] });
             res.json({ submissions: rows.map(submissionToShape) });
@@ -84,7 +86,9 @@ function register(app, ctx) {
     });
 
     // Submit Demos
+    // PHASE 1A: A&R pipeline is label-internal — admin only.
     app.post('/v3/anr/submissions', authenticateToken, async (req, res) => {
+        if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         const { artist, track, url, genre } = req.body;
         if (!artist || !track || !url) return res.status(400).json({ error: 'Missing fields' });
 
@@ -137,7 +141,9 @@ function register(app, ctx) {
 
     // Vote on Submission
     // Vote on Submission (One Vote Per User Logic)
+    // PHASE 1A: A&R pipeline is label-internal — admin only.
     app.post('/v3/anr/submissions/:id/vote', authenticateToken, async (req, res) => {
+        if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         const { id } = req.params;
         const { direction } = req.body || {}; // 'up' or 'down'
         if (direction !== 'up' && direction !== 'down') {
@@ -246,7 +252,9 @@ function register(app, ctx) {
     require('./anrRoom').register(app, ctx);
 
     // AI Competitive Evaluation
+    // PHASE 1A: A&R pipeline is label-internal — admin only.
     app.post('/v3/anr/evaluate', authenticateToken, (req, res) => {
+        if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         const { prospectId } = req.body;
         // PHASE 4CF: evaluation copy and benchmark are label intelligence,
         // now sourced from the profile (mau5trap values byte-identical).
@@ -269,7 +277,9 @@ function register(app, ctx) {
     });
 
     // GET /v3/anr/scout
+    // PHASE 1A: A&R pipeline is label-internal — admin only.
     app.get('/v3/anr/scout', authenticateToken, async (req, res) => {
+        if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         // PHASE 2: mock fixtures, the 500ms simulated latency and the filter moved
         // to src/integrations/scoutService.js. The dead placeholder-credential
         // SpotifyWebApi client that used to sit above this handler is gone; it was
@@ -286,7 +296,9 @@ function register(app, ctx) {
     });
 
     // POST /v3/anr/shortlist
+    // PHASE 1A: A&R pipeline is label-internal — admin only.
     app.post('/v3/anr/shortlist', authenticateToken, async (req, res) => {
+        if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         const artist = req.body;
 
         // Create a new submission/prospect entry

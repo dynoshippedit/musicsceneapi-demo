@@ -6,6 +6,8 @@ const { RoomDemo, RoomVote, RoomSetting, User, AnrSubmission } = require('../mod
 const validUrl = value => { try { return ['http:', 'https:'].includes(new URL(value).protocol); } catch { return false; } };
 
 function register(app, { authenticateToken, logger }) {
+    // PHASE 1A: the A&R room (demos, votes, whiteboard) is part of the
+    // label-internal A&R pipeline — every route below is admin-only.
     const handle = fn => async (req, res) => {
         try { await fn(req, res); } catch (err) { logger.error('A&R room failed:', err); res.status(500).json({ error: 'Unable to save or load the A&R room' }); }
     };
@@ -23,16 +25,19 @@ function register(app, { authenticateToken, logger }) {
         return { artistVotes: votes, totalVotes: users.length, ratio: Number(ratio.toFixed(4)), stars: Math.min(5, Math.round(ratio * 5)) };
     }
     app.get('/v3/anr/state', authenticateToken, handle(async (req, res) => {
+        if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         const settings = Object.fromEntries((await RoomSetting.findAll()).map(row => [row.key, row.value]));
         res.json({ whiteboard: settings.whiteboard || '', nowListening: settings.nowListening || {}, demos: await demos(req.user.id) });
     }));
     app.post('/v3/anr/whiteboard', authenticateToken, handle(async (req, res) => {
+        if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         const { message } = req.body;
         if (typeof message !== 'string' || message.length > 10000) return res.status(400).json({ error: 'Whiteboard must be text under 10000 characters' });
         await RoomSetting.upsert({ key: 'whiteboard', value: message });
         res.json({ success: true, whiteboard: message });
     }));
     app.post('/v3/anr/listening', authenticateToken, handle(async (req, res) => {
+        if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         const { url } = req.body;
         if (!validUrl(url)) return res.status(400).json({ error: 'An HTTP or HTTPS listening URL is required' });
         const value = { url, updatedBy: req.user.email.split('@')[0], timestamp: new Date().toISOString() };
@@ -40,6 +45,7 @@ function register(app, { authenticateToken, logger }) {
         res.json({ success: true, nowListening: value });
     }));
     app.post('/v3/anr/demos', authenticateToken, handle(async (req, res) => {
+        if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         const { title, artist, url, genre = '' } = req.body;
         if (typeof title !== 'string' || !title.trim() || title.length > 255 || typeof artist !== 'string' || !artist.trim() || artist.length > 255 || !validUrl(url) || typeof genre !== 'string' || genre.length > 255) {
             return res.status(400).json({ error: 'Artist, title and an HTTP or HTTPS demo URL are required' });
@@ -49,6 +55,7 @@ function register(app, { authenticateToken, logger }) {
         res.status(201).json({ success: true, demo: demo.toJSON(), demos: await demos(req.user.id) });
     }));
     app.post('/v3/anr/vote/:demoId', authenticateToken, handle(async (req, res) => {
+        if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         const { demoId } = req.params;
         const { action } = req.body;
         if (!['add', 'remove'].includes(action)) return res.status(400).json({ error: 'Invalid action. Use "add" or "remove".' });
@@ -58,11 +65,13 @@ function register(app, { authenticateToken, logger }) {
         res.json({ success: true, hasVoted: action === 'add', demo: { id: demoId, ...await tally(demoId) } });
     }));
     app.get('/v3/anr/stats/:demoId', authenticateToken, handle(async (req, res) => {
+        if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         const result = await tally(req.params.demoId);
         if (!result) return res.status(404).json({ error: 'Demo not found' });
         res.json(result);
     }));
     app.get('/v3/anr/demos/:demoId/rating', authenticateToken, handle(async (req, res) => {
+        if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         let result = await tally(req.params.demoId);
         if (!result) {
             const submission = await AnrSubmission.findByPk(req.params.demoId);

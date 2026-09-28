@@ -135,8 +135,9 @@ test('room, campaigns and multimonth sales survive two restarts; restricted read
     assert.equal(room.status, 201); const demoId = room.body.demo.id;
     await api(admin, 'POST', '/v3/anr/whiteboard', { message: 'Durable whiteboard' });
     await api(admin, 'POST', '/v3/anr/listening', { url: 'https://example.com/listen.mp3' });
-    await Promise.all([admin, artist].map(token => api(token, 'POST', `/v3/anr/vote/${demoId}`, { action: 'add' })));
-    assert.equal((await api(admin, 'GET', `/v3/anr/stats/${demoId}`)).body.artistVotes, 2);
+    await api(admin, 'POST', `/v3/anr/vote/${demoId}`, { action: 'add' });
+    assert.equal((await api(artist, 'POST', `/v3/anr/vote/${demoId}`, { action: 'add' })).status, 403);
+    assert.equal((await api(admin, 'GET', `/v3/anr/stats/${demoId}`)).body.artistVotes, 1);
     const draft = await api(admin, 'POST', '/v3/marketing/campaigns', { name: 'Durable plan', artistId: 'art_deadmau5', type: 'playlist-push', platforms: ['spotify'] });
     assert.equal(draft.status, 201); assert.equal(draft.body.status, 'draft');
     const sale = (token, artistId, month, revenue) => api(token, 'POST', '/v3/analytics/sales', { artistId, month, revenue });
@@ -176,7 +177,7 @@ test('room, campaigns and multimonth sales survive two restarts; restricted read
         const state = (await api(admin, 'GET', '/v3/anr/state')).body;
         assert.ok(state.demos.find(d => d.id === demoId && d.hasVoted));
         assert.equal(state.whiteboard, 'Durable whiteboard'); assert.equal(state.nowListening.url, 'https://example.com/listen.mp3');
-        assert.equal((await api(admin, 'GET', `/v3/anr/stats/${demoId}`)).body.artistVotes, 2);
+        assert.equal((await api(admin, 'GET', `/v3/anr/stats/${demoId}`)).body.artistVotes, 1);
         assert.ok((await api(admin, 'GET', '/v3/marketing/campaigns')).body.campaigns.some(c => c.id === draft.body.id && c.name === 'Durable plan'));
         const forecast = (await api(admin, 'GET', '/v3/analytics/projections?artistId=art_deadmau5&months=1')).body.chartData;
         assert.equal(forecast.labels.length, 14); assert.equal(forecast.labels.at(-1), '2026-02'); assert.equal(forecast.datasets[1].data.at(-1), 1400);

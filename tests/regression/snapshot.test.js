@@ -468,7 +468,7 @@ describe('Phase 4CF — user CRUD truth and session safety', () => {
         assert.ok(victimToken, 'victim can log in');
 
         // Token authorizes protected routes while the user exists.
-        const before = await fetch(`${BASE}/v3/anr/state`, { headers: { Authorization: `Bearer ${victimToken}` } });
+        const before = await fetch(`${BASE}/v3/auth/me`, { headers: { Authorization: `Bearer ${victimToken}` } });
         assert.strictEqual(before.status, 200, 'victim token works pre-delete');
 
         // Admin deletes the victim.
@@ -479,7 +479,7 @@ describe('Phase 4CF — user CRUD truth and session safety', () => {
         assert.strictEqual(del.status, 200);
 
         // The SAME token must now be rejected at the auth middleware.
-        const after = await fetch(`${BASE}/v3/anr/state`, { headers: { Authorization: `Bearer ${victimToken}` } });
+        const after = await fetch(`${BASE}/v3/auth/me`, { headers: { Authorization: `Bearer ${victimToken}` } });
         assert.strictEqual(after.status, 401, 'deleted user\'s token must stop authorizing protected routes');
 
         // And login is gone too.

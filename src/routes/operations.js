@@ -36,13 +36,15 @@ function register(app, ctx) {
         generateMonthlyReport
     } = ctx;
 
-    // 1. Logistics
+    // 1. Logistics — PHASE 1A: label-internal operational data, admin only.
     app.get('/v3/operations/logistics', authenticateToken, (req, res) => {
+        if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         res.json({ logistics: operationsData.logistics });
     });
 
-    // 2. Asset Vault
+    // 2. Asset Vault — PHASE 1A: label-internal operational data, admin only.
     app.get('/v3/operations/assets', authenticateToken, (req, res) => {
+        if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         res.json({ assets: operationsData.assets });
     });
 
