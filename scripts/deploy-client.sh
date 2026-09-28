@@ -16,7 +16,7 @@
 #   4. Installs and starts two systemd user services:
 #        pulsegrid-<slug>      the Express API (node app/server.js)
 #        pulsegrid-<slug>-web  the built frontend + a same-origin gateway for /health and /v3/*
-#      (see "Service management" in DEPLOY.md for why systemd user units were chosen).
+#      (see "Service management" in docs/DEPLOY.md for why systemd user units were chosen).
 #   5. Waits for GET /health, then prints the URL and next steps (DNS, reverse proxy, Stripe).
 #
 # Guarantees:
@@ -218,7 +218,7 @@ SCHEDULE_JOBS=false
 
 # --- Stripe -------------------------------------------------------------------
 # Variable names below match the billing workstream (src/routes/billing.js).
-# Fill in TEST-mode values before selling; see DEPLOY.md.
+# Fill in TEST-mode values before selling; see docs/DEPLOY.md.
 # STRIPE_SECRET_KEY=
 # STRIPE_WEBHOOK_SECRET=
 # STRIPE_SETUP_PRICE_ID=
@@ -355,10 +355,10 @@ EOF
     fi
     cat <<EOF
 --------------------------------------------------------------
- NEXT STEPS (details in DEPLOY.md):
+ NEXT STEPS (details in docs/DEPLOY.md):
   1. Point DNS $slug.pulsegrid.fm at this host.
   2. Put Caddy/nginx in front:  / -> 127.0.0.1:$web_port,
-     /v3/* and /health -> 127.0.0.1:$api_port   (snippet in DEPLOY.md).
+     /v3/* and /health -> 127.0.0.1:$api_port   (snippet in docs/DEPLOY.md).
   3. Set the real RESET_LINK_BASE + ALLOWED_ORIGINS in .env, then:
        systemctl --user restart $api_unit
   4. Add Stripe TEST keys to .env (names owned by the billing workstream).

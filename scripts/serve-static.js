@@ -19,7 +19,7 @@
  *     to /health and /v3/* are reverse-proxied to 127.0.0.1:$PROXY_API_PORT.
  *     This lets a standalone localhost deployment work with no reverse proxy
  *     in front (the built frontend calls /v3/... relative to its own origin).
- *     In production, Caddy/nginx takes over this job — see DEPLOY.md.
+ *     In production, Caddy/nginx takes over this job — see docs/DEPLOY.md.
  */
 
 'use strict';
