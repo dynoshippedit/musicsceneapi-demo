@@ -427,11 +427,9 @@ function calculateHealthScore(auditResults) {
         score += 10;
     }
 
-    // Link accuracy bonus (10 points)
-    if (auditResults.linksAccurate) {
-        score += 10;
-    }
-
+    // Phase 1B: the old "link accuracy" bonus granted 10 free points on a
+    // hardcoded linksAccurate=true. Name-derived links are unverified, so no
+    // points are awarded here.
     return Math.min(score, 100);
 }
 
@@ -523,6 +521,18 @@ function detectInconsistencies(auditResults, artist) {
             platform: 'Wikipedia',
             severity: 'high',
             impact: 'Missing authoritative reference source'
+        });
+    }
+
+    // Phase 1B: name-derived social links are unverified — surfaced as an
+    // issue so the audit never presents them as accurate.
+    if (auditResults.linksVerified === false) {
+        inconsistencies.push({
+            type: 'unverified_social_links',
+            platform: 'multiple',
+            severity: 'low',
+            issue: 'Social profile links are derived from the artist name and have not been verified',
+            impact: 'Links may point at the wrong person; verify before publishing'
         });
     }
 

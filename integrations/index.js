@@ -112,11 +112,10 @@ async function fetchArtistData(artistId, mockData) {
 function mergeData(mockData, apiResults) {
     const merged = { ...mockData };
 
-    // Merge Spotify data
+    // Merge Spotify data — Phase 1B: the integration reports measured fields
+    // only (followers, popularity). The old fabricated monthlyListeners /
+    // totalStreams / growthRate no longer exist and are not merged.
     if (apiResults.spotify) {
-        merged.monthlyListeners = apiResults.spotify.monthlyListeners;
-        merged.totalStreams = apiResults.spotify.totalStreams;
-        merged.growthRate = apiResults.spotify.growthRate;
         merged.social = { ...merged.social, ...apiResults.spotify.social };
         merged.meta = { ...merged.meta, ...apiResults.spotify.meta };
     }
@@ -151,6 +150,13 @@ function mergeData(mockData, apiResults) {
     if (apiResults.tiktok) {
         merged.social = { ...merged.social, ...apiResults.tiktok.social };
         merged.meta = { ...merged.meta, ...apiResults.tiktok.meta };
+    }
+
+    // Phase 1B: propagate per-provider provenance blocks (data honesty).
+    for (const svc of ['spotify', 'instagram', 'tiktok', 'youtube', 'twitter', 'ticketmaster']) {
+        if (apiResults[svc] && apiResults[svc].provenance) {
+            merged.provenance = { ...(merged.provenance || {}), [svc]: apiResults[svc].provenance };
+        }
     }
 
     // Mark data source

@@ -2,6 +2,7 @@
 // Instagram Graph API Integration
 
 const axios = require('axios');
+const { withProvenance } = require('../src/services/provenance');
 
 class InstagramIntegration {
     constructor() {
@@ -46,7 +47,9 @@ class InstagramIntegration {
             // Calculate engagement rate
             const engagementRate = this.calculateEngagementRate(media, account.followers_count);
 
-            return {
+            // Phase 1B: followers_count is verbatim; engagement is derived —
+            // the formula is disclosed in the provenance note, not hidden.
+            return withProvenance({
                 social: {
                     instagram: account.followers_count,
                     instagramEngagement: engagementRate
@@ -56,7 +59,11 @@ class InstagramIntegration {
                     lastUpdated: new Date().toISOString(),
                     instagramUsername: account.username
                 }
-            };
+            }, {
+                source: 'instagram_api',
+                basis: 'measured',
+                note: 'followers_count is a verbatim API field. instagramEngagement is derived: avg(likes+comments per post) / followers_count over the last 20 posts.'
+            });
         } catch (error) {
             console.error('Instagram API Error:', error.message);
             throw error;

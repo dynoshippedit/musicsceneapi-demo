@@ -2,6 +2,7 @@
 // Twitter API v2 Integration
 
 const axios = require('axios');
+const { withProvenance } = require('../src/services/provenance');
 
 class TwitterIntegration {
     constructor() {
@@ -53,7 +54,9 @@ class TwitterIntegration {
             // Calculate average engagement rate
             const engagementRate = this.calculateEngagementRate(tweets, user.public_metrics.followers_count);
 
-            return {
+            // Phase 1B: counts are verbatim; engagement is derived —
+            // the formula is disclosed in the provenance note, not hidden.
+            return withProvenance({
                 social: {
                     twitter: user.public_metrics.followers_count,
                     twitterPosts: user.public_metrics.tweet_count,
@@ -66,7 +69,11 @@ class TwitterIntegration {
                     twitterUsername: username,
                     twitterId: user.id
                 }
-            };
+            }, {
+                source: 'twitter_api',
+                basis: 'measured',
+                note: 'follower/tweet counts and verified flag are verbatim API fields. twitterEngagement is derived: avg(likes+replies+retweets per tweet) / followers over the last 10 tweets.'
+            });
         } catch (error) {
             console.error('Twitter API Error:', error.message);
             throw error;

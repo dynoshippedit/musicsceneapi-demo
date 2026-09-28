@@ -2,6 +2,7 @@
 // YouTube Analytics API Integration
 
 const { google } = require('googleapis');
+const { withProvenance } = require('../src/services/provenance');
 
 class YouTubeIntegration {
     constructor() {
@@ -89,7 +90,8 @@ class YouTubeIntegration {
                 parseInt(stats.videoCount)
             );
 
-            return {
+            // Phase 1B: counts are verbatim; revenue is a disclosed estimate.
+            return withProvenance({
                 social: {
                     youtubeSubscribers: parseInt(stats.subscriberCount),
                     youtubeViews: parseInt(stats.viewCount),
@@ -105,7 +107,11 @@ class YouTubeIntegration {
                     youtubeChannelId: channelId,
                     youtubeChannelName: channel.snippet.title
                 }
-            };
+            }, {
+                source: 'youtube_api',
+                basis: 'measured',
+                note: 'Subscriber/view/video counts are verbatim API fields. youtubeEstimated revenue uses a $3.50 CPM: (last-30-day views / 1000) * 3.5 when analytics are available, else (lifetime views * 0.1 / 12 / 1000) * 3.5. Rough approximation, not a measurement.'
+            });
         } catch (error) {
             console.error('YouTube API Error:', error.message);
             throw error;

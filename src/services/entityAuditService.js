@@ -13,7 +13,9 @@
  *     refresh if already cached (the original's deliberate cost choice)
  *   - the other four providers run concurrently via Promise.all
  *   - auditResults.schemaValid = googleKG.schemaValid || false
- *   - auditResults.linksAccurate = true (hardcoded)
+ *   - auditResults.linksAccurate = false + linksVerified = false (Phase 1B:
+     name-derived social links are unverified; the old hardcoded `true`
+     granted 10 free health-score points)
  *   - issues[] mapping and its `|| 'Review entity data'` defaults
  *   - cached responses get `cached: true`, fresh ones `cached: false`
  *
@@ -90,7 +92,10 @@ function createEntityAuditService({
             genius,
             fandom,
             schemaValid: googleKG.schemaValid || false,
-            linksAccurate: true
+            // Phase 1B: name-derived social links are NOT verified. The old
+            // hardcoded `true` granted 10 free health-score points.
+            linksAccurate: false,
+            linksVerified: false
         };
 
         const healthScore = integrationFacade.calculateHealthScore(auditResults);
@@ -125,6 +130,9 @@ function createEntityAuditService({
             artistName: artist.name,
             auditDate: new Date().toISOString(),
             healthScore,
+            // Phase 1B: social links are guessed from the artist name and
+            // have not been verified against the artist's actual profiles.
+            linksVerified: false,
             platforms: { googleKG, wikipedia, discogs, genius, fandom },
             schemaLD,
             issues,

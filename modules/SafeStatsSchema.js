@@ -1,11 +1,12 @@
 const z = require('zod');
 
-// User-defined schema
+// Phase 1B: the Spotify integration reports measured fields only. The old
+// fabricated monthlyListeners / totalStreams / growthRate are gone; every
+// payload carries a provenance block (source, observedAt, basis, note?).
 const SafeStatsSchema = z
     .object({
-        monthlyListeners: z.number(),
-        totalStreams: z.number(),
-        growthRate: z.number(),
+        followers: z.number(),
+        popularity: z.number(),
         social: z
             .object({
                 spotify: z.number(),
@@ -17,6 +18,14 @@ const SafeStatsSchema = z
                 lastUpdated: z.string(),
                 spotifyId: z.string(),
                 spotifyUrl: z.string(),
+            })
+            .strict(),
+        provenance: z
+            .object({
+                source: z.string(),
+                observedAt: z.string(),
+                basis: z.enum(['measured', 'estimated']),
+                note: z.string().optional(),
             })
             .strict(),
     })

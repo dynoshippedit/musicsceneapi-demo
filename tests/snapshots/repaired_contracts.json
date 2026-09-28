@@ -310,6 +310,26 @@
       "error": "Invalid action. Use \"add\" or \"remove\"."
     }
   },
+  "artist_development": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "artist": "deadmau5",
+      "focusAreas": [
+        "TikTok Content",
+        "LATAM Tour",
+        "Limited Merch"
+      ],
+      "insights": [
+        "deadmau5's streaming growth is outpacing the genre average by 15%.",
+        "Strong engagement in South America suggests potential for a Q3 tour leg.",
+        "Merch sales per listener are lower than expected; strictly limit supply for next drop."
+      ],
+      "projection": "Positive",
+      "projectionBasis": "placeholder",
+      "projectionNote": "Canned assessment from the label profile; not computed from this artist data."
+    }
+  },
   "campaigns_stats_admin": {
     "status": 200,
     "contentType": "application/json",

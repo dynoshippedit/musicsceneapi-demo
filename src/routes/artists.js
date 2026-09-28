@@ -292,9 +292,14 @@ function register(app, ctx) {
         const artist = await artistRepo.findById(req.params.id);
         if (!artist) return res.status(404).json({ error: 'Artist not found' });
 
+        // Phase 1B: the projection and insights below are canned profile copy,
+        // not computed analysis. Labeled as placeholder until grounded in real
+        // inputs -- never present as AI analysis.
         res.json({
             artist: artist.name,
             projection: 'Positive',
+            projectionBasis: 'placeholder',
+            projectionNote: 'Canned assessment from the label profile; not computed from this artist data.',
             insights: profile.ai.developmentInsights.map((tpl) => tpl.replace('{artist}', artist.name)),
             focusAreas: [...profile.ai.developmentFocusAreas]
         });

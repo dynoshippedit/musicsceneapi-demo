@@ -2,6 +2,7 @@
 // TikTok Display API Integration
 
 const axios = require('axios');
+const { withProvenance } = require('../src/services/provenance');
 
 class TikTokIntegration {
     constructor() {
@@ -48,7 +49,9 @@ class TikTokIntegration {
                 userData.video_count
             );
 
-            return {
+            // Phase 1B: counts are verbatim; engagement is derived —
+            // the formula is disclosed in the provenance note, not hidden.
+            return withProvenance({
                 social: {
                     tiktok: userData.follower_count,
                     tiktokVideos: userData.video_count,
@@ -60,7 +63,11 @@ class TikTokIntegration {
                     lastUpdated: new Date().toISOString(),
                     tiktokUsername: username
                 }
-            };
+            }, {
+                source: 'tiktok_api',
+                basis: 'measured',
+                note: 'follower_count, video_count and likes_count are verbatim API fields. tiktokEngagement is derived: (avg likes per video) / follower_count.'
+            });
         } catch (error) {
             // TikTok API errors are often due to OAuth requirements
             if (error.response?.status === 401) {
