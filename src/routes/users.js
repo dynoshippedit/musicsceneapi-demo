@@ -241,7 +241,9 @@ function register(app, ctx) {
     app.get('/v3/users', authenticateToken, async (req, res) => {
         if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         try {
-            const users = await User.findAll({ attributes: { exclude: ['passwordHash', 'resetToken', 'resetTokenExpiry'] } });
+            // STEP 7 (D7): sessionVersion/version are internal revocation counters —
+            // never serialized. `active` stays visible: admins need the deactivation state.
+            const users = await User.findAll({ attributes: { exclude: ['passwordHash', 'resetToken', 'resetTokenExpiry', 'sessionVersion', 'version'] } });
             // Parse pageAccess for frontend
             const parsedUsers = users.map(u => ({ ...u.toJSON(), pageAccess: parsePageAccess(u.pageAccess) }));
             res.json(parsedUsers);

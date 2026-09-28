@@ -127,7 +127,7 @@ const config = {
         // the operative default is resolved by the email service.
         from: process.env.EMAIL_FROM || '',
         // api L583 — hardcoded localhost preserved; Phase 2 concern.
-        resetLinkBase: 'http://localhost:8080/reset-password'
+        resetLinkBase: process.env.RESET_LINK_BASE || 'http://localhost:5173/reset-password'
     },
 
     // api L2493

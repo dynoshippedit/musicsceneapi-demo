@@ -67,6 +67,17 @@ function authenticateToken(req, res, next) {
                 if (!user) {
                     return res.status(401).json({ error: 'User not found' });
                 }
+                // STEP 7 (D7): deactivation and password changes take effect
+                // immediately. Tokens minted before this change carry no
+                // sessionVersion claim and read as 0, matching the column
+                // default for pre-existing rows.
+                if (!user.active) {
+                    return res.status(401).json({ error: 'Account deactivated' });
+                }
+                const tokenSession = req.user.sessionVersion == null ? 0 : req.user.sessionVersion;
+                if (tokenSession !== (user.sessionVersion || 0)) {
+                    return res.status(401).json({ error: 'Session revoked' });
+                }
                 req.user.role = user.role;
                 req.user.artistAccess = user.artistAccess;
                 req.user.integrationCount = user.integrationCount;

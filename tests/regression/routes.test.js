@@ -60,8 +60,9 @@ describe('route table — registration invariants', () => {
     });
 
     test('registers the expected number of routes', () => {
-        assert.strictEqual(TABLE.length, 64,
-            `expected 64 registered routes, found ${TABLE.length}`);
+        // STEP 7 (D7, 2026-09-28): +1 route (POST /v3/auth/reset-password)
+        assert.strictEqual(TABLE.length, 65,
+            `expected 65 registered routes, found ${TABLE.length}`);
     });
 
     test('PINS: the known shadowed duplicate routes are still present', () => {
@@ -139,13 +140,12 @@ describe('route table — registration invariants', () => {
     });
 
     test('PINS: routes the frontend calls that do NOT exist remain absent', () => {
-        assert.ok(!KEYS.includes('POST /v3/auth/reset-password'),
-            'PINNED: reset-password still unimplemented; password reset is dead');
+        // STEP 7 (D7, 2026-09-28): reset-password shipped; its pin is removed.
         assert.ok(!KEYS.includes('GET /v3/label/entity-audit'),
             'PINNED: label entity audit still unrouted');
     });
 
-    test('only the three documented routes are unauthenticated', () => {
+    test('only the four documented routes are unauthenticated', () => {
         const stack = app._router.stack.filter((l) => l.route);
         const unauth = [];
         for (const layer of stack) {
@@ -160,7 +160,8 @@ describe('route table — registration invariants', () => {
         assert.deepStrictEqual(unauth, [
             'GET /health',
             'POST /v3/auth/forgot-password',
-            'POST /v3/auth/login'
+            'POST /v3/auth/login',
+            'POST /v3/auth/reset-password'
         ], `unexpected unauthenticated routes: ${unauth.join(', ')}`);
     });
 

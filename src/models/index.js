@@ -32,7 +32,13 @@ const User = sequelize.define('User', {
     pageAccess: { type: DataTypes.STRING, defaultValue: '["overview"]' }, // Store as stringified JSON manually
     integrationCount: { type: DataTypes.INTEGER, defaultValue: 1 },
     resetToken: { type: DataTypes.STRING },
-    resetTokenExpiry: { type: DataTypes.STRING } // SQLite date handling is strict, use String for safety
+    resetTokenExpiry: { type: DataTypes.STRING }, // SQLite date handling is strict, use String for safety
+    // STEP 7 (D7): bumped on password reset/change to revoke every session
+    sessionVersion: { type: DataTypes.INTEGER, defaultValue: 0 },
+    // STEP 7 (D7): credential-change counter
+    version: { type: DataTypes.INTEGER, defaultValue: 0 },
+    // STEP 7 (D7): deactivated accounts cannot authenticate
+    active: { type: DataTypes.BOOLEAN, defaultValue: true }
 });
 
 // api L158-163
@@ -145,6 +151,7 @@ async function initDB({ logger, labelData } = {}) {
         await sequelize.authenticate();
         if (logger) logger.info('Database connection established.');
         await require('./migrations').repairSalesSchema(sequelize);
+        await require('./migrations').addUserSecurityColumns(sequelize);
         await sequelize.sync(); // Create absent tables; existing schema changes use explicit migrations.
 
         // SEED USERS IF EMPTY — api L182-190

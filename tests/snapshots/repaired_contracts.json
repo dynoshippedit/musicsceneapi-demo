@@ -1,58 +1,23 @@
 {
-  "label_overview_admin": {
-    "status": 200,
+  "ai_analyze_growth": {
+    "status": 503,
     "contentType": "application/json",
     "body": {
-      "activeArtists": 29,
-      "annualProjection": null,
-      "month": null,
-      "monthlyRevenue": null,
-      "quarterlyProjection": null,
-      "source": "recorded_sales",
-      "timestamp": "<VOLATILE>",
-      "topArtists": []
+      "error": "AI is unavailable. Check the server provider configuration or try again later."
     }
   },
-  "label_overview_artist_role": {
-    "status": 200,
+  "ai_analyze_no_query": {
+    "status": 400,
     "contentType": "application/json",
     "body": {
-      "activeArtists": 1,
-      "annualProjection": null,
-      "month": null,
-      "monthlyRevenue": null,
-      "quarterlyProjection": null,
-      "source": "recorded_sales",
-      "timestamp": "<VOLATILE>",
-      "topArtists": []
+      "error": "Prompt required"
     }
   },
-  "campaigns_stats_admin": {
-    "status": 200,
+  "ai_analyze_other": {
+    "status": 503,
     "contentType": "application/json",
     "body": {
-      "history": [],
-      "note": "Reference CRM counts. No historical campaign performance has been recorded.",
-      "source": "roster_reference",
-      "stats": {
-        "presaleSignups": 1782772,
-        "totalEmails": 11218910,
-        "totalSMS": 1010297
-      }
-    }
-  },
-  "rights_contracts_admin": {
-    "status": 501,
-    "contentType": "application/json",
-    "body": {
-      "error": "Contract generation is not available. No contract has been created."
-    }
-  },
-  "rights_contracts_no_artist": {
-    "status": 404,
-    "contentType": "application/json",
-    "body": {
-      "error": "Artist not found"
+      "error": "AI is unavailable. Check the server provider configuration or try again later."
     }
   },
   "ai_analyze_roi": {
@@ -67,98 +32,6 @@
     "contentType": "application/json",
     "body": {
       "error": "AI is unavailable. Check the server provider configuration or try again later."
-    }
-  },
-  "ai_analyze_growth": {
-    "status": 503,
-    "contentType": "application/json",
-    "body": {
-      "error": "AI is unavailable. Check the server provider configuration or try again later."
-    }
-  },
-  "ai_analyze_other": {
-    "status": 503,
-    "contentType": "application/json",
-    "body": {
-      "error": "AI is unavailable. Check the server provider configuration or try again later."
-    }
-  },
-  "ai_analyze_no_query": {
-    "status": 400,
-    "contentType": "application/json",
-    "body": {
-      "error": "Prompt required"
-    }
-  },
-  "anr_state_initial": {
-    "status": 200,
-    "contentType": "application/json",
-    "body": {
-      "demos": [
-        {
-          "artist": "Void Walker",
-          "createdAt": "<VOLATILE>",
-          "genre": null,
-          "hasVoted": false,
-          "id": "<VOLATILE>",
-          "status": "new",
-          "submittedBy": "admin",
-          "title": "Deep Space",
-          "updatedAt": "<VOLATILE>",
-          "url": null
-        },
-        {
-          "artist": "Neon Glitch",
-          "createdAt": "<VOLATILE>",
-          "genre": null,
-          "hasVoted": false,
-          "id": "<VOLATILE>",
-          "status": "high-priority",
-          "submittedBy": "rezz",
-          "title": "Cyberpunk Bass",
-          "updatedAt": "<VOLATILE>",
-          "url": null
-        },
-        {
-          "artist": "Unknown Producer",
-          "createdAt": "<VOLATILE>",
-          "genre": null,
-          "hasVoted": false,
-          "id": "<VOLATILE>",
-          "status": "reviewing",
-          "submittedBy": "admin",
-          "title": "Analog Dreams",
-          "updatedAt": "<VOLATILE>",
-          "url": null
-        }
-      ],
-      "nowListening": {
-        "timestamp": "<VOLATILE>",
-        "updatedBy": "deadmau5",
-        "url": "https://soundcloud.com/mau5trap/example-demo"
-      },
-      "whiteboard": "Currently Reviewing: Q1 2026 Compilation Submissions.\nFocus: Tech House / Minimal."
-    }
-  },
-  "anr_vote_missing_demo": {
-    "status": 400,
-    "contentType": "application/json",
-    "body": {
-      "error": "Invalid action. Use \"add\" or \"remove\"."
-    }
-  },
-  "marketing_campaign_create": {
-    "status": 400,
-    "contentType": "application/json",
-    "body": {
-      "error": "A campaign name, supported strategy and platforms are required"
-    }
-  },
-  "integrations_auth_spotify": {
-    "status": 501,
-    "contentType": "application/json",
-    "body": {
-      "error": "Account connection is not implemented. No account was connected."
     }
   },
   "analytics_geography": {
@@ -379,5 +252,174 @@
       ],
       "source": "fixture"
     }
+  },
+  "anr_state_initial": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "demos": [
+        {
+          "artist": "Void Walker",
+          "createdAt": "<VOLATILE>",
+          "genre": null,
+          "hasVoted": false,
+          "id": "<VOLATILE>",
+          "status": "new",
+          "submittedBy": "admin",
+          "title": "Deep Space",
+          "updatedAt": "<VOLATILE>",
+          "url": null
+        },
+        {
+          "artist": "Neon Glitch",
+          "createdAt": "<VOLATILE>",
+          "genre": null,
+          "hasVoted": false,
+          "id": "<VOLATILE>",
+          "status": "high-priority",
+          "submittedBy": "rezz",
+          "title": "Cyberpunk Bass",
+          "updatedAt": "<VOLATILE>",
+          "url": null
+        },
+        {
+          "artist": "Unknown Producer",
+          "createdAt": "<VOLATILE>",
+          "genre": null,
+          "hasVoted": false,
+          "id": "<VOLATILE>",
+          "status": "reviewing",
+          "submittedBy": "admin",
+          "title": "Analog Dreams",
+          "updatedAt": "<VOLATILE>",
+          "url": null
+        }
+      ],
+      "nowListening": {
+        "timestamp": "<VOLATILE>",
+        "updatedBy": "deadmau5",
+        "url": "https://soundcloud.com/mau5trap/example-demo"
+      },
+      "whiteboard": "Currently Reviewing: Q1 2026 Compilation Submissions.\nFocus: Tech House / Minimal."
+    }
+  },
+  "anr_vote_missing_demo": {
+    "status": 400,
+    "contentType": "application/json",
+    "body": {
+      "error": "Invalid action. Use \"add\" or \"remove\"."
+    }
+  },
+  "campaigns_stats_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "history": [],
+      "note": "Reference CRM counts. No historical campaign performance has been recorded.",
+      "source": "roster_reference",
+      "stats": {
+        "presaleSignups": 1782772,
+        "totalEmails": 11218910,
+        "totalSMS": 1010297
+      }
+    }
+  },
+  "change_password_wrong_current": {
+    "status": 400,
+    "contentType": "application/json",
+    "body": {
+      "error": "New password must be at least 8 characters"
+    }
+  },
+  "integrations_auth_spotify": {
+    "status": 501,
+    "contentType": "application/json",
+    "body": {
+      "error": "Account connection is not implemented. No account was connected."
+    }
+  },
+  "label_overview_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "activeArtists": 29,
+      "annualProjection": null,
+      "month": null,
+      "monthlyRevenue": null,
+      "quarterlyProjection": null,
+      "source": "recorded_sales",
+      "timestamp": "<VOLATILE>",
+      "topArtists": []
+    }
+  },
+  "label_overview_artist_role": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "activeArtists": 1,
+      "annualProjection": null,
+      "month": null,
+      "monthlyRevenue": null,
+      "quarterlyProjection": null,
+      "source": "recorded_sales",
+      "timestamp": "<VOLATILE>",
+      "topArtists": []
+    }
+  },
+  "marketing_campaign_create": {
+    "status": 400,
+    "contentType": "application/json",
+    "body": {
+      "error": "A campaign name, supported strategy and platforms are required"
+    }
+  },
+  "rights_contracts_admin": {
+    "status": 501,
+    "contentType": "application/json",
+    "body": {
+      "error": "Contract generation is not available. No contract has been created."
+    }
+  },
+  "rights_contracts_no_artist": {
+    "status": 404,
+    "contentType": "application/json",
+    "body": {
+      "error": "Artist not found"
+    }
+  },
+  "users_list_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": [
+      {
+        "active": true,
+        "artistAccess": "all",
+        "createdAt": "<VOLATILE>",
+        "email": "admin@mau5trap.com",
+        "id": "<VOLATILE>",
+        "integrationCount": 10,
+        "name": "Admin User",
+        "pageAccess": [
+          "all"
+        ],
+        "role": "admin",
+        "updatedAt": "<VOLATILE>"
+      },
+      {
+        "active": true,
+        "artistAccess": "art_rezz",
+        "createdAt": "<VOLATILE>",
+        "email": "tours@rezz.com",
+        "id": "<VOLATILE>",
+        "integrationCount": 5,
+        "name": "Isabelle Rezazadeh",
+        "pageAccess": [
+          "overview",
+          "roster"
+        ],
+        "role": "artist",
+        "updatedAt": "<VOLATILE>"
+      }
+    ]
   }
 }

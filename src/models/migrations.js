@@ -41,4 +41,33 @@ async function repairSalesSchema(sequelize) {
     return true;
 }
 
-module.exports = { repairSalesSchema };
+module.exports = { repairSalesSchema, addUserSecurityColumns };
+
+/**
+ * STEP 7 (D7, 2026-09-28): session revocation + deactivation columns on Users.
+ * Idempotent: each ALTER runs only when the column is absent. Existing rows
+ * get the DEFAULT so old tokens (no sessionVersion claim) keep working.
+ */
+async function addUserSecurityColumns(sequelize) {
+    if (sequelize.getDialect() !== "sqlite") return false;
+    // On a fresh database the Users table does not exist yet when migrations
+    // run (sequelize.sync() creates it afterwards, with the new columns from
+    // the model definition). PRAGMA on a missing table returns no rows, so
+    // no-op in that case instead of failing the boot.
+    const [rows] = await sequelize.query('PRAGMA table_info("Users");');
+    if (!rows.length) return false;
+    const names = new Set(rows.map((r) => r.name));
+    const needed = [
+        ["sessionVersion", "INTEGER NOT NULL DEFAULT 0"],
+        ["version", "INTEGER NOT NULL DEFAULT 0"],
+        ["active", "INTEGER NOT NULL DEFAULT 1"], // BOOLEAN
+    ];
+    let changed = false;
+    for (const [name, ddl] of needed) {
+        if (!names.has(name)) {
+            await sequelize.query(`ALTER TABLE "Users" ADD COLUMN "${name}" ${ddl}`);
+            changed = true;
+        }
+    }
+    return changed;
+}

@@ -3,6 +3,7 @@ import { ProtectedRoute } from './auth/ProtectedRoute.jsx';
 import { PermissionRoute } from './auth/PermissionRoute.jsx';
 import { AppShell } from './layout/AppShell.jsx';
 import { LoginPage } from './pages/LoginPage/LoginPage.jsx';
+import { ResetPasswordPage } from './pages/ResetPasswordPage/ResetPasswordPage.jsx';
 import { DashboardPage } from './pages/DashboardPage/DashboardPage.jsx';
 import { ArtistsPage } from './pages/ArtistsPage/ArtistsPage.jsx';
 import { ArtistDetailPage } from './pages/ArtistDetailPage/ArtistDetailPage.jsx';
@@ -24,6 +25,8 @@ import { NotFoundPage } from './pages/NotFoundPage/NotFoundPage.jsx';
 // Settings carries no permission — it is the secondary nav, available to every session (§10).
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
+  // STEP 7: public landing page for password-reset email links (?token=…)
+  { path: '/reset-password', element: <ResetPasswordPage /> },
   {
     element: <ProtectedRoute />,
     children: [

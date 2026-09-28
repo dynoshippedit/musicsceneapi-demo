@@ -3,15 +3,16 @@
  *
  * Extracted verbatim from mau5trap-production-api.js (Phase 1 L257-299).
  *
- * PRESERVED DEFECT (audit R10): when no SMTP_HOST / SENDGRID_API_KEY is set,
- * nodemailer is configured with `jsonTransport: true`, which only logs the
- * message. sendEmail() still returns `true`, so every caller believes the mail
- * was delivered. That is the current behavior and is preserved — the password
- * reset flow depends on this returning truthy in local development.
+ * STEP 7 (D7, 2026-09-28) — delivery acknowledgement contract:
+ * sendEmail() returns true ONLY on real delivery acknowledgement: the
+ * transport must resolve AND the recipient must appear in info.accepted.
+ * A transport that throws, or resolves without accepting the recipient,
+ * yields false. When email is not configured at all (no SMTP keys and no
+ * injected transport), isConfigured() is false and sendEmail() returns
+ * false without attempting delivery. The old "jsonTransport simulation
+ * counts as success" behavior was retired by D7 (audit R10).
  *
- * PRESERVED DEFECT: the reset link base is hardcoded to
- * http://localhost:8080/reset-password (original L583). It now comes from
- * config.email.resetLinkBase, which carries the same literal default.
+ * The reset link base comes from config.email.resetLinkBase.
  */
 
 'use strict';
@@ -21,48 +22,67 @@ const config = require('../config');
 const logger = require('../config/logger');
 const profile = require('../profile');
 
-function createEmailService({ transport } = {}) {
+/**
+ * @param {object} [opts]
+ * @param {object} [opts.transport] injected nodemailer-compatible transport (tests)
+ * @param {object} [opts.emailConfig] overrides config.email ({ enabled, host, port, user, pass, from })
+ * @param {object} [opts.log] injected logger (tests)
+ */
+function createEmailService({ transport, emailConfig, log: logFn } = {}) {
+    const log = logFn || logger;
+    const emailCfg = emailConfig || config.email;
     const transporter = transport || nodemailer.createTransport(
-        config.email.enabled ? {
-            host: config.email.host,
-            port: config.email.port,
+        emailCfg.enabled ? {
+            host: emailCfg.host,
+            port: emailCfg.port,
             secure: false,
             auth: {
-                user: config.email.user,
-                pass: config.email.pass
+                user: emailCfg.user,
+                pass: emailCfg.pass
             }
         } : {
-            jsonTransport: true // Logs to console if no keys provided
+            jsonTransport: true // retained for direct transporter use; sendEmail() will not use it unconfigured
         }
     );
 
+    /** Whether this instance can attempt delivery at all. */
+    function isConfigured() {
+        return !!transport || !!emailCfg.enabled;
+    }
+
     /**
-     * @returns {Promise<boolean>} true on send OR on simulated send; false only
-     *          when the transport threw.
+     * @returns {Promise<boolean>} true only when the transport resolved and
+     *          acknowledged the recipient in info.accepted; false when
+     *          unconfigured, when the transport threw, or when the
+     *          recipient was not accepted.
      */
     async function sendEmail({ to, subject, html }) {
+        if (!isConfigured()) {
+            log.warn('[EMAIL SKIP] email not configured; delivery not attempted');
+            return false;
+        }
         try {
             const info = await transporter.sendMail({
                 // PHASE 4CF: brand default resolved from the Label
                 // Intelligence Profile when EMAIL_FROM is unset.
-                from: config.email.from || profile.email.from,
+                from: emailCfg.from || profile.email.from,
                 to,
                 subject,
                 html
             });
 
             if (info.messageId) {
-                logger.info(`[EMAIL SENT] MessageID: ${info.messageId} to ${to}`);
-            } else {
-                // JSON Transport Fallback — console output preserved verbatim.
-                console.log('---------------------------------------------------');
-                console.log(`[EMAIL SIMULATION] To: ${to} | Subject: ${subject}`);
-                console.log('Body:', html);
-                console.log('---------------------------------------------------');
+                log.info(`[EMAIL SENT] MessageID: ${info.messageId} to ${to}`);
+            }
+
+            const accepted = Array.isArray(info.accepted) ? info.accepted : [];
+            if (!accepted.includes(to)) {
+                log.warn(`[EMAIL NOT ACCEPTED] to ${to}`);
+                return false;
             }
             return true;
         } catch (err) {
-            logger.error('[EMAIL FAIL]', err);
+            log.error('[EMAIL FAIL]', err);
             return false;
         }
     }
@@ -90,7 +110,7 @@ function createEmailService({ transport } = {}) {
         });
     }
 
-    return { sendEmail, sendPasswordReset, transporter };
+    return { sendEmail, sendPasswordReset, transporter, isConfigured };
 }
 
 module.exports = createEmailService();

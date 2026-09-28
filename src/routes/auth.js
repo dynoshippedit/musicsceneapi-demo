@@ -1,26 +1,29 @@
 /**
  * src/routes/auth.js
  *
- * Authentication endpoints. PRESERVED CRITICAL-1: the admin-override branch in
- * POST /v3/auth/login compares undefined === undefined when ADMIN_EMAIL/ADMIN_PASS
- * are unset, so an empty JSON body yields an admin token. PRESERVED: no
- * POST /v3/auth/reset-password route exists, so the token minted by
- * forgot-password can never be redeemed.
+ * Authentication endpoints.
  *
- * Handler bodies were moved VERBATIM from mau5trap-production-api.js. They are
- * registered in their original relative order, which matters because Express
- * binds the first matching route. Cross-domain shadowing was checked and does
- * not exist: all duplicate registrations fall within a single domain.
+ * STEP 7 (D7, signed off 2026-09-28): the password-reset flow is SHIPPED.
+ * POST /v3/auth/reset-password redeems the token minted by forgot-password.
+ * Reset tokens are stored as SHA-256 digests (never plaintext); invalid,
+ * expired, and consumed tokens share one controlled 400 with no enumeration
+ * oracle; redemption is single-winner under concurrency; a successful reset
+ * bumps sessionVersion (revoking all existing sessions) and emits a
+ * user.password_reset audit event.
  *
- * Routes (5):
+ * Routes (6):
  *   POST   /v3/auth/login
  *   POST   /v3/auth/forgot-password
+ *   POST   /v3/auth/reset-password
  *   DELETE /v3/auth/me
  *   GET    /v3/auth/me
  *   POST   /v3/auth/change-password
  */
 
 'use strict';
+
+const crypto = require('crypto');
+const { Op } = require('sequelize');
 
 /**
  * @param {object} app Express application
@@ -33,7 +36,7 @@ function register(app, ctx) {
         authenticateToken, hasArtistAccess, filterDataByAccess, checkExportAccess, generateToken,
         calculateTotalRevenue, flattenData, filterMetrics,
         generatePieChart, generateBarChart, generateLineChart, generateDonutChart,
-        cache, emailService, sendEmail, entityAuditService,
+        cache, emailService, sendEmail, entityAuditService, auditService,
         artistRepo, labelData, getArtistData, getAllArtists,
         operationsRepo, operationsData,
         prospects, anrSubmissions, anrState, userIntegrations, salesData, apiCache,
@@ -41,6 +44,36 @@ function register(app, ctx) {
         integrationFacade, fetchArtistData, getIntegrationStatus, SERVICES, limiters,
         generateMonthlyReport, profile
     } = ctx;
+
+    // -- STEP 7 helpers -----------------------------------------------------
+
+    /** SHA-256 hex digest. Reset tokens are stored digested, never plaintext. */
+    function sha256Hex(value) {
+        return crypto.createHash('sha256').update(value).digest('hex');
+    }
+
+    /**
+     * New-password policy: string, at least 8 characters, at most 72 bytes
+     * (bcrypt's input limit — longer inputs would be silently truncated).
+     */
+    function validNewPassword(pw) {
+        return typeof pw === 'string'
+            && pw.length >= 8
+            && Buffer.byteLength(pw, 'utf8') <= 72;
+    }
+
+    /** Fire-and-forget: an audit failure must never break the request. */
+    function emitPasswordResetAudit(userId) {
+        try {
+            if (auditService && typeof auditService.emitAudit === 'function') {
+                auditService.emitAudit({
+                    action: 'user.password_reset',
+                    resourceType: 'user',
+                    resourceId: String(userId)
+                });
+            }
+        } catch (_) { /* audit is advisory */ }
+    }
 
     // pageAccess (pre-Phase-4C Decision 1): User.pageAccess is stringified
     // JSON in a STRING column (models L50; seeds: admin ["all"], artist
@@ -81,10 +114,20 @@ function register(app, ctx) {
                 if (!user) user = await User.create({ email, name: 'Admin', role: 'admin', artistAccess: 'all',
                     pageAccess: JSON.stringify(['all']), passwordHash: await bcrypt.hash(password, 10), integrationCount: 10 });
                 if (user.role !== 'admin') return res.status(403).json({ error: 'Admin override is not allowed for this account' });
-                const token = jwt.sign({ id: user.id, email: user.email, role: user.role, artistAccess: user.artistAccess,
-                    integrationCount: user.integrationCount }, JWT_SECRET, { expiresIn: '24h' });
-                return res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role,
-                    artistAccess: user.artistAccess, pageAccess: parsePageAccess(user.pageAccess) } });
+                // STEP 7: deactivated accounts cannot authenticate, even via override.
+                if (!user.active) return res.status(401).json({ error: 'Invalid credentials' });
+                // STEP 7: the bootstrap credential only opens the account while
+                // it IS the account's password. Once the password has been
+                // changed, the old bootstrap secret must not bypass it — fall
+                // through to the normal credential check, which rejects it.
+                if (await bcrypt.compare(adminPass, user.passwordHash)) {
+                    const token = jwt.sign({ id: user.id, email: user.email, role: user.role, artistAccess: user.artistAccess,
+                        integrationCount: user.integrationCount, sessionVersion: user.sessionVersion || 0 }, JWT_SECRET, { expiresIn: '24h' });
+                    return res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role,
+                        artistAccess: user.artistAccess, pageAccess: parsePageAccess(user.pageAccess) } });
+                }
+                // Password was changed: the bootstrap secret no longer applies.
+                // Fall through to the standard login path below.
             } catch (err) {
                 logger.error('Admin login failed:', err);
                 return res.status(503).json({ error: 'Login is temporarily unavailable' });
@@ -94,6 +137,10 @@ function register(app, ctx) {
         try {
             const user = await User.findOne({ where: { email } });
             if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+
+            // STEP 7: deactivated accounts cannot log in. Same 401 as a bad
+            // password, so deactivation is not enumerable.
+            if (!user.active) return res.status(401).json({ error: 'Invalid credentials' });
 
             const match = await bcrypt.compare(password, user.passwordHash);
             if (!match) return res.status(401).json({ error: 'Invalid credentials' });
@@ -105,12 +152,16 @@ function register(app, ctx) {
             // claim. The previous payload omitted it, so req.user.id was
             // undefined and GET /v3/auth/me, GDPR delete, change-password and
             // per-user integration state were all broken.
+            //
+            // STEP 7: the payload also carries sessionVersion so the auth
+            // middleware can revoke every session on password reset/change.
             const token = jwt.sign({
                 id: user.id,
                 email: user.email,
                 role: user.role,
                 artistAccess: user.artistAccess,
-                integrationCount: user.integrationCount
+                integrationCount: user.integrationCount,
+                sessionVersion: user.sessionVersion || 0
             }, JWT_SECRET, { expiresIn: '24h' });
 
             res.json({
@@ -133,6 +184,10 @@ function register(app, ctx) {
     // Forgot Password (Real Email)
     // MEDIUM-8 FIX (Phase 3): no user enumeration. Unknown emails now return the
     // SAME generic 200 as a valid request, instead of 404 "User not found".
+    //
+    // STEP 7: the token is stored as a SHA-256 digest (never plaintext), and a
+    // failed email delivery clears the pending token so no unusable-but-live
+    // token lingers. The response stays generic either way.
     app.post('/v3/auth/forgot-password', async (req, res) => {
         try {
             const { email } = req.body;
@@ -148,14 +203,14 @@ function register(app, ctx) {
                 return res.json({ message: 'If an account exists for that email, a reset link has been sent.' });
             }
 
-            const resetToken = require('crypto').randomBytes(32).toString('hex');
-            user.resetToken = resetToken;
-            user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
+            const resetToken = crypto.randomBytes(32).toString('hex');
+            user.resetToken = sha256Hex(resetToken);
+            user.resetTokenExpiry = String(Date.now() + 3600000); // 1 hour
             await user.save();
 
             const resetLink = `${config.email.resetLinkBase}?token=${resetToken}`;
 
-            await sendEmail({
+            const delivered = await sendEmail({
                 to: email,
                 // PHASE 4CF: reset-email identity from the Label Intelligence
                 // Profile (values byte-identical for mau5trap).
@@ -171,6 +226,14 @@ function register(app, ctx) {
                 `
             });
 
+            if (!delivered) {
+                // The token never reached the user; leave no live token behind.
+                // The response stays generic (no enumeration oracle).
+                user.resetToken = null;
+                user.resetTokenExpiry = null;
+                await user.save();
+            }
+
             res.json({ message: 'If an account exists for that email, a reset link has been sent.' });
         } catch (err) {
             logger.error('Forgot Password error:', err);
@@ -178,11 +241,64 @@ function register(app, ctx) {
         }
     });
 
+    // Password Reset Redemption (STEP 7 — D7 signed off 2026-09-28)
+    //
+    // Public route. The request carries the raw token from the email link; the
+    // database holds only its SHA-256 digest. Invalid, expired, and consumed
+    // tokens share ONE controlled 400 — there is no oracle distinguishing
+    // them. Redemption is single-winner under concurrency: the UPDATE only
+    // succeeds for the request that still sees the digest, so exactly one of
+    // simultaneous redemptions gets a 200. Success bumps sessionVersion
+    // (every existing session stops working) and emits user.password_reset.
+    app.post('/v3/auth/reset-password', async (req, res) => {
+        const { token, newPassword } = req.body || {};
+        const fail = () => res.status(400).json({ error: 'Invalid or expired reset token' });
+
+        if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token) || !validNewPassword(newPassword)) {
+            return fail();
+        }
+
+        try {
+            const digest = sha256Hex(token);
+            const user = await User.findOne({ where: { resetToken: digest } });
+            if (!user || !user.active || !(Number(user.resetTokenExpiry) > Date.now())) {
+                return fail();
+            }
+
+            const passwordHash = await bcrypt.hash(newPassword, 10);
+            const [affected] = await User.update({
+                passwordHash,
+                resetToken: null,
+                resetTokenExpiry: null,
+                sessionVersion: sequelize.literal('"sessionVersion" + 1'),
+                version: sequelize.literal('"version" + 1')
+            }, {
+                where: {
+                    id: user.id,
+                    resetToken: digest,
+                    resetTokenExpiry: { [Op.gt]: String(Date.now()) }
+                }
+            });
+
+            // 0 rows: another request consumed the token first (or it expired
+            // between the read and the write). Same controlled 400.
+            if (affected !== 1) return fail();
+
+            emitPasswordResetAudit(user.id);
+            return res.json({ message: 'Password has been reset. Please sign in again.' });
+        } catch (err) {
+            logger.error('Reset password failed:', err);
+            return res.status(503).json({ error: 'Password reset is temporarily unavailable' });
+        }
+    });
+
     // GDPR: Delete Account
     app.delete('/v3/auth/me', authenticateToken, async (req, res) => {
         try {
             const user = await User.findByPk(req.user.id);
-            if (!user) return res.status(404).json({ error: 'User not found' });
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
 
             // Prevent deleting the main admin for safety in this demo.
             // PHASE 4CF: the root-admin email now comes from the Label
@@ -223,15 +339,25 @@ function register(app, ctx) {
     });
 
     // Change password
+    //
+    // STEP 7: the new password is validated (min 8 chars, max 72 bytes);
+    // success bumps sessionVersion (all other sessions stop working),
+    // invalidates any pending reset token, and bumps the version counter.
     app.post('/v3/auth/change-password', authenticateToken, async (req, res) => {
         const { currentPassword, newPassword } = req.body || {};
 
         if (!currentPassword || !newPassword) {
             return res.status(400).json({ error: 'Current and new password required' });
         }
+        if (!validNewPassword(newPassword)) {
+            return res.status(400).json({ error: 'New password must be at least 8 characters' });
+        }
 
         try {
             const user = await User.findByPk(req.user.id);
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
             const validPassword = await bcrypt.compare(currentPassword, user.passwordHash);
 
             if (!validPassword) {
@@ -239,6 +365,10 @@ function register(app, ctx) {
             }
 
             user.passwordHash = await bcrypt.hash(newPassword, 10);
+            user.sessionVersion = (user.sessionVersion || 0) + 1;
+            user.version = (user.version || 0) + 1;
+            user.resetToken = null;
+            user.resetTokenExpiry = null;
             await user.save();
             res.json({ message: 'Password changed successfully' });
         } catch (err) {

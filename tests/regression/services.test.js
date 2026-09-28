@@ -534,7 +534,8 @@ describe('src/services/emailService', () => {
     test('reports success and records the message', async () => {
         const sent = [];
         const svc = createEmailService({
-            transport: { sendMail: async (m) => { sent.push(m); return { messageId: 'abc' }; } }
+            // STEP 7 (D7): real delivery acknowledgement = recipient in accepted.
+            transport: { sendMail: async (m) => { sent.push(m); return { messageId: 'abc', accepted: [m.to] }; } }
         });
         assert.strictEqual(await svc.sendEmail({ to: 'a@b.c', subject: 's', html: 'h' }), true);
         assert.strictEqual(sent[0].to, 'a@b.c');
@@ -547,11 +548,13 @@ describe('src/services/emailService', () => {
         assert.strictEqual(await svc.sendEmail({ to: 'a@b.c', subject: 's', html: 'h' }), false);
     });
 
-    test('PINS: a simulated send (no messageId) still reports success', () => {
-        // jsonTransport fallback — callers cannot distinguish simulated from real.
+    test('PINS: a transport that resolves without accepting the recipient reports failure', () => {
+        // STEP 7 (D7): the old "jsonTransport simulation counts as success"
+        // contract was retired (audit R10). A transport that resolves with no
+        // acceptance info is NOT a delivered email.
         return createEmailService({ transport: { sendMail: async () => ({}) } })
             .sendEmail({ to: 'x@y.z', subject: 's', html: 'h' })
-            .then((ok) => assert.strictEqual(ok, true, 'PINNED: simulated send looks successful'));
+            .then((ok) => assert.strictEqual(ok, false, 'PINNED: unacknowledged send looks like failure'));
     });
 
     test('password reset link uses the configured base and carries the token', async () => {

@@ -2770,12 +2770,18 @@
       }
     }
   },
-  "reset_password_missing": {
-    "status": 404,
+  "reset_password_bad_token": {
+    "status": 400,
     "contentType": "application/json",
     "body": {
-      "error": "Endpoint not found",
-      "path": "/v3/auth/reset-password"
+      "error": "Invalid or expired reset token"
+    }
+  },
+  "reset_password_short_password": {
+    "status": 400,
+    "contentType": "application/json",
+    "body": {
+      "error": "Invalid or expired reset token"
     }
   },
   "label_entity_audit_missing": {
@@ -2790,6 +2796,6 @@
     "adminTokenObtained": true,
     "artistTokenObtained": true,
     "entry": "server.js",
-    "caseCount": 91
+    "caseCount": 92
   }
 }

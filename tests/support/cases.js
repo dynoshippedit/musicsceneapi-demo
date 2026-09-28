@@ -139,7 +139,9 @@ const CASES = [
     { name: 'analytics_projections', method: 'GET', path: '/v3/analytics/projections', useToken: 'admin' },
 
     // ---------- known-missing routes the frontend calls ----------
-    { name: 'reset_password_missing', method: 'POST', path: '/v3/auth/reset-password', body: { token: 'x', password: 'y' } },
+    // STEP 7 (D7): reset-password shipped — deterministic 400 cases
+    { name: 'reset_password_bad_token', method: 'POST', path: '/v3/auth/reset-password', body: { token: 'x', newPassword: 'valid-password-123' } },
+    { name: 'reset_password_short_password', method: 'POST', path: '/v3/auth/reset-password', body: { token: 'a'.repeat(64), newPassword: 'short' } },
     { name: 'label_entity_audit_missing', method: 'GET', path: '/v3/label/entity-audit', useToken: 'admin' }
 ];
 

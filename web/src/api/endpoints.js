@@ -1,7 +1,7 @@
 // The ONLY file that contains '/v3/…' path strings (PHASE_4A_HANDOFF.md §7).
 // One thin function per real backend route. No route is invented here: every path below
 // is registered in src/routes/*.js. Routes the backend does not implement
-// (reset-password, label/entity-audit, ai/providers) are handled at their call site as
+// (label/entity-audit, ai/providers) are handled at their call site as
 // documented failures, never faked.
 import { apiFetch, readJson } from './client.js';
 
@@ -12,6 +12,15 @@ export async function login(credentials, { signal } = {}) {
 
 export async function getMe(token, { signal } = {}) {
   return readJson(await apiFetch('/v3/auth/me', { token, signal }));
+}
+
+// STEP 7: password reset. Both routes are public; the responses are generic.
+export async function requestPasswordReset(email, { signal } = {}) {
+  return readJson(await apiFetch('/v3/auth/forgot-password', { method: 'POST', body: { email }, signal }));
+}
+
+export async function confirmPasswordReset(token, newPassword, { signal } = {}) {
+  return readJson(await apiFetch('/v3/auth/reset-password', { method: 'POST', body: { token, newPassword }, signal }));
 }
 
 // ---------- label ----------
