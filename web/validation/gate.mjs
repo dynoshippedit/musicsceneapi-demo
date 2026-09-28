@@ -77,7 +77,16 @@ function check(id, name, pass, observed) {
   console.log(`${pass ? 'PASS' : 'FAIL'} | ${id} ${name} | ${String(observed).replace(/\s+/g, ' ').slice(0, 400)}`);
 }
 async function step(id, name, fn) {
-  try { await fn(); } catch (error) { check(id, name, false, `threw: ${error.message.split('\n')[0]}`); }
+  try {
+    // Neutralize the mouse: page.click() leaves the cursor hovering the
+    // clicked element, so getComputedStyle() would read :hover colors
+    // instead of the resting colors these checks assert. (5,5) is the
+    // neutral spot already used elsewhere in this gate. Focus state is
+    // unaffected (it is DOM/keyboard state, not mouse position).
+    await page.mouse.move(5, 5);
+    await page.waitForTimeout(50);
+    await fn();
+  } catch (error) { check(id, name, false, `threw: ${error.message.split('\n')[0]}`); }
 }
 function summarizeAndExit() {
   const pass = results.filter((r) => r.pass).length; const fail = results.length - pass;
