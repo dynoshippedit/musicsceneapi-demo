@@ -1,6 +1,6 @@
-# musicsceneapi — Label Intelligence Platform (Demo)
+# The Music Scene — Label Intelligence Platform (Demo)
 
-Demo distribution of the pulsegrid concept codebase: a Node.js/Express label-management API + two frontend dashboards, refactored into `src/` modules with a security-hardened Phase 3.
+Demo distribution of The Music Scene codebase (Pulsegrid is the fictional demo label): a Node.js/Express label-management API + two frontend dashboards, refactored into `src/` modules with a security-hardened Phase 3.
 
 > [!CAUTION]
 > **UNOFFICIAL FAN PROJECT**: This is a concept application created for educational and portfolio purposes only. It is **NOT** affiliated with, endorsed by, or connected to **pulsegrid** or **Seven20** management. All trademarks, artist names, and logos belong to their respective owners.

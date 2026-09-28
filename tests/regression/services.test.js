@@ -29,7 +29,7 @@ describe('src/ai/prompts', () => {
         const msgs = prompts.buildQueryMessages({ userPrompt: 'hi', contextData: {} });
         assert.strictEqual(msgs.length, 2);
         assert.strictEqual(msgs[0].role, 'system');
-        assert.strictEqual(msgs[0].content, 'AI analyst for Pulsegrid. Concise, data-driven insights.');
+        assert.strictEqual(msgs[0].content, 'AI analyst for The Music Scene. Concise, data-driven insights.');
     });
 
     test('user prompt is truncated to 500 characters', () => {
@@ -329,6 +329,8 @@ describe('src/services/entityAuditService', () => {
             auditGoogleKG: async () => { record.kg++; return { status: 'OK', schemaValid: true }; },
             auditWikipedia: async () => ({ status: 'OK' }),
             auditDiscogs: async () => ({ status: 'OK' }),
+            auditMusicBrainz: async () => ({ status: 'verified', exists: true, mbid: 'mbid-test' }),
+            auditWikidata: async () => ({ status: 'verified', exists: true, qid: 'Q1' }),
             auditFandom: async () => ({ status: 'OK' }),
             calculateHealthScore: () => 77,
             detectInconsistencies: () => [{ type: 'mismatch' }],
@@ -564,7 +566,7 @@ describe('src/services/emailService', () => {
         });
         await svc.sendPasswordReset({ to: 'a@b.c', resetToken: 'TOK123' });
         assert.match(captured.html, /reset-password\?token=TOK123/);
-        assert.strictEqual(captured.subject, 'Pulsegrid OS - Password Reset Request');
+        assert.strictEqual(captured.subject, 'The Music Scene - Password Reset Request');
     });
 });
 

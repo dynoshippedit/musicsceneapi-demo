@@ -43,6 +43,8 @@ function createIntegrationFacade({
         auditWikipedia: (name) => audit.auditWikipedia(name),
         auditDiscogs: (name) => audit.auditDiscogs(name),
         auditGenius: (name) => audit.auditGenius(name),
+        auditMusicBrainz: (name) => audit.auditMusicBrainz(name),
+        auditWikidata: (name) => audit.auditWikidata(name),
         auditFandom: (name) => audit.auditFandom(name),
         getFandomRoster: () => audit.getFandomRoster(),
         /**

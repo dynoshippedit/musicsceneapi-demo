@@ -1,5 +1,5 @@
-/**
- * Pulsegrid — default Label Intelligence Profile (fictional white-label brand).
+/** BRAND SPLIT (strategy 2026-09-28): the PRODUCT is "The Music Scene"; "Pulsegrid" is the fictional demo label whose roster ships with the demo. Product-facing strings (osName, serviceName, banner, email, AI) use the product name; label-facing strings (slug, labelName, domain, seed emails, search context) stay Pulsegrid.
+ * Pulsegrid profile — the fictional demo label. See BRAND SPLIT note above.
  *
  * PHASE 4CF (Commercial Foundation): every value in this file was moved
  * VERBATIM out of generic backend code (routes, services, config, jobs).
@@ -26,9 +26,10 @@ module.exports = {
     // ------------------------------------------------------------------ meta
     slug: 'pulsegrid',
     labelName: 'Pulsegrid',                     // human label identity (banner uses identity.bannerTitle)
-    osName: 'Pulsegrid OS',
+    productName: 'The Music Scene',          // PRODUCT brand; the demo label above is fictional
+    osName: 'The Music Scene',
     osVersion: 'v5.0',
-    serviceName: 'pulsegrid-api',               // logger defaultMeta (was literal)
+    serviceName: 'the-music-scene-api',               // logger defaultMeta (was literal)
 
     // -------------------------------------------------------------------- db
     db: {
@@ -45,7 +46,7 @@ module.exports = {
         // Startup banner (server.js). Verbatim, including the "Multi-Tenant
         // Access Control Enabled" line — see PHASE_4CF doc (marketing-claim
         // debt, preserved until a product decision changes the copy).
-        bannerTitle: 'Pulsegrid Production API',
+        bannerTitle: 'The Music Scene API',
         bannerSubtitle: 'Multi-Tenant Access Control Enabled',
         bannerFeatures: [
             'User Authentication (JWT)',
@@ -84,8 +85,8 @@ module.exports = {
 
     // ----------------------------------------------------------------- email
     email: {
-        from: '"Pulsegrid OS" <notify@pulsegrid.fm>',
-        resetSubject: 'Pulsegrid OS - Password Reset Request',
+        from: '"The Music Scene" <notify@pulsegrid.fm>',
+        resetSubject: 'The Music Scene - Password Reset Request',
         resetHeadingColor: '#00ff00',
         resetLinkColor: '#00ff00'
     },
@@ -93,7 +94,7 @@ module.exports = {
     // -------------------------------------------------------------------- ai
     ai: {
         // src/ai/prompts.js system prompt (pinned byte-for-byte).
-        systemContext: 'AI analyst for Pulsegrid. Concise, data-driven insights.',
+        systemContext: 'AI analyst for The Music Scene. Concise, data-driven insights.',
         // src/ai/aiService.js + src/routes/ai.js dev fallback (single source now).
         devFallback: '[Dev Fallback] Growth is stable at 2.5%. Recommend increasing tour frequency in EU.',
         keywordInsights: {
@@ -147,7 +148,9 @@ module.exports = {
         http: {
             wikiUserAgent: 'PulsegridIntelligence/1.0 (admin@pulsegrid.fm)',
             discogsUserAgent: 'pulsegrid-api/1.0',
-            labelBotUserAgent: 'PulsegridBot/1.0 (bot@pulsegrid.fm)'
+            labelBotUserAgent: 'PulsegridBot/1.0 (bot@pulsegrid.fm)',
+            musicbrainzUserAgent: 'TheMusicScene/1.0 (admin@pulsegrid.fm)',
+            wikidataUserAgent: 'TheMusicScene/1.0 (admin@pulsegrid.fm)'
         },
         defaultGenre: 'Electronic Music'
     },

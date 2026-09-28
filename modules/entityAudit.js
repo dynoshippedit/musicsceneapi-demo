@@ -8,6 +8,32 @@ const axios = require('axios');
 // Profile. Values for pulsegrid are byte-identical to the previous literals.
 const profile = require('../src/profile');
 
+// --- Rate-limit discipline (feasibility research 2026-09-28) ---
+// MusicBrainz enforces a hard 1 req/sec per IP and BLOCKS violators; Wikidata
+// asks for ~5 req/sec. These module-level gates serialize outbound calls with
+// a minimum interval. This is real enforcement, not a comment.
+const rateGates = new Map();
+async function respectRateLimit(key, minIntervalMs) {
+    const now = Date.now();
+    const last = rateGates.get(key) || 0;
+    const wait = minIntervalMs - (now - last);
+    if (wait > 0) {
+        await new Promise((r) => setTimeout(r, wait));
+    }
+    rateGates.set(key, Date.now());
+}
+
+// --- Entity-identity check (feasibility research 2026-09-28) ---
+// A search API returns the CLOSEST match, not necessarily the RIGHT one.
+// Marking the first result "verified" without comparing names misidentifies
+// similarly named entities. Only an exact normalized name match earns
+// "verified"; anything else is a "candidate" and scores fewer health points.
+function namesMatch(a, b) {
+    const norm = (v) => String(v || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const na = norm(a), nb = norm(b);
+    return na.length > 0 && na === nb;
+}
+
 /**
  * Audit Google Knowledge Graph for artist entity
  * @param {string} artistName - Artist name to search
@@ -387,6 +413,130 @@ async function auditGenius(artistName) {
 }
 
 /**
+ * Audit MusicBrainz for artist entry (strategy doc 2026-09-28).
+ * MusicBrainz is the canonical open music identifier database; the MBID it
+ * returns is the stable key other sources (Wikidata, Wikipedia) link to.
+ * MusicBrainz requires a descriptive User-Agent per their API policy and
+ * enforces ~1 req/sec per IP (violators are blocked). Enforced below via
+ * respectRateLimit; the first search result is only "verified" when its name
+ * matches the query -- otherwise it is a "candidate".
+ * @param {string} artistName - Artist name to search
+ * @returns {Object} MusicBrainz audit results
+ */
+async function auditMusicBrainz(artistName) {
+    try {
+        await respectRateLimit('musicbrainz', 1100);
+        const response = await axios.get('https://musicbrainz.org/ws/2/artist/', {
+            params: {
+                query: `artist:"${artistName}"`,
+                fmt: 'json',
+                limit: 1
+            },
+            headers: {
+                'User-Agent': profile.knowledgeSources.http.musicbrainzUserAgent,
+                'Accept': 'application/json'
+            },
+            timeout: 8000
+        });
+
+        const artists = response.data.artists || [];
+
+        if (artists.length === 0) {
+            return {
+                status: 'not_found',
+                exists: false,
+                message: `No MusicBrainz entry found for "${artistName}"`
+            };
+        }
+
+        const artist = artists[0];
+        const matched = namesMatch(artist.name, artistName);
+
+        return {
+            status: matched ? 'verified' : 'candidate',
+            exists: true,
+            nameMatch: matched,
+            matchNote: matched
+                ? undefined
+                : `MusicBrainz returned "${artist.name}" for query "${artistName}" -- identity uncertain`,
+            mbid: artist.id,
+            name: artist.name,
+            url: `https://musicbrainz.org/artist/${artist.id}`,
+            score: artist.score,
+            country: artist.country || null,
+            tags: (artist.tags || []).map((t) => t.name)
+        };
+    } catch (error) {
+        console.error('MusicBrainz API Error:', error.message);
+        return {
+            status: 'error',
+            exists: false,
+            error: error.message
+        };
+    }
+}
+
+/**
+ * Audit Wikidata for artist entity (strategy doc 2026-09-28).
+ * Wikidata QIDs are the cross-walk key between Wikipedia, MusicBrainz and
+ * the Google Knowledge Graph -- an artist with a QID is unambiguously
+ * identified across the open knowledge graph.
+ * @param {string} artistName - Artist name to search
+ * @returns {Object} Wikidata audit results
+ */
+async function auditWikidata(artistName) {
+    try {
+        await respectRateLimit('wikidata', 250);
+        const response = await axios.get('https://www.wikidata.org/w/api.php', {
+            params: {
+                action: 'wbsearchentities',
+                search: artistName,
+                language: 'en',
+                format: 'json',
+                limit: 1
+            },
+            headers: {
+                'User-Agent': profile.knowledgeSources.http.wikidataUserAgent
+            },
+            timeout: 8000
+        });
+
+        const results = response.data.search || [];
+
+        if (results.length === 0) {
+            return {
+                status: 'not_found',
+                exists: false,
+                message: `No Wikidata entity found for "${artistName}"`
+            };
+        }
+
+        const entity = results[0];
+        const matched = namesMatch(entity.label, artistName);
+
+        return {
+            status: matched ? 'verified' : 'candidate',
+            exists: true,
+            nameMatch: matched,
+            matchNote: matched
+                ? undefined
+                : `Wikidata returned "${entity.label}" for query "${artistName}" -- identity uncertain`,
+            qid: entity.id,
+            label: entity.label,
+            description: entity.description || null,
+            url: entity.url || `https://www.wikidata.org/wiki/${entity.id}`
+        };
+    } catch (error) {
+        console.error('Wikidata API Error:', error.message);
+        return {
+            status: 'error',
+            exists: false,
+            error: error.message
+        };
+    }
+}
+
+/**
  * Calculate overall entity health score
  * @param {Object} auditResults - Results from all platform audits
  * @returns {number} Health score (0-100)
@@ -394,32 +544,49 @@ async function auditGenius(artistName) {
 function calculateHealthScore(auditResults) {
     let score = 0;
 
-    // Google Knowledge Graph (25 points)
-    if (auditResults.googleKG.exists) {
-        score += 15;
-        if (auditResults.googleKG.schemaValid) score += 5;
-        if (auditResults.googleKG.description) score += 3;
+    // Google Knowledge Graph (20 points)
+    if (auditResults.googleKG?.exists) {
+        score += 12;
+        if (auditResults.googleKG.schemaValid) score += 4;
+        if (auditResults.googleKG.description) score += 2;
         if (auditResults.googleKG.image) score += 2;
     }
 
-    // Wikipedia (25 points)
-    if (auditResults.wikipedia.exists) {
-        score += 15;
-        if (auditResults.wikipedia.musicRelated) score += 5;
-        if (auditResults.wikipedia.hasInfobox) score += 3;
+    // Wikipedia (20 points)
+    if (auditResults.wikipedia?.exists) {
+        score += 12;
+        if (auditResults.wikipedia.musicRelated) score += 4;
+        if (auditResults.wikipedia.hasInfobox) score += 2;
         if (auditResults.wikipedia.externalLinks > 5) score += 2;
     }
 
-    // Discogs (15 points)
-    if (auditResults.discogs.exists) {
-        score += 10;
-        if (auditResults.discogs.thumbnail) score += 5;
+    // MusicBrainz (15 points) -- the MBID is the canonical open music identifier.
+    // Full points only on a name-verified match; a candidate (identity
+    // uncertain) scores roughly half.
+    if (auditResults.musicbrainz?.exists) {
+        const verified = auditResults.musicbrainz.status === 'verified';
+        score += verified ? 10 : 5;
+        if (auditResults.musicbrainz.mbid) score += verified ? 5 : 2;
     }
 
-    // Genius (15 points)
-    if (auditResults.genius.exists) {
-        score += 10;
-        if (auditResults.genius.verified) score += 5;
+    // Wikidata (15 points) -- the QID cross-walks Wikipedia/MusicBrainz/Google KG
+    // Wikidata (15 points) -- same verified/candidate split as MusicBrainz.
+    if (auditResults.wikidata?.exists) {
+        const verified = auditResults.wikidata.status === 'verified';
+        score += verified ? 10 : 5;
+        if (auditResults.wikidata.description) score += verified ? 5 : 2;
+    }
+
+    // Discogs (10 points)
+    if (auditResults.discogs?.exists) {
+        score += 7;
+        if (auditResults.discogs.thumbnail) score += 3;
+    }
+
+    // Genius (10 points)
+    if (auditResults.genius?.exists) {
+        score += 7;
+        if (auditResults.genius.verified) score += 3;
     }
 
     // Schema validation bonus (10 points)
@@ -444,22 +611,21 @@ function generateSchemaLD(artist, auditResults) {
         "@context": "https://schema.org",
         "@type": "MusicGroup",
         "name": artist.name,
-        "url": artist.website || `https://www.${artist.name.toLowerCase()}.com`,
+        // Strategy 2026-09-28: never fabricate a website URL from the artist's
+        // name. Only emit the website the label actually entered, if any.
+        ...(artist.website ? { "url": artist.website } : {}),
         "genre": artist.genreHybrids || profile.knowledgeSources.defaultGenre,
         "sameAs": []
     };
 
-    // Add social profiles and external references
-    if (artist.social) {
-        if (artist.social.instagram) {
-            schema.sameAs.push(`https://instagram.com/${artist.name.toLowerCase()}`);
-        }
-        if (artist.social.twitter) {
-            schema.sameAs.push(`https://twitter.com/${artist.name.toLowerCase()}`);
-        }
-    }
+    // Strategy 2026-09-28: sameAs carries VERIFIED urls only. The old code
+    // pushed https://instagram.com/<artist-name> and
+    // https://twitter.com/<artist-name> whenever the follower COUNT was
+    // non-zero -- fabricated links from the name, not the artist's profiles.
+    // Social handles from the label's own mappings are data entry, not
+    // verification, so they are not emitted here either.
 
-    // Add Authoritative Sources (Wikipedia, Genius, Discogs)
+    // Add Authoritative Sources (Wikipedia, Genius, Discogs, MusicBrainz, Wikidata)
     if (auditResults.wikipedia?.url) {
         schema.sameAs.push(auditResults.wikipedia.url);
     }
@@ -468,6 +634,12 @@ function generateSchemaLD(artist, auditResults) {
     }
     if (auditResults.genius?.url) {
         schema.sameAs.push(auditResults.genius.url);
+    }
+    if (auditResults.musicbrainz?.url) {
+        schema.sameAs.push(auditResults.musicbrainz.url);
+    }
+    if (auditResults.wikidata?.url) {
+        schema.sameAs.push(auditResults.wikidata.url);
     }
 
     // Add streaming platforms (if available)
@@ -756,6 +928,8 @@ module.exports = {
     auditWikipedia,
     auditDiscogs,
     auditGenius,
+    auditMusicBrainz,
+    auditWikidata,
     auditFandom,
     auditLabel,
     getFandomRoster,

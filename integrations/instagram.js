@@ -1,8 +1,20 @@
 // integrations/instagram.js
 // Instagram Graph API Integration
+//
+// ATTRIBUTION MODEL (strategy doc 2026-09-28, fail-closed): this integration
+// talks to ONE configured Instagram business account
+// (INSTAGRAM_BUSINESS_ACCOUNT_ID). That account's metrics may only be merged
+// into an artist's social figures when the account's LIVE username matches the
+// artist's mapped instagramName. A mismatch -- or no mapped handle at all --
+// returns null and the caller must NOT merge. One account can never populate
+// two artists' figures.
 
 const axios = require('axios');
 const { withProvenance } = require('../src/services/provenance');
+
+function normalizeHandle(handle) {
+    return String(handle || '').trim().replace(/^@+/, '').toLowerCase();
+}
 
 class InstagramIntegration {
     constructor() {
@@ -12,13 +24,22 @@ class InstagramIntegration {
     }
 
     /**
-     * Fetch Instagram business account data
-     * @returns {Object} Instagram metrics mapped to pulsegrid schema
+     * Fetch Instagram business account data, attributed only when the live
+     * account username matches the expected handle from the artist mapping.
+     * @param {string} [expectedUsername] - handle from the artist's social mapping
+     * @returns {Object|null} metrics with provenance, or null when the
+     *   configured account cannot be attributed to this artist (fail closed)
      */
-    async getAccountData() {
+    async getAccountData(expectedUsername) {
         try {
             if (!this.isConfigured()) {
                 throw new Error('Instagram credentials not configured');
+            }
+
+            const expected = normalizeHandle(expectedUsername);
+            if (!expected) {
+                console.warn('Instagram attribution refused: no mapped instagram handle for this artist');
+                return null;
             }
 
             // Fetch account info
@@ -31,6 +52,17 @@ class InstagramIntegration {
             });
 
             const account = accountResponse.data;
+            const liveUsername = normalizeHandle(account.username);
+
+            // FAIL CLOSED: the single configured account must not be attributed
+            // to an artist whose mapped handle does not match the live account.
+            if (liveUsername !== expected) {
+                console.warn(
+                    `Instagram attribution refused: configured account @${account.username} ` +
+                    `does not match mapped handle @${expectedUsername}`
+                );
+                return null;
+            }
 
             // Fetch recent media for engagement calculation
             const mediaResponse = await axios.get(`${this.baseURL}/${this.businessAccountId}/media`, {
@@ -49,6 +81,7 @@ class InstagramIntegration {
 
             // Phase 1B: followers_count is verbatim; engagement is derived —
             // the formula is disclosed in the provenance note, not hidden.
+            // Attribution is verified: live username matched the mapped handle.
             return withProvenance({
                 social: {
                     instagram: account.followers_count,
@@ -57,12 +90,14 @@ class InstagramIntegration {
                 meta: {
                     dataSource: 'instagram_api',
                     lastUpdated: new Date().toISOString(),
-                    instagramUsername: account.username
+                    instagramUsername: account.username,
+                    instagramAttribution: 'verified'
                 }
             }, {
                 source: 'instagram_api',
                 basis: 'measured',
-                note: 'followers_count is a verbatim API field. instagramEngagement is derived: avg(likes+comments per post) / followers_count over the last 20 posts.'
+                note: `Attributed: the configured account's live username @${account.username} matches the artist's mapped Instagram handle. ` +
+                    'followers_count is a verbatim API field. instagramEngagement is derived: avg(likes+comments per post) / followers_count over the last 20 posts.'
             });
         } catch (error) {
             console.error('Instagram API Error:', error.message);

@@ -49,11 +49,18 @@ async function fetchArtistData(artistId, mockData) {
         }
     }
 
-    // Fetch Instagram data
-    if (instagramIntegration.isConfigured()) {
+    // Fetch Instagram data -- fail-closed attribution (strategy 2026-09-28):
+    // the single configured business account is only merged when its live
+    // username matches the artist's mapped handle. getAccountData() returns
+    // null on mismatch / unmapped handle; the merge below skips null.
+    if (instagramIntegration.isConfigured() && mapping.instagramName) {
         try {
-            results.instagram = await instagramIntegration.getAccountData();
-            console.log(`✓ Fetched Instagram data for ${artistId}`);
+            results.instagram = await instagramIntegration.getAccountData(mapping.instagramName);
+            if (results.instagram) {
+                console.log(`✓ Fetched Instagram data for ${artistId}`);
+            } else {
+                console.warn(`○ Instagram attribution refused for ${artistId}: not merged`);
+            }
         } catch (error) {
             console.warn(`✗ Instagram fetch failed for ${artistId}: `, error.message);
         }
@@ -89,11 +96,18 @@ async function fetchArtistData(artistId, mockData) {
         }
     }
 
-    // Fetch TikTok data (Phase 3)
-    if (tiktokIntegration.isConfigured()) {
+    // Fetch TikTok data (Phase 3) -- fail-closed attribution (strategy
+    // 2026-09-28): /user/info/ returns the token owner, so getUserData()
+    // verifies the token owner's live username against the mapped handle and
+    // returns null on mismatch. The merge below skips null.
+    if (tiktokIntegration.isConfigured() && mapping.tiktokUsername) {
         try {
             results.tiktok = await tiktokIntegration.getUserData(mapping.tiktokUsername);
-            console.log(`✓ Fetched TikTok data for ${artistId}`);
+            if (results.tiktok) {
+                console.log(`✓ Fetched TikTok data for ${artistId}`);
+            } else {
+                console.warn(`○ TikTok attribution refused for ${artistId}: not merged`);
+            }
         } catch (error) {
             console.warn(`✗ TikTok fetch failed for ${artistId}: `, error.message);
         }

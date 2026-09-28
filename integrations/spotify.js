@@ -101,6 +101,91 @@ class SpotifyIntegration {
     }
 
     /**
+     * Fetch an artist's albums/singles from Spotify (strategy doc 2026-09-28:
+     * profile-integrity check). This endpoint is readable with a standard Web
+     * API token -- no Spotify for Artists access required.
+     *
+     * NOTE: the simplified album objects returned here do NOT carry
+     * external_ids. The full album endpoint (GET /v1/albums/{id}, or the
+     * batch GET /v1/albums?ids= used by getAlbumUpcs below) DOES expose
+     * external_ids.upc -- verified against Spotify's official API reference
+     * 2026-09-28. The integrity check hydrates UPCs via the batch endpoint.
+     *
+     * @param {string} spotifyArtistId - Spotify artist ID
+     * @returns {Object} { albums: [...], provenance }
+     */
+    async getArtistAlbums(spotifyArtistId) {
+        await this.ensureToken();
+
+        const albumsData = await this.spotifyApi.getArtistAlbums(spotifyArtistId, {
+            include_groups: 'album,single',
+            limit: 50
+        });
+
+        const observedAt = new Date().toISOString();
+        const albums = (albumsData.body.items || []).map((a) => ({
+            spotifyAlbumId: a.id,
+            name: a.name,
+            albumType: a.album_type,
+            releaseDate: a.release_date || null,
+            releaseDatePrecision: a.release_date_precision || null,
+            totalTracks: a.total_tracks,
+            spotifyUrl: (a.external_urls && a.external_urls.spotify) || null
+        }));
+
+        return {
+            albums,
+            provenance: {
+                source: 'spotify_api',
+                observedAt,
+                basis: 'measured',
+                note: 'Album list is verbatim from the Spotify Web API (simplified album objects; UPCs hydrated separately via the batch album endpoint).'
+            }
+        };
+    }
+
+    /**
+     * Hydrate UPCs for a list of Spotify album IDs via the batch endpoint
+     * GET /v1/albums?ids= (max 20 per call). The full album object exposes
+     * external_ids.upc -- verified against Spotify's official API reference
+     * 2026-09-28 (the simplified objects from getArtistAlbums do not).
+     *
+     * @param {string[]} albumIds - Spotify album IDs
+     * @returns {Object} { upcs: { albumId: upc|null }, provenance }
+     */
+    async getAlbumUpcs(albumIds) {
+        await this.ensureToken();
+
+        const observedAt = new Date().toISOString();
+        const upcs = {};
+        const ids = [...new Set((albumIds || []).filter(Boolean))];
+        for (let i = 0; i < ids.length; i += 20) {
+            const batch = ids.slice(i, i + 20);
+            const data = await this.spotifyApi.getAlbums(batch);
+            for (const album of (data.body.albums || [])) {
+                if (!album) continue;
+                const upc = album.external_ids && (album.external_ids.upc || album.external_ids.ean);
+                upcs[album.id] = upc ? String(upc).trim() : null;
+            }
+        }
+        // Any requested ID the batch endpoint did not return stays null
+        // (unverifiable), never invented.
+        for (const id of ids) {
+            if (!(id in upcs)) upcs[id] = null;
+        }
+
+        return {
+            upcs,
+            provenance: {
+                source: 'spotify_api',
+                observedAt,
+                basis: 'measured',
+                note: 'UPCs from the full album object external_ids (Spotify Web API). Null means Spotify exposed no UPC for that album -- unverifiable, not unknown.'
+            }
+        };
+    }
+
+    /**
      * Check if Spotify credentials are configured
      * @returns {boolean}
      */

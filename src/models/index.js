@@ -87,6 +87,30 @@ const SalesEntry = sequelize.define('SalesEntry', {
     revenue: { type: DataTypes.FLOAT, allowNull: false }
 }, { timestamps: false, indexes: [{ unique: true, fields: ['artistId', 'month'] }] });
 
+// Merch settlements (atVenu nightly-settlement style exports). Money is
+// integer cents + ISO currency, same discipline as RoyaltyLine. One row =
+// one settled show for one artist. Idempotency key:
+// (artistId, showDate, venue, source) -- re-importing a settlement file can
+// never double-count a show.
+const MerchSettlement = sequelize.define('MerchSettlement', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    artistId: { type: DataTypes.STRING, allowNull: false },
+    showDate: { type: DataTypes.STRING, allowNull: false }, // YYYY-MM-DD
+    venue: { type: DataTypes.STRING, allowNull: false },
+    grossCents: { type: DataTypes.INTEGER, allowNull: false }, // integer cents, NEVER float
+    feesCents: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    taxesCents: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    netCents: { type: DataTypes.INTEGER, allowNull: false }, // integer cents, NEVER float
+    currency: { type: DataTypes.STRING, allowNull: false }, // 3-letter ISO, uppercase
+    attendance: { type: DataTypes.INTEGER, allowNull: true },
+    source: { type: DataTypes.STRING, allowNull: false, defaultValue: 'atvenu' },
+    importedBy: { type: DataTypes.STRING, allowNull: true }
+}, {
+    indexes: [
+        { unique: true, name: 'merch_settlements_artist_show_venue', fields: ['artistId', 'showDate', 'venue', 'source'] }
+    ]
+});
+
 // Room and Scouting have separate durable models and vote semantics.
 const RoomDemo = sequelize.define('RoomDemo', {
     id: { type: DataTypes.STRING, primaryKey: true },
@@ -360,4 +384,4 @@ const RoyaltyLine = sequelize.define('RoyaltyLine', {
     ]
 });
 
-module.exports = { sequelize, User, Artist, Stats, AuditEvent, AnrSubmission, SalesEntry, RoomDemo, RoomVote, RoomSetting, Campaign, Subscription, ArtistOAuth, Recording, Release, Work, WorkRecording, RoyaltyLine, initDB };
+module.exports = { sequelize, User, Artist, Stats, AuditEvent, AnrSubmission, SalesEntry, RoomDemo, RoomVote, RoomSetting, Campaign, Subscription, ArtistOAuth, Recording, Release, Work, WorkRecording, RoyaltyLine, MerchSettlement, initDB };

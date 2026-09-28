@@ -1,7 +1,7 @@
 /**
  * src/services/entityAuditService.js
  *
- * Orchestrates the entity-health audit: 5 external providers + 1 LLM call +
+ * Orchestrates the entity-health audit: 7 external providers + 1 LLM call +
  * two-tier caching. Extracted from the GET /v3/artists/:id/entity-audit route
  * handler (Phase 1 L766-870), which was the single worst offender for mixing
  * concerns — HTTP, caching, 5 network calls, AI invocation, JSON parsing and
@@ -67,20 +67,22 @@ function createEntityAuditService({
         }
 
         // --- Remaining providers, concurrently ---
-        const [googleKG, wikipedia, discogs, fandom] = await Promise.all([
+        const [googleKG, wikipedia, discogs, musicbrainz, wikidata, fandom] = await Promise.all([
             integrationFacade.auditGoogleKG(artist.name),
             integrationFacade.auditWikipedia(artist.name),
             integrationFacade.auditDiscogs(artist.name),
+            integrationFacade.auditMusicBrainz(artist.name),
+            integrationFacade.auditWikidata(artist.name),
             integrationFacade.auditFandom(artist.name)
         ]);
 
         // PHASE 4CF: usage-attribution seam at the external-provider spend
         // point (Objective 7). One record per fresh audit pass; cached
         // responses return above and cost nothing.
-        usageService.recordUsage('provider_call', 4, {
+        usageService.recordUsage('provider_call', 6, {
             artistId,
             userId: actor?.id ?? null,
-            providers: ['googleKG', 'wikipedia', 'discogs', 'fandom']
+            providers: ['googleKG', 'wikipedia', 'discogs', 'musicbrainz', 'wikidata', 'fandom']
         });
 
         const genius = geniusResult;
@@ -90,6 +92,8 @@ function createEntityAuditService({
             wikipedia,
             discogs,
             genius,
+            musicbrainz,
+            wikidata,
             fandom,
             schemaValid: googleKG.schemaValid || false,
             // Phase 1B: name-derived social links are NOT verified. The old
@@ -133,7 +137,7 @@ function createEntityAuditService({
             // Phase 1B: social links are guessed from the artist name and
             // have not been verified against the artist's actual profiles.
             linksVerified: false,
-            platforms: { googleKG, wikipedia, discogs, genius, fandom },
+            platforms: { googleKG, wikipedia, discogs, genius, musicbrainz, wikidata, fandom },
             schemaLD,
             issues,
             aiAnalysis,

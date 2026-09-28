@@ -123,6 +123,7 @@ function buildContext() {
         Work: models.Work,
         WorkRecording: models.WorkRecording,
         RoyaltyLine: models.RoyaltyLine,
+        MerchSettlement: models.MerchSettlement,
 
         // auth
         authenticateToken,

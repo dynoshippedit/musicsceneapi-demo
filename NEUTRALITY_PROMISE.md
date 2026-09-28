@@ -29,6 +29,27 @@ data lives in exactly one database that no other customer can reach.
   scoping) still applies *within* a customer's database. The neutrality
   promise is about isolation *between* customers.
 
+## Benchmarking is not part of this promise
+
+Cross-customer benchmarking (e.g. "labels like yours pay X") **conflicts** with
+one-database-per-customer and is therefore **not offered by default** — there
+is no query path from one customer's database into another's, and none will be
+added implicitly.
+
+If benchmarking is ever built, it will be a **separate, explicit opt-in
+product**, not a default feature:
+
+- Participation requires the customer's **written contractual permission**,
+  separate from the hosting agreement.
+- Published benchmarks are computed only from **aggregated, anonymized**
+  contributions with a **minimum aggregation threshold** (no benchmark cell is
+  computed from fewer than N contributors, so no single label's figures are
+  identifiable or reverse-engineerable).
+- A customer who does not opt in contributes nothing and sees nothing.
+
+Until that product exists, the rule is simple: your data never leaves your
+database for anyone else's benefit.
+
 ## Why it matters
 
 Royalty statements, unreleased recordings, contract terms, and A&R

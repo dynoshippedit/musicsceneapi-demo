@@ -375,7 +375,7 @@ describe('src/profile — Label Intelligence Profile', () => {
     });
 
     test('pulsegrid intelligence survived externalization byte-for-byte', () => {
-        assert.strictEqual(profile.ai.systemContext, 'AI analyst for Pulsegrid. Concise, data-driven insights.');
+        assert.strictEqual(profile.ai.systemContext, 'AI analyst for The Music Scene. Concise, data-driven insights.');
         assert.strictEqual(profile.ai.keywordInsights.roiSecondPlace, 'NOVAKIN is second at 8.7x.');
         assert.strictEqual(profile.searchContext.artistQueryPrefix, 'pulsegrid ');
         assert.strictEqual(profile.knowledgeSources.fandom.host, 'https://pulsegrid.fandom.com');

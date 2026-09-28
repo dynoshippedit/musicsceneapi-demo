@@ -9,6 +9,7 @@
  *   PUT    /v3/catalog/recordings/:id        update
  *   DELETE /v3/catalog/recordings/:id        delete
  *   ... same shape for /releases and /works
+ *   GET    /v3/catalog/integrity            profile-integrity check (admin)
  *
  * Access: admin sees everything; artist role is scoped to their own artistId
  * via hasArtistAccess (same pattern as the rest of the API).
@@ -24,6 +25,7 @@
 'use strict';
 
 const { Op } = require('sequelize');
+const integrityService = require('../services/catalogIntegrityService');
 const { normalizeArtistAccess } = require('../auth');
 
 const ISRC_RE = /^[A-Z]{2}[A-Z0-9]{3}[0-9]{7}$/;
@@ -267,6 +269,33 @@ function registerCrud(app, ctx, opts) {
 }
 
 function register(app, ctx) {
+    const { authenticateToken } = ctx;
+
+    /**
+     * GET /v3/catalog/integrity -- profile-integrity check (strategy doc
+     * 2026-09-28, admin-only). Compares each artist's Spotify albums against
+     * the delivered releases (UPCs) in the catalog and alerts on anything
+     * unknown. Optional ?artistId= scopes to one artist.
+     */
+    app.get('/v3/catalog/integrity', authenticateToken, requireAuth, async (req, res) => {
+        if (!req.user || req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Admin access required' });
+        }
+        try {
+            if (req.query.artistId) {
+                const result = await integrityService.checkArtist(req.query.artistId);
+                if (result.status === 'not_found') {
+                    return res.status(404).json({ error: 'Artist not found' });
+                }
+                return res.json(result);
+            }
+            const report = await integrityService.checkAll();
+            res.json(report);
+        } catch (error) {
+            res.status(500).json({ error: 'Integrity check failed', detail: error.message });
+        }
+    });
+
     registerCrud(app, ctx, {
         path: 'recordings',
         Model: ctx.Recording,

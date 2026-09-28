@@ -64,8 +64,10 @@ describe('route table — registration invariants', () => {
         // Stripe billing (2026-09-28): +3 routes
         // (POST /v3/billing/checkout, POST /v3/billing/webhook, GET /v3/billing/status)
         // Phase 2 (2026-09-28): +21 routes (OAuth x4, catalog x15, royalties x2)
-        assert.strictEqual(TABLE.length, 89,
-            `expected 89 registered routes, found ${TABLE.length}`);
+        // Strategy compliance (2026-09-28): +1 route (GET /v3/catalog/integrity)
+        // Strategy compliance (2026-09-28): +2 routes (POST /v3/royalties/import/atvenu, GET /v3/royalties/merch-settlements)
+        assert.strictEqual(TABLE.length, 92,
+            `expected 92 registered routes, found ${TABLE.length}`);
     });
 
     test('PINS: the known shadowed duplicate routes are still present', () => {
