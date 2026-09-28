@@ -1,0 +1,217 @@
+[
+  {
+    "id": "health",
+    "ok": true,
+    "detail": "status=200"
+  },
+  {
+    "id": "health-reqid",
+    "ok": true,
+    "detail": "id=28a74d73-a711-4501-8932-528ca51f9477"
+  },
+  {
+    "id": "malformed-json",
+    "ok": true,
+    "detail": "status=400 rid=29f57335-abb6-4677-84ba-95ee6bd3be91"
+  },
+  {
+    "id": "admin-login",
+    "ok": true,
+    "detail": "status=200"
+  },
+  {
+    "id": "artist-login",
+    "ok": true,
+    "detail": "status=200"
+  },
+  {
+    "id": "empty-login-401",
+    "ok": true,
+    "detail": "status=401"
+  },
+  {
+    "id": "artist-users-403",
+    "ok": true,
+    "detail": "status=403"
+  },
+  {
+    "id": "artist-denied-other",
+    "ok": true,
+    "detail": "status=403"
+  },
+  {
+    "id": "artist-own-200",
+    "ok": true,
+    "detail": "status=200 id=art_rezz"
+  },
+  {
+    "id": "sale-old-keys-400",
+    "ok": true,
+    "detail": "status=400 body={\"error\":\"Missing fields\"}"
+  },
+  {
+    "id": "sale-zero-200",
+    "ok": true,
+    "detail": "status=200"
+  },
+  {
+    "id": "sale-ok-200",
+    "ok": true,
+    "detail": "status=200"
+  },
+  {
+    "id": "sale-ghost-404",
+    "ok": true,
+    "detail": "status=404"
+  },
+  {
+    "id": "vote-empty-400",
+    "ok": true,
+    "detail": "status=400 {\"error\":\"Direction must be \\\"up\\\" or \\\"down\\\"\"}"
+  },
+  {
+    "id": "vote-empty-no-increment",
+    "ok": true,
+    "detail": "votes=15"
+  },
+  {
+    "id": "vote-up-200",
+    "ok": true,
+    "detail": "status=200 votes=16 userVote=up"
+  },
+  {
+    "id": "sub-create",
+    "ok": true,
+    "detail": "id=sub_1789704765733"
+  },
+  {
+    "id": "concurrent-votes-both-200",
+    "ok": true,
+    "detail": "a=200 b=200"
+  },
+  {
+    "id": "concurrent-votes-persist-2",
+    "ok": true,
+    "detail": "votes=2"
+  },
+  {
+    "id": "anr-state-memory",
+    "ok": true,
+    "detail": "demos=3 wb=string"
+  },
+  {
+    "id": "room-vote-memory-200",
+    "ok": true,
+    "detail": "status=200"
+  },
+  {
+    "id": "whiteboard-memory-200",
+    "ok": true,
+    "detail": "status=200"
+  },
+  {
+    "id": "scout-mocked",
+    "ok": true,
+    "detail": "n=0"
+  },
+  {
+    "id": "campaign-created-lie",
+    "ok": true,
+    "detail": "id=cmp_1789704766288"
+  },
+  {
+    "id": "campaign-stats-not-the-create",
+    "ok": true,
+    "detail": "hasId=false"
+  },
+  {
+    "id": "integ-connect-mock",
+    "ok": true,
+    "detail": "body={\"success\":true,\"message\":\"Connected to Spotify Web API (Mock)\"}"
+  },
+  {
+    "id": "ai-providers-404",
+    "ok": true,
+    "detail": "status=404"
+  },
+  {
+    "id": "ai-query-no-key",
+    "ok": true,
+    "detail": "status=200 source=fallback answer=[Dev Fallback] Growth is stable at 2.5%. Recommend increasing tour frequency in "
+  },
+  {
+    "id": "ai-analyze-keyword",
+    "ok": true,
+    "detail": "conf=0.98"
+  },
+  {
+    "id": "users-list",
+    "ok": true,
+    "detail": "n=2"
+  },
+  {
+    "id": "pageAccess-object-400",
+    "ok": true,
+    "detail": "status=400 {\"error\":\"pageAccess must be an array of strings\"}"
+  },
+  {
+    "id": "pageAccess-unchanged",
+    "ok": true,
+    "detail": "pageAccess=[\"overview\",\"roster\"]"
+  },
+  {
+    "id": "royalty-object-4xx",
+    "ok": true,
+    "detail": "status=400"
+  },
+  {
+    "id": "alive-after-royalty",
+    "ok": true,
+    "detail": "status=200"
+  },
+  {
+    "id": "generate-all-array-4xx",
+    "ok": true,
+    "detail": "status=400"
+  },
+  {
+    "id": "alive-after-generate-all",
+    "ok": true,
+    "detail": "status=200"
+  },
+  {
+    "id": "rights-fake-success",
+    "ok": true,
+    "detail": "status=200 {\"success\":true,\"message\":\"Contract generated for Unknown Artist\",\"downloadUrl\":\"/v3/reports/contracts/art_nope.pdf\",\"status\":\"draft\",\"terms\":{\"term\":\"3 Years\","
+  },
+  {
+    "id": "fans-200",
+    "ok": true,
+    "detail": "status=200 keys=topMovers,demographics"
+  },
+  {
+    "id": "ops-200",
+    "ok": true,
+    "detail": "status=200"
+  },
+  {
+    "id": "kg-not-crash",
+    "ok": true,
+    "detail": "status=200 keys=status,message"
+  },
+  {
+    "id": "forgot-200",
+    "ok": true,
+    "detail": "status=200"
+  },
+  {
+    "id": "reset-missing",
+    "ok": true,
+    "detail": "status=404"
+  },
+  {
+    "id": "admin-me",
+    "ok": true,
+    "detail": "status=200 pages=[\"all\"]"
+  }
+]

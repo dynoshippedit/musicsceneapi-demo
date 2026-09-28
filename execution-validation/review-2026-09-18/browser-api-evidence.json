@@ -1,0 +1,1277 @@
+{
+  "pages": [
+    {
+      "route": "/dashboard",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nDashboard\n\nReal-time label performance metrics\n\nAU\nAdmin User\nMONTHLY REVENUE\n$3.2M\nQUARTERLY PROJECTION\n$134.8M\nANNUAL PROJECTION\n$539.1M\nACTIVE ARTISTS\n29\nREVENUE FORECAST\nPDF\nCSV\nARTIST\nSELECT ARTIST\nATTLAS\nBlackGummy\nBlue Mora\nBUDD\nColleen D'Agostino\ndeadmau5\nDom Kane\nDraft\nEDDIE\nEnzo Bennet\nElectrocado\nFeed Me\nFehrplay\nFrost\nHEYZ\nHolyU\nKayve\nMatt Lange\nMichael Woods\nMonstergetdown\nNeus\nNo Mana\nOliver Winters\nREZZ\nRinzen\nSevenDoors\nShotty Horroh\nTinlicker\nTommy Lee\nMONTH\nAMOUNT\nRECORD\nCOMMAND CONSOLE\nSYSTEM DEFAULT · READY\n>\nRUN\n// system ready\nGLOBAL HEATMAP\nGLOBAL HEATMAP\nSOURCE: STREAMING DATA",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "PDF",
+          "disabled": false
+        },
+        {
+          "text": "CSV",
+          "disabled": false
+        },
+        {
+          "text": "RECORD",
+          "disabled": true
+        },
+        {
+          "text": "RUN",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/artists",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nArtists\n\nReal-time label performance metrics\n\nAU\nAdmin User\nARTISTS\n29/29\nSHOW ARCHIVED\nSIGN ARTIST\nARTIST\n\tTIER\n\tMONTHLY LISTENERS\n\tREVENUE\n↓\n\tROI\n\t\n\nFeed Me (Flagship)\n\tFLAGSHIP\t6.3M\t$16.4M\t2.7x\t\nVIEW\nARCHIVE\n\n\ndeadmau5 (Flagship)\n\tFLAGSHIP\t2.8M\t$12.5M\t6.5x\t\nVIEW\nARCHIVE\n\n\nREZZ (Flagship)\n\tFLAGSHIP\t7.5M\t$8.5M\t8.7x\t\nVIEW\nARCHIVE\n\n\nBlackGummy (Core)\n\tCORE\t113.3K\t$1.4M\t8.8x\t\nVIEW\nARCHIVE\n\n\nATTLAS (Core)\n\tCORE\t558.1K\t$1.2M\t7.4x\t\nVIEW\nARCHIVE\n\n\nFehrplay (Core)\n\tCORE\t548.7K\t$988.9K\t8.8x\t\nVIEW\nARCHIVE\n\n\nNo Mana (Core)\n\tCORE\t112.7K\t$865.9K\t4.1x\t\nVIEW\nARCHIVE\n\n\nTinlicker (Core)\n\tCORE\t300.2K\t$641.2K\t3.2x\t\nVIEW\nARCHIVE\n\n\nElectrocado (Developing)\n\tDEVELOPING\t76.9K\t$161.7K\t2.8x\t\nVIEW\nARCHIVE\n\n\nMichael Woods (Developing)\n\tDEVELOPING\t94.8K\t$143K\t3.5x\t\nVIEW\nARCHIVE\n\n\nFrost (Developing)\n\tDEVELOPING\t25.8K\t$142.4K\t2.9x\t\nVIEW\nARCHIVE\n\n\nKayve (Developing)\n\tDEVELOPING\t62.6K\t$139.1K\t8.5x\t\nVIEW\nARCHIVE\n\n\nColleen D'Agostino (Developing)\n\tDEVELOPING\t15.6K\t$137.6K\t8.2x\t\nVIEW\nARCHIVE\n\n\nOliver Winters (Developing)\n\tDEVELOPING\t77.7K\t$132.5K\t7.5x\t\nVIEW\nARCHIVE\n\n\nMatt Lange (Developing)\n\tDEVELOPING\t76.3K\t$130.7K\t7.0x\t\nVIEW\nARCHIVE\n\n\nBUDD (Developing)\n\tDEVELOPING\t84.1K\t$129.8K\t2.6x\t\nVIEW\nARCHIVE\n\n\nSevenDoors (Developing)\n\tDEVELOPING\t77.3K\t$126.8K\t2.6x\t\nVIEW\nARCHIVE\n\n\nDom Kane (Developing)\n\tDEVELOPING\t15.4K\t$126.4K\t5.6x\t\nVIEW\nARCHIVE\n\n\nEDDIE (Developing)\n\tDEVELOPING\t73.5K\t$123.2K\t2.8x\t\nVIEW\nARCHIVE\n\n\nHolyU (Developing)\n\tDEVELOPING\t79.9K\t$113.8K\t8.9x\t\nVIEW\nARCHIVE\n\n\nBlue Mora (Developing)\n\tDEVELOPING\t99.8K\t$110.1K\t8.6x\t\nVIEW\nARCHIVE\n\n\nNeus (Developing)\n\tDEVELOPING\t80.5K\t$104.1K\t2.4x\t\nVIEW\nARCHIVE\n\n\nTommy Lee (Developing)\n\tDEVELOPING\t83.6K\t$98.8K\t4.3x\t\nVIEW\nARCHIVE\n\n\nDraft (Developing)\n\tDEVELOPING\t14.7K\t$98.4K\t2.4x\t\nVIEW\nARCHIVE\n\n\nHEYZ (Developing)\n\tDEVELOPING\t71.7K\t$85.9K\t6.7x\t\nVIEW\nARCHIVE\n\n\nMonstergetdown (Developing)\n\tDEVELOPING\t25.3K\t$85.5K\t4.4x\t\nVIEW\nARCHIVE\n\n\nRinzen (Developing)\n\tDEVELOPING\t25.4K\t$80.9K\t4.1x\t\nVIEW\nARCHIVE\n\n\nShotty Horroh (Developing)\n\tDEVELOPING\t90.7K\t$70.7K\t4.4x\t\nVIEW\nARCHIVE\n\n\nEnzo Bennet (Developing)\n\tDEVELOPING\t90.1K\t$47.1K\t2.6x\t\nVIEW\nARCHIVE",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "SHOW ARCHIVED",
+          "disabled": false
+        },
+        {
+          "text": "SIGN ARTIST",
+          "disabled": false
+        },
+        {
+          "text": "ARTIST",
+          "disabled": false
+        },
+        {
+          "text": "TIER",
+          "disabled": false
+        },
+        {
+          "text": "MONTHLY LISTENERS",
+          "disabled": false
+        },
+        {
+          "text": "REVENUE\n↓",
+          "disabled": false
+        },
+        {
+          "text": "ROI",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        },
+        {
+          "text": "VIEW",
+          "disabled": false
+        },
+        {
+          "text": "ARCHIVE",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/artists/art_deadmau5",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nArtists\n\nReal-time label performance metrics\n\nAU\nAdmin User\nBACK TO ROSTER\n←\n→\nDEADMAU5 (FLAGSHIP)\nSOURCE: GENERATED_MOCK\nFLAGSHIP\nMONTHLY LISTENERS\n2.8M\nTOTAL STREAMS\n244.4M\nGROWTH\n+0.8%\nREVENUE\n$12.5M\nOVERVIEW\nREVENUE\nGEOGRAPHY\nTOURING\nMERCH\nBRAND\nNETWORK\nSUSTAINABILITY\nENTITY AUDIT\nOVERVIEW\n\nJoel Thomas Zimmerman, known professionally as Deadmau5, is a Canadian electronic music producer and DJ. His musical style mostly includes progressive house and electro house genres, though he also produces and DJs other genres of electronic music, including techno under the alias Testpilot. Zimmerman mostly appears and performs with a custom helmet called the \"mau5head\". He has received seven Grammy Award nominations and won four Juno Awards for his songs.\n\nROI\n6.5x\nPRIORITY\n—\nGROWTH\n+0.8%\nLAST UPDATED\nDec 10, 2025, 06:55 AM\nKNOWLEDGE GRAPH\nGoogle Knowledge Graph API key not configured\nSOCIAL\nINSTAGRAM\n58.8M\nTWITTER\n23.5M\nTIKTOK\n47M\nENGAGEMENT RATE\n5.6%\nIMAGE OVERRIDE URL\nAPPLY",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "BACK TO ROSTER",
+          "disabled": false
+        },
+        {
+          "text": "←",
+          "disabled": false
+        },
+        {
+          "text": "→",
+          "disabled": false
+        },
+        {
+          "text": "OVERVIEW",
+          "disabled": false
+        },
+        {
+          "text": "REVENUE",
+          "disabled": false
+        },
+        {
+          "text": "GEOGRAPHY",
+          "disabled": false
+        },
+        {
+          "text": "TOURING",
+          "disabled": false
+        },
+        {
+          "text": "MERCH",
+          "disabled": false
+        },
+        {
+          "text": "BRAND",
+          "disabled": false
+        },
+        {
+          "text": "NETWORK",
+          "disabled": false
+        },
+        {
+          "text": "SUSTAINABILITY",
+          "disabled": false
+        },
+        {
+          "text": "ENTITY AUDIT",
+          "disabled": false
+        },
+        {
+          "text": "APPLY",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/artists/art_rezz",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nArtists\n\nReal-time label performance metrics\n\nAU\nAdmin User\nBACK TO ROSTER\n←\n→\nREZZ (FLAGSHIP)\nSOURCE: GENERATED_MOCK\nFLAGSHIP\nMONTHLY LISTENERS\n7.5M\nTOTAL STREAMS\n847.5M\nGROWTH\n+6.4%\nREVENUE\n$8.5M\nOVERVIEW\nREVENUE\nGEOGRAPHY\nTOURING\nMERCH\nBRAND\nNETWORK\nSUSTAINABILITY\nENTITY AUDIT\nOVERVIEW\n\nIsabelle Rezazadeh, who is known by her stage name Rezz, is a Ukrainian–Canadian DJ and record producer from Niagara Falls, Ontario.\n\nROI\n8.7x\nPRIORITY\n—\nGROWTH\n+6.4%\nLAST UPDATED\nDec 10, 2025, 06:55 AM\nKNOWLEDGE GRAPH\nGoogle Knowledge Graph API key not configured\nSOCIAL\nINSTAGRAM\n58.5M\nTWITTER\n23.4M\nTIKTOK\n46.8M\nENGAGEMENT RATE\n6.1%\nIMAGE OVERRIDE URL\nAPPLY",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "BACK TO ROSTER",
+          "disabled": false
+        },
+        {
+          "text": "←",
+          "disabled": false
+        },
+        {
+          "text": "→",
+          "disabled": false
+        },
+        {
+          "text": "OVERVIEW",
+          "disabled": false
+        },
+        {
+          "text": "REVENUE",
+          "disabled": false
+        },
+        {
+          "text": "GEOGRAPHY",
+          "disabled": false
+        },
+        {
+          "text": "TOURING",
+          "disabled": false
+        },
+        {
+          "text": "MERCH",
+          "disabled": false
+        },
+        {
+          "text": "BRAND",
+          "disabled": false
+        },
+        {
+          "text": "NETWORK",
+          "disabled": false
+        },
+        {
+          "text": "SUSTAINABILITY",
+          "disabled": false
+        },
+        {
+          "text": "ENTITY AUDIT",
+          "disabled": false
+        },
+        {
+          "text": "APPLY",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/anr",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nA&R Room\n\nReal-time label performance metrics\n\nAU\nAdmin User\nA&R ROOM\nSCOUTING\nWHITEBOARD\nCurrently Reviewing: Q1 2026 Compilation Submissions.\nFocus: Tech House / Minimal.\nNOW LISTENING\ndeadmau5\nhttps://soundcloud.com/mau5trap/example-demo\nSEP 18, 2026, 12:29 AM\nDEMO QUEUE\n3\nAnalog Dreams\nUnknown Producer\nREVIEWING\nadmin\nTALLY\nRATE\nCyberpunk Bass\nNeon Glitch\nHIGH-PRIORITY\nrezz\nTALLY\nRATE\nDeep Space\nVoid Walker\nNEW\nadmin\nTALLY\nRATE\nSUBMIT DEMO\nSCOUTING\nARTIST\nTRACK\nGENRE\nURL\nSUBMIT",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "TALLY",
+          "disabled": false
+        },
+        {
+          "text": "RATE",
+          "disabled": false
+        },
+        {
+          "text": "TALLY",
+          "disabled": false
+        },
+        {
+          "text": "RATE",
+          "disabled": false
+        },
+        {
+          "text": "TALLY",
+          "disabled": false
+        },
+        {
+          "text": "RATE",
+          "disabled": false
+        },
+        {
+          "text": "SUBMIT",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/anr/scouting",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nA&R Room\n\nReal-time label performance metrics\n\nAU\nAdmin User\nA&R ROOM\nSCOUTING\nSCOUT NETWORK\nSEARCH\nNO SCOUT RESULTS\nSHORTLISTED\n1\nARTIST\tTRACK\tGENRE\tVOTES\tSUBMITTED\t\nTestpilot\tSunspot\tTechno\t42\tSep 18, 2026\t\nUP\nDOWN\nDELETE\nSUBMISSIONS\n1\nARTIST\tTRACK\tGENRE\tVOTES\tSUBMITTED\t\nGhost Data\tVoid Walker\tSynthwave\t15\tSep 18, 2026\t\nUP\nDOWN\nDELETE",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "SEARCH",
+          "disabled": false
+        },
+        {
+          "text": "UP",
+          "disabled": false
+        },
+        {
+          "text": "DOWN",
+          "disabled": false
+        },
+        {
+          "text": "DELETE",
+          "disabled": false
+        },
+        {
+          "text": "UP",
+          "disabled": false
+        },
+        {
+          "text": "DOWN",
+          "disabled": false
+        },
+        {
+          "text": "DELETE",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/intelligence",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nIntelligence\n\nReal-time label performance metrics\n\nAU\nAdmin User\nCOMMAND CONSOLE\nSYSTEM DEFAULT · READY\n>\nRUN\n// system ready\nROSTER NETWORK\n29\nFLAGSHIP\nCORE\nDEVELOPING",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "RUN",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/marketing",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nMarketing\n\nReal-time label performance metrics\n\nAU\nAdmin User\nTOTAL EMAILS\n11.2M\nTOTAL SMS\n1M\nPRESALE SIGNUPS\n1.8M\nCHANNEL HISTORY\nMONTH\tTOTAL EMAILS\tTOTAL SMS\nJul\t7.9M\t606.2K\nAug\t8.4M\t707.2K\nSep\t9M\t808.2K\nOct\t9.5M\t858.8K\nNov\t10.1M\t909.3K\nDec\t11.2M\t1M\nCAMPAIGN BUILDER\nSTEP 1/3\nCAMPAIGN NAME\nAUDIENCE\nALL ARTISTS\nATTLAS\nBlackGummy\nBlue Mora\nBUDD\nColleen D'Agostino\ndeadmau5\nDom Kane\nDraft\nEDDIE\nEnzo Bennet\nElectrocado\nFeed Me\nFehrplay\nFrost\nHEYZ\nHolyU\nKayve\nMatt Lange\nMichael Woods\nMonstergetdown\nNeus\nNo Mana\nOliver Winters\nREZZ\nRinzen\nSevenDoors\nShotty Horroh\nTinlicker\nTommy Lee\nNEXT",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "NEXT",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "route": "/fans",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nFans\n\nReal-time label performance metrics\n\nAU\nAdmin User\nTOP MOVERS\nSOURCE: MOCK\nARTIST\tGROWTH\tENGAGEMENT\nMatt Lange\t+24.3%\t2.2%\nTommy Lee\t+23.8%\t7.4%\nShotty Horroh\t+23.5%\t5.9%\nFehrplay\t+21.6%\t4.0%\nATTLAS\t+20.7%\t7.6%\nAGE DISTRIBUTION\n18-24\n35%\n25-34\n45%\n35-44\n15%\n45+\n5%\nGENDER SPLIT\nMALE\n55%\nFEMALE\n42%\nOTHER\n3%\nTOP CITIES\nLOCATION\tLISTENERS\nLos Angeles, USA\t120K\nLondon, UK\t85K\nToronto, Canada\t60K\nBerlin, Germany\t45K\nSydney, Australia\t30K\nPLATFORM GROWTH\nSPOTIFY\n+12.5%\nTIKTOK\n+28.4%\nINSTAGRAM\n+5.2%\nYOUTUBE\n+8.1%",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/operations",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nOperations\n\nReal-time label performance metrics\n\nAU\nAdmin User\nLOGISTICS\nSOURCE: FIXTURE\nITEM\tQTY\tSTATUS\tVENDOR\tETA\tLOCATION\nMau5head Replica (Gen 4)\t150\tIN TRANSIT\tFourthwall\tDec 17, 2025\tLos Angeles Warehouse\nTour Tee (BlackGummy)\t800\tSTOCKED\tPrintful\t—\tEU Fulfillment Center\nREZZ Goggles Replica\t45\tLOW STOCK\tMerchbar\t—\tToronto Warehouse\nASSET VAULT\nSOURCE: FIXTURE\nTITLE\tTYPE\tARTIST\tUPLOADED\tSIZE\tSTATUS\ndeadmau5 - Strobe (Master WAV)\tAudio Master\tdeadmau5\tMar 14, 2024\t248 MB\tAPPROVED\nREZZ - Edge (Official Video)\tVideo\tREZZ\tJan 09, 2025\t1.8 GB\tPROCESSING\nBlackGummy - Album Artwork Pack\tArtwork\tBlackGummy\tFeb 19, 2025\t89 MB\tAPPROVED\nCONTRACTS\nSOURCE: FIXTURE\nARTIST\tTYPE\tSIGNED\tTERM\tADVANCE\tROYALTY\tNEXT MILESTONE\ndeadmau5\tMaster Recording\tMay 31, 2018\tPerpetuity\t$0\t50%\t—\nREZZ\tExclusive Recording\tNov 14, 2022\t3 Albums\t$150k\tStandard\tAlbum 3 Q2 2026\nBlackGummy\tSingle Deal + Option\tAug 19, 2024\t2+2\t$40k\t18%\tOption Mar 2026",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/settings/integrations",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nSettings\n\nReal-time label performance metrics\n\nAU\nAdmin User\nINTEGRATIONS\nAI\nINTEGRATIONS\n0/9\n\n// CREDENTIALS ARE SERVER-MANAGED — NO KEY IS ENTERED OR STORED IN THIS APPLICATION\n\nSpotify Web API\nNOT CONNECTED\nQUOTA\n—\nLAST SYNC —\nCONNECT\nYouTube Analytics\nNOT CONNECTED\nQUOTA\n—\nLAST SYNC —\nCONNECT\nTikTok API\nNOT CONNECTED\nQUOTA\n—\nLAST SYNC —\nCONNECT\nInstagram Graph\nNOT CONNECTED\nQUOTA\n—\nLAST SYNC —\nCONNECT\nShopify API\nNOT CONNECTED\nQUOTA\n—\nLAST SYNC —\nCONNECT\nTicketmaster Discovery\nNOT CONNECTED\nQUOTA\n—\nLAST SYNC —\nCONNECT\nBandsintown API\nNOT CONNECTED\nQUOTA\n—\nLAST SYNC —\nCONNECT\nChartmetric API\nNOT CONNECTED\nQUOTA\n—\nLAST SYNC —\nCONNECT\nRevelator API\nNOT CONNECTED\nQUOTA\n—\nLAST SYNC —\nCONNECT",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "CONNECT",
+          "disabled": false
+        },
+        {
+          "text": "CONNECT",
+          "disabled": false
+        },
+        {
+          "text": "CONNECT",
+          "disabled": false
+        },
+        {
+          "text": "CONNECT",
+          "disabled": false
+        },
+        {
+          "text": "CONNECT",
+          "disabled": false
+        },
+        {
+          "text": "CONNECT",
+          "disabled": false
+        },
+        {
+          "text": "CONNECT",
+          "disabled": false
+        },
+        {
+          "text": "CONNECT",
+          "disabled": false
+        },
+        {
+          "text": "CONNECT",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/settings/ai",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nSettings\n\nReal-time label performance metrics\n\nAU\nAdmin User\nINTEGRATIONS\nAI\nAI\nAI PROVIDER\n// provider catalog unavailable — using system default\nMODEL\n// provider catalog unavailable — using system default\nDEFAULTS\nSYSTEM DEFAULT\nSET AS DEFAULT\nPROVIDER STATUS\nSYSTEM DEFAULT · READY\nBRING YOUR OWN KEY\n// not available — credentials are server-managed",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "SET AS DEFAULT",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "route": "/admin",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nAdmin\n\nReal-time label performance metrics\n\nAU\nAdmin User\nCOMMAND CONSOLE\nSYSTEM DEFAULT · READY\n>\nRUN\n// system ready\nTEAM\n2\nPDF\nCSV\nNAME\tEMAIL\tROLE\tPAGE ACCESS\t\nAdmin User\tadmin@mau5trap.com\tADMIN\t\nALL\n\t\nEDIT\n\nIsabelle Rezazadeh\ttours@rezz.com\tARTIST\t\nOVERVIEW\nROSTER\n\t\nEDIT\nDELETE\nCREATE USER\nNAME\nEMAIL\nPASSWORD\nROLE\nADMIN\nARTIST\nVIEWER\nARTIST ACCESS\nNONE\nALL\nATTLAS\nBlackGummy\nBlue Mora\nBUDD\nColleen D'Agostino\ndeadmau5\nDom Kane\nDraft\nEDDIE\nEnzo Bennet\nElectrocado\nFeed Me\nFehrplay\nFrost\nHEYZ\nHolyU\nKayve\nMatt Lange\nMichael Woods\nMonstergetdown\nNeus\nNo Mana\nOliver Winters\nREZZ\nRinzen\nSevenDoors\nShotty Horroh\nTinlicker\nTommy Lee\nPAGE ACCESS\nOVERVIEW\nROSTER\nANR_ROOM\nAI_LAB\nMARKETING\nFANS\nOPERATIONS\nADMIN\n\nPage access controls navigation visibility only. The server authorizes every request independently.\n\nCREATE",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "RUN",
+          "disabled": false
+        },
+        {
+          "text": "PDF",
+          "disabled": false
+        },
+        {
+          "text": "CSV",
+          "disabled": false
+        },
+        {
+          "text": "EDIT",
+          "disabled": false
+        },
+        {
+          "text": "EDIT",
+          "disabled": false
+        },
+        {
+          "text": "DELETE",
+          "disabled": false
+        },
+        {
+          "text": "CREATE",
+          "disabled": false
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "name": "graph-data-and-interaction",
+      "evidence": {
+        "artists": 29,
+        "withCollaborations": 0,
+        "canvas": "Roster relationship graph",
+        "artistLinks": 0,
+        "text": "Intelligence\n\nReal-time label performance metrics\n\nAU\nAdmin User\nCOMMAND CONSOLE\nSYSTEM DEFAULT · READY\n>\nRUN\n// system ready\nROSTER NETWORK\n29\nFLAGSHIP\nCORE\nDEVELOPING"
+      }
+    },
+    {
+      "name": "ai-console-no-key",
+      "evidence": {
+        "text": "[Dev Fallback] Growth is stable at 2.5%. Recommend increasing tour frequency in EU.",
+        "provider": {
+          "status": 404,
+          "data": {
+            "error": "Endpoint not found",
+            "path": "/v3/ai/providers"
+          }
+        }
+      }
+    },
+    {
+      "name": "room-submit-readback",
+      "evidence": {
+        "roomContainsSubmission": false,
+        "scoutingContainsSubmission": true,
+        "visible": "A&R Room\n\nReal-time label performance metrics\n\nAU\nAdmin User\nA&R ROOM\nSCOUTING\nWHITEBOARD\nCurrently Reviewing: Q1 2026 Compilation Submissions.\nFocus: Tech House / Minimal.\nNOW LISTENING\ndeadmau5\nhttps://soundcloud.com/mau5trap/example-demo\nSEP 18, 2026, 12:29 AM\nDEMO QUEUE\n3\nAnalog Dreams\nUnknown Producer\nREVIEWING\nadmin\nTALLY\nRATE\nCyberpunk Bass\nNeon Glitch\nHIGH-PRIORITY\nrezz\nTALLY\nRATE\nDeep Space\nVoid Walker\nNEW\nadmin\nTALLY\nRATE\nSUBMIT DEMO\nSCOUTING\nARTIST\nTRACK\nGENRE\nURL\nSUBMIT"
+      }
+    },
+    {
+      "name": "sale-persistence",
+      "evidence": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "count": 1
+        },
+        "overview": {
+          "monthlyRevenue": 3202870,
+          "quarterlyProjection": 134773080,
+          "annualProjection": 539092320,
+          "activeArtists": 29,
+          "topArtists": [
+            {
+              "name": "Feed Me",
+              "revenue": 16384705,
+              "roi": 2.7
+            },
+            {
+              "name": "deadmau5",
+              "revenue": 12530730,
+              "roi": 6.5
+            },
+            {
+              "name": "REZZ",
+              "revenue": 8464217,
+              "roi": 8.7
+            },
+            {
+              "name": "BlackGummy",
+              "revenue": 1413625,
+              "roi": 8.8
+            },
+            {
+              "name": "ATTLAS",
+              "revenue": 1246764,
+              "roi": 7.4
+            }
+          ],
+          "timestamp": "2026-09-18T04:35:07.768Z"
+        }
+      }
+    },
+    {
+      "name": "marketing-error-visibility",
+      "harnessError": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /launch/i })\u001b[22m\n"
+    },
+    {
+      "name": "campaign-created-without-store",
+      "evidence": {
+        "created": {
+          "status": 200,
+          "data": {
+            "campaignId": "cmp_1789706138154",
+            "status": "created",
+            "plan": [
+              {
+                "step": 1,
+                "action": "Post 15s clips daily",
+                "platform": "instagram"
+              },
+              {
+                "step": 2,
+                "action": "Collaborate with influencers",
+                "platform": "instagram"
+              },
+              {
+                "step": 3,
+                "action": "Host AMA",
+                "platform": "instagram"
+              }
+            ],
+            "budget": "Pending Approval"
+          }
+        },
+        "list": {
+          "status": 404,
+          "data": {
+            "error": "Endpoint not found",
+            "path": "/v3/marketing/campaigns"
+          }
+        }
+      }
+    },
+    {
+      "name": "integration-connect",
+      "evidence": {
+        "connected": {
+          "status": 200,
+          "data": {
+            "success": true,
+            "message": "Connected to Spotify Web API (Mock)"
+          }
+        },
+        "status": {
+          "status": 200,
+          "data": {
+            "services": [
+              {
+                "id": "spotify",
+                "name": "Spotify Web API",
+                "connected": true,
+                "lastSync": "2026-09-18T04:35:38.164Z",
+                "quotaUsed": null
+              },
+              {
+                "id": "youtube",
+                "name": "YouTube Analytics",
+                "connected": false,
+                "lastSync": null,
+                "quotaUsed": null
+              },
+              {
+                "id": "tiktok",
+                "name": "TikTok API",
+                "connected": false,
+                "lastSync": null,
+                "quotaUsed": null
+              },
+              {
+                "id": "instagram",
+                "name": "Instagram Graph",
+                "connected": false,
+                "lastSync": null,
+                "quotaUsed": null
+              },
+              {
+                "id": "shopify",
+                "name": "Shopify API",
+                "connected": false,
+                "lastSync": null,
+                "quotaUsed": null
+              },
+              {
+                "id": "ticketmaster",
+                "name": "Ticketmaster Discovery",
+                "connected": false,
+                "lastSync": null,
+                "quotaUsed": null
+              },
+              {
+                "id": "bandsintown",
+                "name": "Bandsintown API",
+                "connected": false,
+                "lastSync": null,
+                "quotaUsed": null
+              },
+              {
+                "id": "chartmetric",
+                "name": "Chartmetric API",
+                "connected": false,
+                "lastSync": null,
+                "quotaUsed": null
+              },
+              {
+                "id": "revelator",
+                "name": "Revelator API",
+                "connected": false,
+                "lastSync": null,
+                "quotaUsed": null
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "rights-unknown-artist",
+      "evidence": {
+        "status": 200,
+        "data": {
+          "success": true,
+          "message": "Contract generated for Unknown Artist",
+          "downloadUrl": "/v3/reports/contracts/review-does-not-exist.pdf",
+          "status": "draft",
+          "terms": {
+            "term": "3 Years",
+            "territory": "World",
+            "royaltyRate": "70% Net Receipts"
+          }
+        }
+      }
+    },
+    {
+      "name": "restricted-artist-access",
+      "evidence": [
+        {
+          "route": "/v3/artists/art_deadmau5",
+          "status": 403,
+          "data": {
+            "error": "Access denied to this artist"
+          }
+        },
+        {
+          "route": "/v3/artists/art_deadmau5/monthly-sales",
+          "status": 403,
+          "data": {
+            "error": "Access denied"
+          }
+        },
+        {
+          "route": "/v3/users",
+          "status": 403,
+          "data": {
+            "error": "Admin access required"
+          }
+        },
+        {
+          "route": "/v3/royalties/calculate",
+          "status": 200,
+          "data": {
+            "artistName": "deadmau5",
+            "totalRevenue": 10573157,
+            "payout": {
+              "artist": 7401209.899999999,
+              "label": 3171947.1
+            },
+            "breakdown": {
+              "streaming": 1426368,
+              "merch": 428693,
+              "touring": 8718096
+            },
+            "splits": {
+              "artist": 0.7,
+              "label": 0.3
+            }
+          }
+        },
+        {
+          "route": "/v3/artists/art_deadmau5/development",
+          "status": 200,
+          "data": {
+            "artist": "deadmau5",
+            "projection": "Positive",
+            "insights": [
+              "deadmau5's streaming growth is outpacing the genre average by 15%.",
+              "Strong engagement in South America suggests potential for a Q3 tour leg.",
+              "Merch sales per listener are lower than expected; strictly limit supply for next drop."
+            ],
+            "focusAreas": [
+              "TikTok Content",
+              "LATAM Tour",
+              "Limited Merch"
+            ]
+          }
+        },
+        {
+          "route": "/v3/campaigns/stats",
+          "status": 200,
+          "data": {
+            "stats": {
+              "totalEmails": 11218910,
+              "totalSMS": 1010297,
+              "presaleSignups": 1782772
+            },
+            "history": [
+              {
+                "month": "Jul",
+                "email": 7853236,
+                "sms": 606178
+              },
+              {
+                "month": "Aug",
+                "email": 8414182,
+                "sms": 707207
+              },
+              {
+                "month": "Sep",
+                "email": 8975128,
+                "sms": 808237
+              },
+              {
+                "month": "Oct",
+                "email": 9536073,
+                "sms": 858752
+              },
+              {
+                "month": "Nov",
+                "email": 10097019,
+                "sms": 909267
+              },
+              {
+                "month": "Dec",
+                "email": 11218910,
+                "sms": 1010297
+              }
+            ]
+          }
+        },
+        {
+          "route": "/v3/tours",
+          "status": 200,
+          "data": {
+            "tours": []
+          }
+        },
+        {
+          "route": "/v3/fans/demographics",
+          "status": 200,
+          "data": {
+            "topMovers": [
+              {
+                "id": "art_mattlange",
+                "name": "Matt Lange",
+                "growth": 24.3,
+                "engagement": 2.2
+              },
+              {
+                "id": "art_tommylee",
+                "name": "Tommy Lee",
+                "growth": 23.8,
+                "engagement": 7.4
+              },
+              {
+                "id": "art_shottyhorroh",
+                "name": "Shotty Horroh",
+                "growth": 23.5,
+                "engagement": 5.9
+              },
+              {
+                "id": "art_fehrplay",
+                "name": "Fehrplay",
+                "growth": 21.6,
+                "engagement": 4
+              },
+              {
+                "id": "art_attlas",
+                "name": "ATTLAS",
+                "growth": 20.7,
+                "engagement": 7.6
+              }
+            ],
+            "demographics": {
+              "age": [
+                {
+                  "range": "18-24",
+                  "value": 35
+                },
+                {
+                  "range": "25-34",
+                  "value": 45
+                },
+                {
+                  "range": "35-44",
+                  "value": 15
+                },
+                {
+                  "range": "45+",
+                  "value": 5
+                }
+              ],
+              "gender": [
+                {
+                  "label": "Male",
+                  "value": 55
+                },
+                {
+                  "label": "Female",
+                  "value": 42
+                },
+                {
+                  "label": "Other",
+                  "value": 3
+                }
+              ],
+              "locations": [
+                {
+                  "city": "Los Angeles",
+                  "country": "USA",
+                  "value": 120000
+                },
+                {
+                  "city": "London",
+                  "country": "UK",
+                  "value": 85000
+                },
+                {
+                  "city": "Toronto",
+                  "country": "Canada",
+                  "value": 60000
+                },
+                {
+                  "city": "Berlin",
+                  "country": "Germany",
+                  "value": 45000
+                },
+                {
+                  "city": "Sydney",
+                  "country": "Australia",
+                  "value": 30000
+                }
+              ],
+              "platformGrowth": [
+                {
+                  "platform": "Spotify",
+                  "growth": 12.5
+                },
+                {
+                  "platform": "TikTok",
+                  "growth": 28.4
+                },
+                {
+                  "platform": "Instagram",
+                  "growth": 5.2
+                },
+                {
+                  "platform": "YouTube",
+                  "growth": 8.1
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "responsive-graph",
+      "evidence": [
+        {
+          "width": 1024,
+          "scrollWidth": 1024,
+          "graphWidth": 886
+        },
+        {
+          "width": 390,
+          "scrollWidth": 390,
+          "graphWidth": 308
+        }
+      ]
+    }
+  ],
+  "pageErrors": [],
+  "failedResponses": [
+    {
+      "url": "http://127.0.0.1:4011/v3/ai/providers",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/ai/providers",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/ai/providers",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/ai/providers",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/ai/providers",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/ai/providers",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/ai/providers",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/ai/providers",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/ai/providers",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/ai/providers",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/ai/providers",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/ai/providers",
+      "status": 404
+    }
+  ],
+  "requests": [
+    {
+      "url": "http://127.0.0.1:4011/v3/ai/query",
+      "body": {
+        "prompt": "Summarize deadmau5 revenue"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/anr/submissions",
+      "body": {
+        "artist": "Review Artist",
+        "track": "Review Track",
+        "genre": "electronic",
+        "url": "https://example.test/review-track"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/analytics/sales",
+      "body": {
+        "artistId": "art_attlas",
+        "month": "2026-09",
+        "revenue": 125
+      }
+    }
+  ]
+}

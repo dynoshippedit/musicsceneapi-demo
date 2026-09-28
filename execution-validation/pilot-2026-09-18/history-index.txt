@@ -1,0 +1,472 @@
+
+EXECUTION_RESULTS.md (284 lines)
+# Execution results — D0 (blocked, then integrity-corrected)
+"BLOCKED / FAILED" footer as current; §11 and the footer below it are current.
+## 1. Decision and stop boundary
+## 2. Repository recovery and file coverage
+## 3. Parent-reproduced blocking failures
+## 4. Additional review disposition
+## 5. Guide/source discrepancies to resolve without discarding the guide
+## 6. Validation actually executed
+## 7. Database, source and process safety
+## 8. Per-step result and deferred work
+| D0 | Option A approved; **validation blocked**, checkpoint not created |
+## 9. Product acceptance assessment
+3. Dedicated label ownership: active profile plus dedicated DB selection exists. Required new-table stamps and this sequence's persistence changes are not implemented; full requested acceptance is not met. This is not a demonstrated cross-label leak.
+7. Health: NOT REACHED. Existing literal liveness/version body remains; operational truth was not implemented or certified.
+## 10. Required next boundary
+## 11. Pre-D0 integrity correction (2026-09-18)
+## Final status
+## 12. Step 1 — Deployment truth (2026-09-18)
+## 13. Step 2 — Hermetic verify (2026-09-18)
+## 14. Step 3 — Error contract (2026-09-18)
+### Step 3 review note (feature-dev:code-reviewer, 2026-09-18)
+## 15. Full-tree re-read (2026-09-18)
+
+EXECUTION_GUIDE.md (372 lines)
+# EXECUTION_GUIDE.md
+## 0. Decision records (all require explicit operator sign-off before that step starts)
+### 0.1 D0 template — checkpoint the uncommitted tree
+`git restore …`, which is only safe if the 4C+4CF work is committed first. Decision:
+## 1. Consolidated pin ledger (every deliberate test/artifact flip, all steps)
+## 2. Execution order
+## 3. Steps 1–4 (trust tier, foundations)
+### Step 1 — Deployment truth (small/very-low)
+### Step 2 — Hermetic verify (small/medium)
+### Step 3 — Error contract (small/very-low)
+### Step 4 — Pagination (small/low-medium)
+## 4. Steps 5–6 (durable-state tier)
+### Step 5 — Ownership consistency (small/low; operator-DB rebuild required)
+### Step 6a — Campaigns persist + read-back (small-medium/low)
+### Step 6b — Integrations per-user JSON seam (small-medium/medium)
+### Step 6c — A&R store #2 decision (document-only, trivial)
+### Step 6d — apiCache deletion (small, mechanical)
+### Step 6e — Stats/masterSyncLoop dormancy (trivial)
+## 5. Step 7 — Password reset (MEDIUM/MEDIUM; GATED on D7)
+### 7.5 D7 decision template (to be filed at repo root BEFORE Step 7 work)
+C. optional emitAudit('user.password_reset') yes/no; D. deferred: JWT session
+## 6. Step 8 — Password policy + quota stubs (small/low; no pins flip)
+## 7. Step 9 — API keys (medium/medium-low, additive)
+## 8. Step 10 — OpenAPI + versioning (medium/low; Step 9 first)
+## 9. Step 11 — Frontend debt (interleavable after 1-2)
+## 10. Step 12 — Ops hardening (D12F gate at 12F)
+## 11. Step 13 — Postgres + migrations + licensing (PILOT-GATED — no build now)
+## 12. Corrections this guide records over NEXT_STEPS_PLAN.md
+## 13. Rollback + verify discipline (every step)
+## 14. Source-correct execution qualifications (do not skip)
+
+NEXT_STEPS_PLAN.md (174 lines)
+# NEXT_STEPS_PLAN.md
+## Reconciliation: external review items vs reality
+## Build-now steps (trust tier, pre-4D)
+### Step 1 — Deployment truth (small)
+### Step 2 — Hermetic verify (small)
+### Step 3 — Error contract tidies (small)
+### Step 4 — Pagination on unbounded lists (small)
+### Step 5 — Ownership consistency (small)
+changes. Customer/Label table = DEFERRED (dedicated-deployment profile-as-root is adequate;
+### Step 6 — Product-state truth (small–medium)
+### Step 7 — Password reset flow (DP first) (medium)
+### Step 8 — Password policy + quotas (small)
+### Step 9 — API keys / service accounts (medium)
+### Step 10 — OpenAPI + versioning policy (medium)
+## Frontend debt (interleavable, small–medium)
+### Step 11 — RevenueBarChart + UniversalPlayer + router eval
+## Pre-pilot operations (runbook tier)
+### Step 12 — Ops hardening (small–medium, mostly docs/scripts)
+## Pilot-gated (do NOT build now)
+### Step 13 — Postgres + migrations + licensing review
+## Explicit DO-NOT-BUILD list (all three reviews concur)
+## Suggested execution order
+
+ERROR_LEDGER.md (101 lines)
+# ERROR LEDGER — mau5trap forensic pass (HEAD `9101746`)
+**Repair update, 2026-09-18:** The user authorized repairs after the review. Read [REPAIR_RESULTS_2026-09-18.md](REPAIR_RESULTS_2026-09-18.md) for the current state. Sales schema, access/cache checks, AI errors, persistent Room/campaigns, forecasts, graph/map, form refresh and session verification have been repaired. The operator database was backed up and migrated with all original rows preserved; API 3000/UI 5173 are running the repaired code. Gates: 150 backend tests, 54 API checks, 9 brand checks, 8 browser workflows passed. External OAuth/contracts remain explicitly unavailable; other feature gaps are listed in the repair report. **The ledger and “no repairs” statements below describe the earlier audit, not current status.**
+## Live defects
+## Astra hypotheses — independent disposition (do not re-open as live)
+## Smallest tests that should exist (not implemented this pass)
+
+FULL_SYSTEM_FORENSIC_AUDIT.md (311 lines)
+# FULL SYSTEM FORENSIC AUDIT
+## 1. Current repository state
+## 2. Historical architecture reviewed
+## 3. Exact validation environment
+## 4. Operator database safety
+## 5. Routes / pages tested
+## 6. User workflows tested
+## 7. API connectivity assessment
+## 8. AI / provider assessment
+## 9. Visual graph semantic assessment
+## 10. CRUD / persistence assessment
+## 11. Concurrency assessment
+## 12. React state / routing assessment
+## 13. Auth / RBAC assessment
+## 14. Legacy parity assessment
+## 15. External integrations assessment
+## 16. Reports / exports assessment
+## 17. Demo vs real
+## 18. Portability assessment
+## 19. Error-handling / process-stability
+## 20. Test / gate blind spots
+## 21. Visual / UI defects
+## 22. Confirmed blockers
+## 23. Confirmed majors / criticals (product truth)
+## 24. Minor / deferred
+## 25. Genuinely working
+## 26. Appear connected but are not
+## 27. Remain mocked / simulated
+## 28. Tests that must be added
+## 29. Smallest repair sequence
+## 30. Can D0 be certified?
+## 18 questions
+## FINAL STATUS BLOCK
+
+API_CONNECTION_MATRIX.md (61 lines)
+# API CONNECTION MATRIX — React `web/` vs reachable `src/routes` (HEAD `9101746`)
+REMAINING_PRODUCT_GAPS.md: MISSING
+
+PHASE_4CF_COMMERCIAL_FOUNDATION.md (200 lines)
+# PHASE_4CF_COMMERCIAL_FOUNDATION.md
+## 1. Starting repository state
+## 2. Defects fixed (all previously live-reproduced)
+## 3. User CRUD corrections
+## 4. Artist source-of-truth correction
+## 5. Session / user-deletion correction
+## 6. Persist-vs-demo classification table
+| Campaigns (`POST /v3/marketing/campaigns`, stats) | nothing stored | **DEMO — lying-success documented; persistence deferred to a campaigns feature pass** |
+| Reports/PDFs | filesystem | GENERATED, not catalogued (deferred) |
+## 7. Customer/label ownership seam
+## 8. Audit-event seam
+## 9. Usage / request-attribution seam
+## 10. Label Intelligence Profile architecture
+## 11. Mau5trap-specific values moved behind configuration
+## 12. Backend files changed
+## 13. API contracts changed (deliberate, documented)
+## 14. Database / schema changes
+## 15. Tests added
+## 16. Restart / durability validation
+## 17. Frontend regression results
+## 18. Backend regression results
+## 19. Known commercial debt remaining
+## 20. Explicitly deferred architecture
+## 21. What is still demo/simulated
+## 22. What is now safe for customer data
+## 23. Dedicated-instance commercial-readiness assessment
+## 24. Exact Phase 4D starting recommendation
+## 25. Post-4CF adversarial review fixes (2026-09-17)
+
+PHASE_4C_HANDOFF.md (393 lines)
+# PHASE_4C_HANDOFF.md
+## 0. Status
+## 1. What was inherited, and whether it was true
+| React Router 7 deferred | **TRUE** | `web/package.json` unchanged at `^6.30.1`; advisories reported, not suppressed |
+## 2. Evaluation of the Phase 4B reference implementation at 4C scale
+## 3. The one BLOCKER, and why the inherited description understated it
+### The other three debt items
+## 4. Migration inventory
+**U** unsurfaced · **B** blocked.
+### Routes added (12 new paths)
+### Orphaned legacy views — what was and was not surfaced
+## 5. Architecture: extended, never paralleled
+### `alert()` / `confirm()` / dead-code sweep (4A §17)
+## 6. Auth and pageAccess result
+## 7. Brand portability result
+### Example Records result — PASS
+## 8. Parity gaps and deliberate behaviour changes
+| Reset password | **Blocked, unchanged** | `POST /v3/auth/reset-password` does not exist. `Forgot Password?` remains present and disabled as in 4B. The legacy token step was **not** ported — a gap against 4A row 3, which asked for the UI to be ported so it fails as today. Deferred deliberately rather than shipping a control whose only outcome is a 404. |
+| Label identity banner | **Blocked, graceful** | `GET /v3/label/entity-audit` does not exist; legacy skips the banner on non-OK, so nothing is rendered. No route invented. |
+## 9. Architectural deviations from the Phase 4A plan
+## 10. Validation
+### Gate boxes added or amended for 4C
+### Visual assessment against the design contract
+## 11. `npm audit` — actual result, not a claim
+## 12. Known debt carried forward
+## 13. Phase 4D recommendation
+## 14. Repository state
+
+PHASE_4C_PREREQUISITE_VALIDATION.md (617 lines)
+# PHASE_4C_PREREQUISITE_VALIDATION.md
+## 0. Status
+## 1. Scope
+## 2. Exact files changed
+## 3. `pageAccess` contract change (Decision 1)
+### 3.1 Response shapes — before (HEAD `7efb44b`) → after (working tree), observed live on a fresh-DB server (§8 items 5-7)
+### 3.2 Source
+### 3.3 Tests added
+### 3.4 Snapshot re-baseline (D1 only)
+### 3.5 Authorization unchanged
+## 4. Auth session error handling (Decision 5)
+## 5. Portability gate correction (Decision 3)
+## 6. Deterministic baseline investigation (Decision 4)
+## 7. React Router advisory disposition (Decision 2)
+# npm audit report
+**Disposition: DEFERRED (operator Decision 2).** Not upgraded, not suppressed, not "fixed"; the audit is NOT clean and no claim to
+## 8. Validation log (every command from this session; verbatim results — the two seed passwords are redacted as `<admin-seed-pw>` / `<artist-seed-pw>` wherever tool output printed them; JWTs as `<REDACTED>`)
+# tests 123
+# suites 26
+# pass 123
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9602.958283
+## 9. Remaining known debt (observed or confirmed this session; none fixed here)
+   (L217). PHASE_4B_STATIC_AUDIT F-10. Decision: record, do not fix, no admin model.
+6. **react-router / react-router-dom 6.30.6 — 2 moderate advisories** (GHSA-wrjc-x8rr-h8h6, GHSA-337j-9hxr-rhxg); DEFERRED with
+## 10. Verdict
+REACT ROUTER 7: DEFERRED
+
+COMMERCIAL_PRODUCT_READINESS_AUDIT.md (547 lines)
+# COMMERCIAL_PRODUCT_READINESS_AUDIT.md
+## How this audit was performed (evidence basis)
+## 1. Executive conclusion
+## 2. What the product actually is today
+## 3. Commercial product boundary
+## 4. CRUD matrix (runtime-verified, not inferred)
+Authorization summary (verified): admin-only guards fire correctly (artist role 403s on users/artists/A&R-delete/contracts); artist data-scoping works (roster=own artist, other-artist detail 403, own export 200, label-wide export 403); non-admin write attempts are blocked. The gaps are the two missing DELETE guards, the dropped `artistAccess` update, free-text roles, and no token revocation.
+## 5. Data integrity / runtime failure findings
+### F-1 — `PUT /v3/users/:id` drops `artistAccess` and reports success — **MAJOR**
+### F-2 — `DELETE /v3/users/:id` has no root-admin guard, no self-delete guard, no revocation — **MAJOR**
+### F-3 — Artist persistence is split-brain: created artists 404 after restart — **MAJOR**
+### F-4 — Duplicate artist name → success with silent divergence — **MODERATE**
+### F-5 — Product state is process memory; restart wipes it — **MAJOR**
+### F-6 — Fabricated values served without provenance — **MAJOR (commercial trust)**
+### F-7 — Validation/semantics gaps (all verified) — **MODERATE**
+### F-8 — Operational: documented PM2 deployment is broken; cluster mode is incoherent — **MAJOR**
+### F-9 — Unbounded paid-provider spend per user — **MAJOR (commercial)**
+### Positives verified
+## 6. API product-readiness findings
+## 7. Customer / label domain-model findings
+## 8. Dedicated-instance vs multi-tenant analysis
+## 9. User / RBAC / identity findings
+## 10. Audit-log / event findings
+## 11. Billing / subscription architecture findings
+## 12. Usage / metering findings
+## 13. API keys / service accounts
+## 14. Integration / secret ownership findings
+## 15. AI architecture findings
+## 16. Label Intelligence Profile findings
+## 17. External-data dependency findings
+## 18. Reports / export findings
+## 19. Database / schema findings
+## 20. Operations findings
+## 21. Security / productization findings
+- **Dependency advisories:** 2 moderate React Router 6, honestly reported, deferred with a trigger (correct handl
+
+COMMERCIAL_FOUNDATION_RECHECK.md (432 lines)
+# COMMERCIAL_FOUNDATION_RECHECK.md
+## 1. Executive verdict
+## 2. Kimi audit reliability assessment
+## 3. artistAccess CRUD finding — **CONFIRMED**
+## 4. User-delete protections — **CONFIRMED**
+## 5. Deleted-user JWT/session finding — **CONFIRMED**
+## 6. Artist canonical-source-of-truth finding — **CONFIRMED (and wider than Kimi stated)**
+## 7. Persist-vs-demo classification
+## 8. Integration quota/metering finding — **CONFIRMED**
+## 9. PM2/deployment finding — **CONFIRMED**
+## 10. Customer/label ownership seam
+## 11. Dedicated-instance architecture
+## 12. Future multi-tenant architecture
+## 13. Audit-event seam
+## 14. Usage-attribution seam
+## 15. API productization / expensive-to-change contracts
+## 16. Backend label portability
+## 17. Label Intelligence Profile assessment
+## 18. Commercial customer thought experiments
+- Verdict: **blocked on the §22/§23 items; realistic after them.**
+## 19. Findings Kimi overstated
+## 20. Findings Kimi missed
+## 21. Cost-of-deferral matrix
+## 22. MUST FIX NOW
+## 23. MUST DESIGN NOW / IMPLEMENT MINIMALLY
+## 24. BEFORE FIRST PILOT
+## 25. BEFORE PAID PRODUCTION
+## 26. SAFE TO DEFER
+## 27. DO NOT BUILD YET
+## 28. Recommended bounded phase BEFORE ordinary Phase 4D
+## Final questions — explicit answers
+12. **Single highest-cost mistake if deferred?** **The backend label/ownership profile (4-LABEL) with its conventions** — runner-up: the persist-or-demo decision for in-memory product state; third: the ID convention.
+## FINAL VERDICT
+## Appendix — repository state at recheck close
+
+FRONTEND_API_MAP.md (152 lines)
+# FRONTEND_API_MAP.md
+## 1. Workstation — `mau5trap-frontend-connected.html`
+### Endpoints consumed (37)
+### The split-brain A&R problem
+## 2. Command Center — `mau5trap-terminal-dashboard.html`
+### Auth bypass in preview mode
+## 3. Server routes with no frontend consumer (21)
+## 4. Missing frontend assets
+
+API_INVENTORY.md (164 lines)
+# API_INVENTORY.md
+## Auth summary
+## Shadowed routes (declared but unreachable)
+## Contract mismatches between frontend and server
+### Frontend calls routes that do not exist (runtime 404 via L3169 handler)
+### `test-api.js` targets routes that do not exist
+## Response-shape inconsistency
+
+INTEGRATION_INVENTORY.md (181 lines)
+# INTEGRATION_INVENTORY.md
+## 1. `integrations/` — social & streaming (6 providers)
+### Artist coverage is 2 of 29
+### Silent degradation is the default everywhere
+### Partial provenance metadata exists but is not exposed
+### Cross-artist data leak in the Instagram path
+### Schema validation is applied to exactly one provider
+## 2. `modules/entityAudit.js` — identity/metadata (5 providers, 752 lines)
+### Caching / cost control on the audit path
+## 3. Rogue Spotify client (api L2689-2695)
+## 4. Other external surfaces
+## 5. Rate-limiting: two systems, one unused
+## 6. Configuration matrix
+
+BACKEND_ARCHITECTURE.md (315 lines)
+# BACKEND_ARCHITECTURE.md
+## 1. Entrypoint and boot sequence
+## 2. Layer map
+### Dependency direction
+## 3. Route organisation and why ORDER is a contract
+## 4. AI/LLM boundary
+  Verified on git HEAD. Now the failure is deferred to the first AI request.
+### Preserved AI defects
+## 5. Data access and persistence
+### Three sources of truth — preserved, now visible
+## 6. Integrations
+## 7. Preserved defects (deliberate, each pinned by a test)
+## 8. Testing architecture
+## 9. Known runtime hazards
+
+SECURITY_AUDIT.md (315 lines)
+# SECURITY_AUDIT.md
+## Phase 3 remediation status
+## CRITICAL-1 — Unauthenticated admin token via empty request body
+## CRITICAL-2 — Hardcoded JWT fallback secret
+## CRITICAL-3 — `pm2 start ecosystem.config.js` runs in development mode
+## HIGH-4 — Broken authorization denies artists their own data
+## HIGH-5 — CORS reflects any origin with credentials
+## HIGH-6 — Command injection surface in report auto-printing
+## HIGH-7 — Unbounded third-party spend by any authenticated user
+## MEDIUM-8 — User enumeration on password reset
+## MEDIUM-9 — Internal error details returned to clients
+## MEDIUM-10 — Secrets and credentials committed to the repository
+## MEDIUM-11 — No input validation on any endpoint
+## LOW-12 — Weak / missing hardening details
+## Runtime-stability problems (not security, but production-fatal)
+## Positive findings
+
+BRAND_PORTABILITY_AUDIT.md (198 lines)
+# Brand portability audit — current repository state
+## 1. Executive conclusion
+### Actual configuration flow
+## 2. Runtime coupling findings
+### Backend, knowledge, AI, and output paths
+### Current browser frontends
+## 3. Frontend findings
+## 4. Backend findings
+## 5. Knowledge and intelligence findings
+## 6. AI findings
+## 7. Branding and theme findings
+## 8. Email, report, and PDF findings
+## 9. Auth and admin findings
+## 10. Seed, demo, and test findings
+## 11. Findings absent from the Phase 4A backend inventory
+## 12. Portability thought experiment: Example Records
+## 13. False positives and intentionally allowed mau5trap references
+- The mau5trap profile/theme/mark/favicon **specified** in FRONTEND_ARCHITECTURE.md §14 and PHASE_4A_HANDOFF.md §15 are the desired default. They are not implemented yet; their future files should retain the mau5trap values.
+## 14. Minimum remediation set
+### MUST FIX BEFORE 4B
+1. Make the Phase 4B portability gate's scope explicit in the execution decision: its Example Records login/dashboard check is **frontend display portability only** until backend active-label resolution exists. Do not certify the application brand-switchable from that check.
+### CAN FIX DURING 4B
+### CAN DEFER UNTIL LATER
+## 15. Final verdict
+
+BRAND_PORTABILITY_AUDIT_RECHECK.md (133 lines)
+# Brand portability audit — independent recheck
+## 1. First-audit verdict review
+## 2. Confirmed BLOCKER findings
+## 3. Confirmed MAJOR findings
+## 4. Findings that are EXPECTED 4B/4C work
+## 5. OVERSCOPED findings
+## 6. INCORRECT findings
+## 7. Issues the first audit missed
+## 8. Phase 4A architecture verdict
+## 9. Existing backend portability verdict
+**FAIL for a real second-label deployment.** There is no active backend profile; artists/users/operations/A&R data, social mappings, search and wiki sources, AI context, admin protection, generated colors, PDF/email identity, and SQLite default remain selected inside generic runtime files (§§2–3, 7). The proposed backend §15.3 profile is a sound initial seam but is not implemented and needs the additions listed in §7. Provider neutrality is separate: Groq is the only runtime transport (`src/ai/aiService.js:27-31,69-79`), while the Phase 4A frontend provider contract anticipates later routing (`PHASE_4A_HANDOFF.md:275-320`). Neither the mau5trap data nor its useful intelligence should be deleted.
+## 10. Minimum work required before Phase 4B
+## 11. Work safe to perform during Phase 4B
+## 12. Work safe to defer
+## 13. Recommendation on separate backend closure before 4B
+
+REFACTOR_PROGRESS.md (466 lines)
+# REFACTOR_PROGRESS.md
+## Status
+advisories — not suppressed, not fixed** (RR7 remains deferred).
+suppressed, not fixed (bumps deferred). Full detail: `PHASE_4CF_COMMERCIAL_FOUNDATION.md`.
+## Phase 2 — files created (27)
+### Repositories
+### Services
+### AI
+### Integrations / analytics / reports / jobs
+### Routes (13 domain modules + 2 support)
+### Tests / tooling
+### Docs
+## Phase 2 — files modified (5)
+## Functionality moved
+### Removed as verified-dead
+## Dependencies changed
+## Tests added / changed
+## Tests executed and results
+### 1. Regression suite — `npm test`
+# tests 114   # suites 26   # pass 114   # fail 0   # skipped 0
+### 2. Behavioral equivalence
+### 3. Operational verification — `verify_phase2.js` (clean DB)
+### 4. Legacy scripts — offline (9)
+### 5. Legacy scripts — against the running refactored server (6)
+### 6. Application start
+## Failures
+### NEW-1 — admin user creation always fails (PRE-EXISTING)
+### NEW-2 — PDF endpoints crash the process (PRE-EXISTING, NEW FINDING)
+### No regressions
+## Unresolved issues → Phase 3 resolution
+### Phase 3 close-out additions (after initial validation)
+## Remaining technical debt
+### Architectural
+### Integration
+### Operational
+### Recorded pre-4C (2026-09-17) — see PHASE_4C_PREREQUISITE_VALIDATION.md §7 and §9
+  DEFERRED, stay on 6.x for 4C; audit is not suppressed and is NOT clean.
+### Resolved in Phase 4C (2026-09-17) — see PHASE_4C_HANDOFF.md §3
+### Recorded in Phase 4C (still open)
+## Phase 3 order (COMPLETE — see PHASE_3_VALIDATION.md)
+
+DECISION_D0_CHECKPOINT.md (28 lines)
+# DECISION D0 — Checkpoint Strategy
+**Date:** 2026-09-17 · **Operator:** Dino · **Repo HEAD at decision:** `7efb44b`
+## Question
+## Options
+## Signature
+
+STEP7_PASSWORD_RESET_DECISION.md (45 lines)
+# STEP 7 DECISION RECORD — Password Reset Flow
+## Question
+## What shipping flips (deliberate pin edits — full detail in EXECUTION_GUIDE.md ledger)
+## Options
+- [ ] D. Deferred (out of scope, noted): JWT session invalidation on reset (needs a
+## Signature
+
+DECISION_D12F_HEALTH.md (37 lines)
+# DECISION D12F — /health Body Change
+## Question
+## What shipping flips (deliberate pin edits — ledger in EXECUTION_GUIDE.md)
+## Options
+## Signature
+
+REPAIR_RESULTS_2026-09-18.md (63 lines)
+# Application repairs — 2026-09-18
+## Fixed
+## Database repair and running app
+## Verification
+## Remaining feature gaps and limits

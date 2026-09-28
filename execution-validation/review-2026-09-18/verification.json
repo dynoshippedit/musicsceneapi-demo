@@ -1,0 +1,71 @@
+{
+  "date": "2026-09-18",
+  "head": "9101746dee32f7dade6a0814ddfe19d1c76e15c1",
+  "operatorDatabase": {
+    "bytes": 196608,
+    "sha256Before": "a71f9ec104d5bbcf66a471dbd03a1dac477403aac86aa2cf592c9f5a93aa919a",
+    "sha256After": "a71f9ec104d5bbcf66a471dbd03a1dac477403aac86aa2cf592c9f5a93aa919a",
+    "schemaInspection": "SQLite mode=ro&immutable=1",
+    "salesSchema": [
+      {
+        "name": "SalesEntries",
+        "sql": "CREATE TABLE `SalesEntries` (`id` INTEGER PRIMARY KEY, `artistId` VARCHAR(255) NOT NULL UNIQUE, `month` VARCHAR(255) NOT NULL UNIQUE, `revenue` FLOAT NOT NULL)"
+      },
+      {
+        "name": "sqlite_autoindex_SalesEntries_1",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_SalesEntries_2",
+        "sql": null
+      },
+      {
+        "name": "sales_entries_artist_id_month",
+        "sql": "CREATE UNIQUE INDEX `sales_entries_artist_id_month` ON `SalesEntries` (`artistId`, `month`)"
+      }
+    ]
+  },
+  "runtime": {
+    "api": "http://127.0.0.1:4011",
+    "ui": "http://127.0.0.1:4174",
+    "storage": "/tmp/mau5-review-20260918-Dhbr1Q/review.sqlite",
+    "paidProviderKeyConfigured": false,
+    "reviewServersStopped": true
+  },
+  "checks": {
+    "backendSuite": {
+      "command": "npm test",
+      "cwd": "/tmp/mau5-review-20260918-Dhbr1Q/suite",
+      "source": "git archive HEAD, installed dependencies symlinked",
+      "passed": 143,
+      "failed": 0,
+      "durationMs": 10021.12265
+    },
+    "frontendBuild": {
+      "command": "npm run build",
+      "cwd": "/home/dino/mau5trap-repo/web",
+      "exit": 0,
+      "warning": "Bundle chunk above 500 kB"
+    },
+    "initialWorkingDirectoryUnitRun": {
+      "passed": 49,
+      "failed": 1,
+      "reason": "Empty admin override from local configuration differs from undefined required by test; clean isolated run passes."
+    },
+    "sqlReadback": {
+      "artistId": "art_attlas",
+      "month": "2026-09",
+      "revenue": 125,
+      "submissionArtist": "Review Artist",
+      "submissionTrack": "Review Track"
+    }
+  },
+  "productSourceChanged": false,
+  "limits": [
+    "No live Groq/OAuth validation",
+    "No PostgreSQL verification",
+    "First marketing browser check had a selector error; focused check supersedes it",
+    "Live three-month forecast setup failed on RV-001; arithmetic verified with injected rows",
+    "Rights injected rejection is a handler-boundary probe, not a confirmed live DB-outage crash"
+  ]
+}

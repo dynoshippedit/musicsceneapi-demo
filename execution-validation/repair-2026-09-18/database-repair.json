@@ -1,0 +1,24 @@
+{
+  "allOriginalRowsPreserved": true,
+  "tables": {
+    "AnrSubmissions": 2,
+    "Artists": 29,
+    "AuditEvents": 0,
+    "SalesEntries": 0,
+    "Stats": 0,
+    "Users": 2
+  },
+  "integrity": "ok",
+  "uniqueIndexes": [
+    [
+      0,
+      "sales_entries_artist_id_month",
+      1,
+      "c",
+      0
+    ]
+  ],
+  "backups": [
+    "/home/dino/mau5trap-repo/backups/before-sales-repair-1789709474929-b8be77a9-0646-4b11-a95b-124f16a92c7d.sqlite"
+  ]
+}

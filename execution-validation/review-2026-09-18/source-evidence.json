@@ -1,0 +1,126 @@
+[
+  {
+    "name": "AI-004-late-rejection-after-timeout",
+    "evidence": {
+      "caught": "AiTimeoutError",
+      "lateRejected": true,
+      "unhandled": [],
+      "processSurvived": true
+    }
+  },
+  {
+    "name": "AI-cache-authorization-bypass",
+    "evidence": {
+      "ownerKind": "ok",
+      "restricted": {
+        "kind": "cached",
+        "answer": "Revenue?\nData: {\"name\":\"Private Artist\",\"stats\":\"Listeners: 10, Streams: undefined, Growth: undefined%\",\"revenue\":\"Total: $123456 (Top: streaming)\"}"
+      },
+      "repoReads": 1,
+      "leakedPrivateContext": true
+    }
+  },
+  {
+    "name": "AUTH-002-db-revalidation-fails-open",
+    "evidence": {
+      "authorized": true,
+      "responseCode": 200,
+      "body": null
+    }
+  },
+  {
+    "name": "API-009-all-report-writes-fail",
+    "evidence": {
+      "status": 200,
+      "body": {
+        "message": "Reports generated successfully",
+        "count": 0,
+        "reports": [],
+        "directory": "/home/dino/mau5trap-repo/src/routes/reports/2026-09"
+      }
+    }
+  },
+  {
+    "name": "forecast-history-lengths",
+    "evidence": [
+      {
+        "count": 3,
+        "status": 200,
+        "labelCount": 14,
+        "historyCount": 5,
+        "projectionAnchor": null,
+        "firstProjection": 1300,
+        "expectedFirstProjection": 400
+      },
+      {
+        "count": 12,
+        "status": 200,
+        "labelCount": 14,
+        "historyCount": 14,
+        "projectionAnchor": 1200,
+        "firstProjection": 1300,
+        "expectedFirstProjection": 1300
+      },
+      {
+        "count": 13,
+        "status": 200,
+        "labelCount": 14,
+        "historyCount": 15,
+        "projectionAnchor": 1200,
+        "firstProjection": 1300,
+        "expectedFirstProjection": 1400
+      }
+    ]
+  },
+  {
+    "name": "rights-DB-rejection-escapes-handler",
+    "evidence": {
+      "escaped": "injected DB failure",
+      "responseSent": false,
+      "boundaryOnly": true,
+      "repositoryNormallyCatchesDbErrors": true,
+      "interpretation": "Injected handler-boundary result; does not establish a live DB-outage crash because the real repository catches DB reads."
+    }
+  },
+  {
+    "name": "sales-schema-corruption-on-second-sync",
+    "evidence": {
+      "firstSchema": [
+        {
+          "sql": "CREATE TABLE `SalesEntries` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `artistId` VARCHAR(255) NOT NULL, `month` VARCHAR(255) NOT NULL, `revenue` FLOAT NOT NULL)"
+        }
+      ],
+      "secondSchema": [
+        {
+          "sql": "CREATE TABLE `SalesEntries` (`id` INTEGER PRIMARY KEY, `artistId` VARCHAR(255) NOT NULL UNIQUE, `month` VARCHAR(255) NOT NULL UNIQUE, `revenue` FLOAT NOT NULL)"
+        }
+      ],
+      "outcomes": [
+        {
+          "row": {
+            "artistId": "artist-one",
+            "month": "2026-02",
+            "revenue": 200
+          },
+          "saved": false,
+          "error": "SequelizeUniqueConstraintError",
+          "fields": [
+            "artistId"
+          ]
+        },
+        {
+          "row": {
+            "artistId": "artist-two",
+            "month": "2026-01",
+            "revenue": 300
+          },
+          "saved": false,
+          "error": "SequelizeUniqueConstraintError",
+          "fields": [
+            "month"
+          ]
+        }
+      ]
+    }
+  }
+]

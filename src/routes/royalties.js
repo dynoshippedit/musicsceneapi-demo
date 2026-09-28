@@ -33,6 +33,8 @@
 const multer = require('multer');
 
 const { ISRC_RE, UPC_RE } = require('./catalog');
+const { Op } = require('sequelize');
+const { normalizeArtistAccess } = require('../auth');
 
 const upload = multer({
     storage: multer.memoryStorage(),
@@ -233,14 +235,20 @@ function register(app, ctx) {
         if (req.user.role === 'admin') {
             if (req.query.artistId) where.artistId = String(req.query.artistId);
         } else {
-            const access = req.user.artistAccess;
-            if (typeof access === 'string' && /^art_[A-Za-z0-9]+$/.test(access)) {
-                where.artistId = access;
-            } else {
+            // Same normalization as catalog listWhere / hasArtistAccess on
+            // detail routes: scalar, array, and 'all' grants behave
+            // identically. Fail-closed: no grants -> 403.
+            const access = normalizeArtistAccess(req.user.artistAccess);
+            if (access.length === 0) {
                 return res.status(403).json({ error: 'Not authorized' });
             }
-            if (req.query.artistId && req.query.artistId !== where.artistId) {
-                return res.status(403).json({ error: 'Not authorized for this artist' });
+            if (req.query.artistId) {
+                if (!hasArtistAccess(req.user, req.query.artistId)) {
+                    return res.status(403).json({ error: 'Not authorized for this artist' });
+                }
+                where.artistId = String(req.query.artistId);
+            } else if (!access.includes('all')) {
+                where.artistId = access.length === 1 ? access[0] : { [Op.in]: access };
             }
         }
         if (req.query.period) where.period = String(req.query.period);

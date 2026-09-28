@@ -1,0 +1,691 @@
+{
+  "pages": [
+    {
+      "route": "/artists/art_deadmau5?tab=overview",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nArtists\n\nReal-time label performance metrics\n\nAU\nAdmin User\nBACK TO ROSTER\n←\n→\nDEADMAU5 (FLAGSHIP)\nSOURCE: GENERATED_MOCK\nFLAGSHIP\nMONTHLY LISTENERS\n2.8M\nTOTAL STREAMS\n244.4M\nGROWTH\n+0.8%\nREVENUE\n$12.5M\nOVERVIEW\nREVENUE\nGEOGRAPHY\nTOURING\nMERCH\nBRAND\nNETWORK\nSUSTAINABILITY\nENTITY AUDIT\nOVERVIEW\n\nJoel Thomas Zimmerman, known professionally as Deadmau5, is a Canadian electronic music producer and DJ. His musical style mostly includes progressive house and electro house genres, though he also produces and DJs other genres of electronic music, including techno under the alias Testpilot. Zimmerman mostly appears and performs with a custom helmet called the \"mau5head\". He has received seven Grammy Award nominations and won four Juno Awards for his songs.\n\nROI\n6.5x\nPRIORITY\n—\nGROWTH\n+0.8%\nLAST UPDATED\nDec 10, 2025, 06:55 AM\nKNOWLEDGE GRAPH\nGoogle Knowledge Graph API key not configured\nSOCIAL\nINSTAGRAM\n58.8M\nTWITTER\n23.5M\nTIKTOK\n47M\nENGAGEMENT RATE\n5.6%\nIMAGE OVERRIDE URL\nAPPLY",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "BACK TO ROSTER",
+          "disabled": false
+        },
+        {
+          "text": "←",
+          "disabled": false
+        },
+        {
+          "text": "→",
+          "disabled": false
+        },
+        {
+          "text": "OVERVIEW",
+          "disabled": false
+        },
+        {
+          "text": "REVENUE",
+          "disabled": false
+        },
+        {
+          "text": "GEOGRAPHY",
+          "disabled": false
+        },
+        {
+          "text": "TOURING",
+          "disabled": false
+        },
+        {
+          "text": "MERCH",
+          "disabled": false
+        },
+        {
+          "text": "BRAND",
+          "disabled": false
+        },
+        {
+          "text": "NETWORK",
+          "disabled": false
+        },
+        {
+          "text": "SUSTAINABILITY",
+          "disabled": false
+        },
+        {
+          "text": "ENTITY AUDIT",
+          "disabled": false
+        },
+        {
+          "text": "APPLY",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/artists/art_deadmau5?tab=revenue",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nArtists\n\nReal-time label performance metrics\n\nAU\nAdmin User\nBACK TO ROSTER\n←\n→\nDEADMAU5 (FLAGSHIP)\nSOURCE: GENERATED_MOCK\nFLAGSHIP\nMONTHLY LISTENERS\n2.8M\nTOTAL STREAMS\n244.4M\nGROWTH\n+0.8%\nREVENUE\n$12.5M\nOVERVIEW\nREVENUE\nGEOGRAPHY\nTOURING\nMERCH\nBRAND\nNETWORK\nSUSTAINABILITY\nENTITY AUDIT\nREVENUE\nTYPE\tREVENUE\nSTREAMING\t$1,426,368\nTOURING\t$8,718,096\nMERCH\t$428,693\nSYNC\t$142,636\nBRANDING\t$1,743,619\nYOUTUBE\t$71,318",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "BACK TO ROSTER",
+          "disabled": false
+        },
+        {
+          "text": "←",
+          "disabled": false
+        },
+        {
+          "text": "→",
+          "disabled": false
+        },
+        {
+          "text": "OVERVIEW",
+          "disabled": false
+        },
+        {
+          "text": "REVENUE",
+          "disabled": false
+        },
+        {
+          "text": "GEOGRAPHY",
+          "disabled": false
+        },
+        {
+          "text": "TOURING",
+          "disabled": false
+        },
+        {
+          "text": "MERCH",
+          "disabled": false
+        },
+        {
+          "text": "BRAND",
+          "disabled": false
+        },
+        {
+          "text": "NETWORK",
+          "disabled": false
+        },
+        {
+          "text": "SUSTAINABILITY",
+          "disabled": false
+        },
+        {
+          "text": "ENTITY AUDIT",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/artists/art_deadmau5?tab=geography",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nArtists\n\nReal-time label performance metrics\n\nAU\nAdmin User\nBACK TO ROSTER\n←\n→\nDEADMAU5 (FLAGSHIP)\nSOURCE: GENERATED_MOCK\nFLAGSHIP\nMONTHLY LISTENERS\n2.8M\nTOTAL STREAMS\n244.4M\nGROWTH\n+0.8%\nREVENUE\n$12.5M\nOVERVIEW\nREVENUE\nGEOGRAPHY\nTOURING\nMERCH\nBRAND\nNETWORK\nSUSTAINABILITY\nENTITY AUDIT\nGLOBAL HEATMAP\n27\nDEADMAU5 (FLAGSHIP)\nSOURCE: STREAMING DATA\nLOCATION\tREVENUE\t%\nSpace, Ibiza\t$110,000\t7.7%\nGuvernment, Toronto\t$105,000\t7.4%\nMinistry of Sound, London\t$95,000\t6.7%\nWomb, Tokyo\t$85,000\t6.0%\nNew York, US\t$82,000\t5.8%\nChicago, US\t$80,000\t5.6%\nZouk, Singapore\t$80,000\t5.6%\nSao Paulo, BR\t$78,000\t5.5%\nWarung, Brazil\t$76,000\t5.4%\nBuenos Aires, AR\t$75,000\t5.3%\nD-Edge, Sao Paulo\t$72,000\t5.1%\nPalladium, Los Angeles\t$70,000\t4.9%\nMiami, US\t$68,000\t4.8%\nBerghain, Berlin\t$65,000\t4.6%\nSan Francisco, US\t$62,000\t4.3%\nSeoul, KR\t$60,000\t4.2%\nAmsterdam, NL\t$59,000\t4.2%\nSydney, AU\t$58,000\t4.1%\nMexico City, MX\t$56,000\t4.0%\nMumbai, IN\t$55,000\t3.9%\nDubai, AE\t$52,000\t3.7%\nRed Rocks, Denver\t$50,000\t3.5%\nFabric, London\t$48,000\t3.4%\nParis, FR\t$45,000\t3.2%\nMontreal, CA\t$40,000\t2.8%\nOceania\t$140,000\t9.8%\nSouth America\t$220,000\t15.4%",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "BACK TO ROSTER",
+          "disabled": false
+        },
+        {
+          "text": "←",
+          "disabled": false
+        },
+        {
+          "text": "→",
+          "disabled": false
+        },
+        {
+          "text": "OVERVIEW",
+          "disabled": false
+        },
+        {
+          "text": "REVENUE",
+          "disabled": false
+        },
+        {
+          "text": "GEOGRAPHY",
+          "disabled": false
+        },
+        {
+          "text": "TOURING",
+          "disabled": false
+        },
+        {
+          "text": "MERCH",
+          "disabled": false
+        },
+        {
+          "text": "BRAND",
+          "disabled": false
+        },
+        {
+          "text": "NETWORK",
+          "disabled": false
+        },
+        {
+          "text": "SUSTAINABILITY",
+          "disabled": false
+        },
+        {
+          "text": "ENTITY AUDIT",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/artists/art_deadmau5?tab=touring",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nArtists\n\nReal-time label performance metrics\n\nAU\nAdmin User\nBACK TO ROSTER\n←\n→\nDEADMAU5 (FLAGSHIP)\nSOURCE: GENERATED_MOCK\nFLAGSHIP\nMONTHLY LISTENERS\n2.8M\nTOTAL STREAMS\n244.4M\nGROWTH\n+0.8%\nREVENUE\n$12.5M\nOVERVIEW\nREVENUE\nGEOGRAPHY\nTOURING\nMERCH\nBRAND\nNETWORK\nSUSTAINABILITY\nENTITY AUDIT\nTOURING\nUPCOMING SHOWS\n9\nAVG TICKET PRICE\n$65\nAVG ATTENDANCE\n13,438\nMERCH PER HEAD\n$22\nCARBON OFFSET\n25,602\nSUSTAINABILITY SCORE\nB\nNO DATA",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "BACK TO ROSTER",
+          "disabled": false
+        },
+        {
+          "text": "←",
+          "disabled": false
+        },
+        {
+          "text": "→",
+          "disabled": false
+        },
+        {
+          "text": "OVERVIEW",
+          "disabled": false
+        },
+        {
+          "text": "REVENUE",
+          "disabled": false
+        },
+        {
+          "text": "GEOGRAPHY",
+          "disabled": false
+        },
+        {
+          "text": "TOURING",
+          "disabled": false
+        },
+        {
+          "text": "MERCH",
+          "disabled": false
+        },
+        {
+          "text": "BRAND",
+          "disabled": false
+        },
+        {
+          "text": "NETWORK",
+          "disabled": false
+        },
+        {
+          "text": "SUSTAINABILITY",
+          "disabled": false
+        },
+        {
+          "text": "ENTITY AUDIT",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/artists/art_deadmau5?tab=merch",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nArtists\n\nReal-time label performance metrics\n\nAU\nAdmin User\nBACK TO ROSTER\n←\n→\nDEADMAU5 (FLAGSHIP)\nSOURCE: GENERATED_MOCK\nFLAGSHIP\nMONTHLY LISTENERS\n2.8M\nTOTAL STREAMS\n244.4M\nGROWTH\n+0.8%\nREVENUE\n$12.5M\nOVERVIEW\nREVENUE\nGEOGRAPHY\nTOURING\nMERCH\nBRAND\nNETWORK\nSUSTAINABILITY\nENTITY AUDIT\nMERCH\nONLINE SALES\n$257,215\nTOUR SALES\n$171,477\nMARGIN\n60.0%\nT-SHIRT\nHOODIE\nSTICKERS",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "BACK TO ROSTER",
+          "disabled": false
+        },
+        {
+          "text": "←",
+          "disabled": false
+        },
+        {
+          "text": "→",
+          "disabled": false
+        },
+        {
+          "text": "OVERVIEW",
+          "disabled": false
+        },
+        {
+          "text": "REVENUE",
+          "disabled": false
+        },
+        {
+          "text": "GEOGRAPHY",
+          "disabled": false
+        },
+        {
+          "text": "TOURING",
+          "disabled": false
+        },
+        {
+          "text": "MERCH",
+          "disabled": false
+        },
+        {
+          "text": "BRAND",
+          "disabled": false
+        },
+        {
+          "text": "NETWORK",
+          "disabled": false
+        },
+        {
+          "text": "SUSTAINABILITY",
+          "disabled": false
+        },
+        {
+          "text": "ENTITY AUDIT",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/artists/art_deadmau5?tab=brand",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nArtists\n\nReal-time label performance metrics\n\nAU\nAdmin User\nBACK TO ROSTER\n←\n→\nDEADMAU5 (FLAGSHIP)\nSOURCE: GENERATED_MOCK\nFLAGSHIP\nMONTHLY LISTENERS\n2.8M\nTOTAL STREAMS\n244.4M\nGROWTH\n+0.8%\nREVENUE\n$12.5M\nOVERVIEW\nREVENUE\nGEOGRAPHY\nTOURING\nMERCH\nBRAND\nNETWORK\nSUSTAINABILITY\nENTITY AUDIT\nBRAND DEALS\nNO DATA",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "BACK TO ROSTER",
+          "disabled": false
+        },
+        {
+          "text": "←",
+          "disabled": false
+        },
+        {
+          "text": "→",
+          "disabled": false
+        },
+        {
+          "text": "OVERVIEW",
+          "disabled": false
+        },
+        {
+          "text": "REVENUE",
+          "disabled": false
+        },
+        {
+          "text": "GEOGRAPHY",
+          "disabled": false
+        },
+        {
+          "text": "TOURING",
+          "disabled": false
+        },
+        {
+          "text": "MERCH",
+          "disabled": false
+        },
+        {
+          "text": "BRAND",
+          "disabled": false
+        },
+        {
+          "text": "NETWORK",
+          "disabled": false
+        },
+        {
+          "text": "SUSTAINABILITY",
+          "disabled": false
+        },
+        {
+          "text": "ENTITY AUDIT",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/artists/art_deadmau5?tab=network",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nArtists\n\nReal-time label performance metrics\n\nAU\nAdmin User\nBACK TO ROSTER\n←\n→\nDEADMAU5 (FLAGSHIP)\nSOURCE: GENERATED_MOCK\nFLAGSHIP\nMONTHLY LISTENERS\n2.8M\nTOTAL STREAMS\n244.4M\nGROWTH\n+0.8%\nREVENUE\n$12.5M\nOVERVIEW\nREVENUE\nGEOGRAPHY\nTOURING\nMERCH\nBRAND\nNETWORK\nSUSTAINABILITY\nENTITY AUDIT\nROSTER NETWORK\nGENRE HYBRIDS\nElectro House\nINFLUENCES\nMAU5TRAP SOUND\nTECHNO\nPROG HOUSE\nCOLLABORATIONS\nNO DATA",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "BACK TO ROSTER",
+          "disabled": false
+        },
+        {
+          "text": "←",
+          "disabled": false
+        },
+        {
+          "text": "→",
+          "disabled": false
+        },
+        {
+          "text": "OVERVIEW",
+          "disabled": false
+        },
+        {
+          "text": "REVENUE",
+          "disabled": false
+        },
+        {
+          "text": "GEOGRAPHY",
+          "disabled": false
+        },
+        {
+          "text": "TOURING",
+          "disabled": false
+        },
+        {
+          "text": "MERCH",
+          "disabled": false
+        },
+        {
+          "text": "BRAND",
+          "disabled": false
+        },
+        {
+          "text": "NETWORK",
+          "disabled": false
+        },
+        {
+          "text": "SUSTAINABILITY",
+          "disabled": false
+        },
+        {
+          "text": "ENTITY AUDIT",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/artists/art_deadmau5?tab=sustainability",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nArtists\n\nReal-time label performance metrics\n\nAU\nAdmin User\nBACK TO ROSTER\n←\n→\nDEADMAU5 (FLAGSHIP)\nSOURCE: GENERATED_MOCK\nFLAGSHIP\nMONTHLY LISTENERS\n2.8M\nTOTAL STREAMS\n244.4M\nGROWTH\n+0.8%\nREVENUE\n$12.5M\nOVERVIEW\nREVENUE\nGEOGRAPHY\nTOURING\nMERCH\nBRAND\nNETWORK\nSUSTAINABILITY\nENTITY AUDIT\nSUSTAINABILITY\nLONGEVITY SCORE\n8.6\nREVENUE STABILITY\n84%\nBURNOUT RISK\nLow\nLEGACY IMPACT\n74",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "BACK TO ROSTER",
+          "disabled": false
+        },
+        {
+          "text": "←",
+          "disabled": false
+        },
+        {
+          "text": "→",
+          "disabled": false
+        },
+        {
+          "text": "OVERVIEW",
+          "disabled": false
+        },
+        {
+          "text": "REVENUE",
+          "disabled": false
+        },
+        {
+          "text": "GEOGRAPHY",
+          "disabled": false
+        },
+        {
+          "text": "TOURING",
+          "disabled": false
+        },
+        {
+          "text": "MERCH",
+          "disabled": false
+        },
+        {
+          "text": "BRAND",
+          "disabled": false
+        },
+        {
+          "text": "NETWORK",
+          "disabled": false
+        },
+        {
+          "text": "SUSTAINABILITY",
+          "disabled": false
+        },
+        {
+          "text": "ENTITY AUDIT",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/artists/art_deadmau5?tab=entity",
+      "text": "mau5trap\nINTELLIGENCE PLATFORM\nDashboard\nArtists\nA&R Room\nIntelligence\nMarketing\nFans\nOperations\nAdmin\nSettings\nTerminate Session\nArtists\n\nReal-time label performance metrics\n\nAU\nAdmin User\nBACK TO ROSTER\n←\n→\nDEADMAU5 (FLAGSHIP)\nSOURCE: GENERATED_MOCK\nFLAGSHIP\nMONTHLY LISTENERS\n2.8M\nTOTAL STREAMS\n244.4M\nGROWTH\n+0.8%\nREVENUE\n$12.5M\nOVERVIEW\nREVENUE\nGEOGRAPHY\nTOURING\nMERCH\nBRAND\nNETWORK\nSUSTAINABILITY\nENTITY AUDIT\nENTITY AUDIT\nSep 18, 2026, 12:40 AM\nREFRESH AUDIT\nCONFIDENCE\n35\nGOOGLEKG\nUNCONFIGURED\nGoogle Knowledge Graph API key not configured\nWIKIPEDIA\nVERIFIED\nJoel Thomas Zimmerman, known professionally as Deadmau5, is a Canadian electronic music producer and DJ. His musical style mostly includes progressive house and electro house genres, though he also produces and DJs other genres of electronic music, including techno under the alias Testpilot. Zimmerman mostly appears and performs with a custom helmet called the \"mau5head\". He has received seven Grammy Award nominations and won four Juno Awards for his songs.\nDISCOGS\nUNCONFIGURED\nDiscogs API key not configured\nGENIUS\nUNCONFIGURED\nGenius API token not configured\nFANDOM\nNOT_FOUND\n—",
+      "scrollWidth": 1440,
+      "viewport": 1440,
+      "brokenImages": [],
+      "buttons": [
+        {
+          "text": "Terminate Session",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "disabled": false
+        },
+        {
+          "text": "BACK TO ROSTER",
+          "disabled": false
+        },
+        {
+          "text": "←",
+          "disabled": false
+        },
+        {
+          "text": "→",
+          "disabled": false
+        },
+        {
+          "text": "OVERVIEW",
+          "disabled": false
+        },
+        {
+          "text": "REVENUE",
+          "disabled": false
+        },
+        {
+          "text": "GEOGRAPHY",
+          "disabled": false
+        },
+        {
+          "text": "TOURING",
+          "disabled": false
+        },
+        {
+          "text": "MERCH",
+          "disabled": false
+        },
+        {
+          "text": "BRAND",
+          "disabled": false
+        },
+        {
+          "text": "NETWORK",
+          "disabled": false
+        },
+        {
+          "text": "SUSTAINABILITY",
+          "disabled": false
+        },
+        {
+          "text": "ENTITY AUDIT",
+          "disabled": false
+        },
+        {
+          "text": "REFRESH AUDIT",
+          "disabled": false
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "name": "marketing-error-visibility",
+      "evidence": {
+        "showsFailure": false,
+        "alertCount": 0,
+        "text": "Marketing\n\nReal-time label performance metrics\n\nAU\nAdmin User\nTOTAL EMAILS\n11.2M\nTOTAL SMS\n1M\nPRESALE SIGNUPS\n1.8M\nCHANNEL HISTORY\nMONTH\tTOTAL EMAILS\tTOTAL SMS\nJul\t7.9M\t606.2K\nAug\t8.4M\t707.2K\nSep\t9M\t808.2K\nOct\t9.5M\t858.8K\nNov\t10.1M\t909.3K\nDec\t11.2M\t1M\nCAMPAIGN BUILDER\nSTEP 2/3\nCHANNEL\nPLAYLIST PUSH\nSOCIAL GROWTH\nTOUR PROMO\nPLATFORMS\nSPOTIFY\nTIKTOK\nINSTAGRAM\nYOUTUBE\nEMAIL\nBACK\nGENERATE PLAN"
+      }
+    },
+    {
+      "name": "real-sales-forecast-three-months-and-access",
+      "harnessError": "{\"status\":500,\"data\":{\"error\":\"Failed to persist sale\"}}"
+    },
+    {
+      "name": "room-rating-reveal-and-toggle",
+      "evidence": {
+        "before": "A&R Room\n\nReal-time label performance metrics\n\nAU\nAdmin User\nA&R ROOM\nSCOUTING\nWHITEBOARD\nCurrently Reviewing: Q1 2026 Compilation Submissions.\nFocus: Tech House / Minimal.\nNOW LISTENING\ndeadmau5\nhttps://soundcloud.com/mau5trap/example-demo\nSEP 18, 2026, 12:29 AM\nDEMO QUEUE\n3\nAnalog Dreams\nUnknown Producer\nREVIEWING\nadmin\n0/2 · —\nTALLY\nRATE\nCyberpunk Bass\nNeon Glitch\nHIGH-PRIORITY\nrezz\nTALLY\nRATE\nDeep Space\nVoid Walker\nNEW\nadmin\nTALLY\nRATE\nSUBMIT DEMO\nSCOUTING\nARTIST\nTRACK\nGENRE\nURL\nSUBMIT",
+        "after": "A&R Room\n\nReal-time label performance metrics\n\nAU\nAdmin User\nA&R ROOM\nSCOUTING\nWHITEBOARD\nCurrently Reviewing: Q1 2026 Compilation Submissions.\nFocus: Tech House / Minimal.\nNOW LISTENING\ndeadmau5\nhttps://soundcloud.com/mau5trap/example-demo\nSEP 18, 2026, 12:29 AM\nDEMO QUEUE\n3\nAnalog Dreams\nUnknown Producer\nREVIEWING\nadmin\n1/2 · ★★★\nTALLY\nRATE\nCyberpunk Bass\nNeon Glitch\nHIGH-PRIORITY\nrezz\nTALLY\nRATE\nDeep Space\nVoid Walker\nNEW\nadmin\nTALLY\nRATE\nSUBMIT DEMO\nSCOUTING\nARTIST\nTRACK\nGENRE\nURL\nSUBMIT"
+      }
+    },
+    {
+      "name": "artist-pager-preserves-tab",
+      "evidence": {
+        "url": "http://127.0.0.1:4174/artists/art_domkane?tab=revenue",
+        "text": "Artists\n\nReal-time label performance metrics\n\nAU\nAdmin User\nBACK TO ROSTER\n←\n→\nDOM KANE (DEVELOPING)\nSOURCE: GENERATED_MOCK\nDEVELOPING\nMONTHLY LISTENERS\n15.4K\nTOTAL STREAMS\n1.9M\nGROWTH\n+12.4%\nREVENUE\n$126.4K\nOVERVIEW\nREVENUE\nGEOGRAPHY\nTOURING\nMERCH\nBRAND\nNETWORK\nSUSTAINABILITY\nENTITY AUDIT\nREVENUE\nTYPE\tREVENUE\nSTREAMING\t$26,176\nTOURING\t$78,531\nMERCH\t$2,081\nSYNC\t$2,617\nBRANDING\t$15,706\nYOUTUBE\t$1,308"
+      }
+    },
+    {
+      "name": "restricted-pages",
+      "evidence": [
+        {
+          "route": "/dashboard",
+          "text": "Dashboard\n\nReal-time label performance metrics\n\nIR\nIsabelle Rezazadeh\nMONTHLY REVENUE\n$8.5M\nQUARTERLY PROJECTION\n$25.4M\nANNUAL PROJECTION\n$101.6M\nACTIVE ARTISTS\n1\nREVENUE FORECAST\nPDF\nCSV\nARTIST\nSELECT ARTIST\nREZZ\nMONTH\nAMOUNT\nRECORD\nCOMMAND CONSOLE\nSYSTEM DEFAULT · READY\n>\nRUN\n// system ready\nGLOBAL HEATMAP\nGLOBAL HEATMAP\nSOURCE: STREAMING DATA"
+        },
+        {
+          "route": "/artists/art_rezz",
+          "text": "Artists\n\nReal-time label performance metrics\n\nIR\nIsabelle Rezazadeh\nBACK TO ROSTER\n←\n→\nREZZ (FLAGSHIP)\nSOURCE: GENERATED_MOCK\nFLAGSHIP\nMONTHLY LISTENERS\n7.5M\nTOTAL STREAMS\n847.5M\nGROWTH\n+6.4%\nREVENUE\n$8.5M\nOVERVIEW\nREVENUE\nGEOGRAPHY\nTOURING\nMERCH\nBRAND\nNETWORK\nSUSTAINABILITY\nENTITY AUDIT\nOVERVIEW\n\nIsabelle Rezazadeh, who is known by her stage name Rezz, is a Ukrainian–Canadian DJ and record producer from Niagara Falls, Ontario.\n\nROI\n8.7x\nPRIORITY\n—\nGROWTH\n+6.4%\nLAST UPDATED\nDec 10, 2025, 06:55 AM\nKNOWLEDGE GRAPH\nGoogle Knowledge Graph API key not configured\nSOCIAL\nINSTAGRAM\n58.5M\nTWITTER\n23.4M\nTIKTOK\n46.8M\nENGAGEMENT RATE\n6.1%"
+        },
+        {
+          "route": "/artists/art_deadmau5",
+          "text": "Artists\n\nReal-time label performance metrics\n\nIR\nIsabelle Rezazadeh\nBACK TO ROSTER\nACCESS DENIED\n\nAccess denied to this artist"
+        },
+        {
+          "route": "/admin",
+          "text": "Admin\n\nReal-time label performance metrics\n\nIR\nIsabelle Rezazadeh\nACCESS DENIED\n\nThis section is not part of your access grant."
+        }
+      ]
+    }
+  ],
+  "pageErrors": [],
+  "failedResponses": [
+    {
+      "url": "http://127.0.0.1:4011/v3/ai/providers",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/ai/providers",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/marketing/campaigns",
+      "status": 503
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/ai/providers",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/ai/providers",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/artists/art_deadmau5",
+      "status": 403
+    }
+  ],
+  "requests": [
+    {
+      "url": "http://127.0.0.1:4011/v3/marketing/campaigns",
+      "body": {
+        "artistId": "",
+        "type": "playlist-push",
+        "platforms": [
+          "spotify"
+        ]
+      }
+    },
+    {
+      "url": "http://127.0.0.1:4011/v3/anr/vote/demo1",
+      "body": {
+        "action": "add"
+      }
+    }
+  ]
+}

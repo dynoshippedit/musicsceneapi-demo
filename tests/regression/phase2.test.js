@@ -425,6 +425,28 @@ describe('Phase 2 — royalty CSV import (integer cents)', () => {
         const other = await srv.api('GET', '/v3/royalties/summary?artistId=art_lumenveil', artist);
         assert.strictEqual(other.status, 403);
     });
+    test('summary scoping matches detail routes for array grants', async () => {
+        // Artist with an ARRAY of grants (stored stringified, as the write
+        // path keeps the STRING column): summary must behave like the
+        // catalog listWhere / hasArtistAccess detail routes — scalar, array,
+        // and 'all' consistent; fail-closed otherwise.
+        const mk = await srv.api('POST', '/v3/users', admin, {
+            email: 'array-grants@test.fm', password: 'array12345', name: 'Array Grants',
+            role: 'artist', artistAccess: '["art_novakin","art_lumenveil"]'
+        });
+        assert.strictEqual(mk.status, 200);
+        const multi = await login(srv.api, 'array-grants@test.fm', 'array12345');
+
+        const all = await srv.api('GET', '/v3/royalties/summary', multi);
+        assert.strictEqual(all.status, 200, 'array grants must not 403 the summary');
+
+        const one = await srv.api('GET', '/v3/royalties/summary?artistId=art_lumenveil', multi);
+        assert.strictEqual(one.status, 200, 'granted artistId must not 403');
+
+        const stranger = await srv.api('GET', '/v3/royalties/summary?artistId=art_stranger', multi);
+        assert.strictEqual(stranger.status, 403, 'ungranted artistId stays fail-closed');
+    });
+
 
     test('quoted CSV fields parse correctly', async () => {
         const csv = [

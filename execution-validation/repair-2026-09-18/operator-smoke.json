@@ -1,0 +1,12 @@
+{
+  "routes": [
+    "/dashboard",
+    "/anr",
+    "/intelligence",
+    "/marketing",
+    "/settings/ai"
+  ],
+  "pageErrors": [],
+  "apiHealth": 200,
+  "graphArtists": 29
+}

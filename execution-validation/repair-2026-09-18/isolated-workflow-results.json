@@ -1,0 +1,198 @@
+{
+  "tileMode": "fixture",
+  "checks": [
+    {
+      "name": "map uses attributed basemap and regional markers",
+      "pass": true
+    },
+    {
+      "name": "AI sends chosen artist context and visibly reports unavailable provider",
+      "pass": true
+    },
+    {
+      "name": "room demo, player, vote, whiteboard and listening persist after reload",
+      "pass": true
+    },
+    {
+      "name": "campaign errors are visible at step 2 and successful plans can be reopened after reload",
+      "pass": true
+    },
+    {
+      "name": "graph labels select artists and links open the profile",
+      "pass": true
+    },
+    {
+      "name": "sales form accepts multiple months and another artist in the same month",
+      "pass": true
+    },
+    {
+      "name": "mobile graph remains within the viewport with internal scrolling",
+      "pass": true
+    },
+    {
+      "name": "stored admin claims cannot mount restricted UI before session verification",
+      "pass": true
+    }
+  ],
+  "pageErrors": [],
+  "pages": [
+    {
+      "route": "/dashboard",
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "route": "/artists",
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "route": "/artists/art_deadmau5?tab=entity",
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "route": "/anr",
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "route": "/anr/scouting",
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "route": "/intelligence",
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "route": "/marketing",
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "route": "/fans",
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "route": "/operations",
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "route": "/settings/integrations",
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "route": "/settings/ai",
+      "width": 1440,
+      "scroll": 1440
+    },
+    {
+      "route": "/admin",
+      "width": 1440,
+      "scroll": 1440
+    }
+  ],
+  "tiles": [
+    {
+      "url": "https://tile.openstreetmap.org/2/1/1.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/2/1.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/1/2.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/2/2.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/0/1.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/3/1.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/0/2.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/3/2.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/1/1.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/2/1.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/1/2.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/2/2.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/0/1.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/3/1.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/0/2.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/3/2.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/1/1.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/2/1.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/1/2.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/2/2.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/0/1.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/3/1.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/0/2.png",
+      "status": 200
+    },
+    {
+      "url": "https://tile.openstreetmap.org/2/3/2.png",
+      "status": 200
+    }
+  ]
+}

@@ -1,0 +1,218 @@
+{
+  "console": [
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:4173/dashboard"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:4173/dashboard"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:4173/dashboard"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:4173/dashboard"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:4173/intelligence"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:4173/settings/ai"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:4173/admin"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:4173/dashboard"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:4173/dashboard"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+      "url": "http://127.0.0.1:4173/artists/art_deadmau5"
+    }
+  ],
+  "pageerrors": [],
+  "failed": [
+    {
+      "url": "http://127.0.0.1:4010/v3/ai/providers",
+      "status": 404,
+      "page": "http://127.0.0.1:4173/dashboard"
+    },
+    {
+      "url": "http://127.0.0.1:4010/v3/ai/providers",
+      "status": 404,
+      "page": "http://127.0.0.1:4173/dashboard"
+    },
+    {
+      "url": "http://127.0.0.1:4010/v3/ai/providers",
+      "status": 404,
+      "page": "http://127.0.0.1:4173/dashboard"
+    },
+    {
+      "url": "http://127.0.0.1:4010/v3/ai/providers",
+      "status": 404,
+      "page": "http://127.0.0.1:4173/dashboard"
+    },
+    {
+      "url": "http://127.0.0.1:4010/v3/ai/providers",
+      "status": 404,
+      "page": "http://127.0.0.1:4173/intelligence"
+    },
+    {
+      "url": "http://127.0.0.1:4010/v3/ai/providers",
+      "status": 404,
+      "page": "http://127.0.0.1:4173/settings/ai"
+    },
+    {
+      "url": "http://127.0.0.1:4010/v3/ai/providers",
+      "status": 404,
+      "page": "http://127.0.0.1:4173/admin"
+    },
+    {
+      "url": "http://127.0.0.1:4010/v3/ai/providers",
+      "status": 404,
+      "page": "http://127.0.0.1:4173/dashboard"
+    },
+    {
+      "url": "http://127.0.0.1:4010/v3/ai/providers",
+      "status": 404,
+      "page": "http://127.0.0.1:4173/dashboard"
+    },
+    {
+      "url": "http://127.0.0.1:4010/v3/artists/art_deadmau5",
+      "status": 403,
+      "page": "http://127.0.0.1:4173/artists/art_deadmau5"
+    }
+  ],
+  "routes": [
+    {
+      "url": "http://127.0.0.1:4173/dashboard",
+      "ok": true
+    },
+    {
+      "url": "/dashboard",
+      "final": "http://127.0.0.1:4173/dashboard",
+      "h1": "Dashboard",
+      "denied": false,
+      "newPageErrors": 0
+    },
+    {
+      "url": "/artists",
+      "final": "http://127.0.0.1:4173/artists",
+      "h1": "Artists",
+      "denied": false,
+      "newPageErrors": 0
+    },
+    {
+      "url": "/artists/art_deadmau5",
+      "final": "http://127.0.0.1:4173/artists/art_deadmau5",
+      "h1": "Artists",
+      "denied": false,
+      "newPageErrors": 0
+    },
+    {
+      "url": "/artists/art_rezz",
+      "final": "http://127.0.0.1:4173/artists/art_rezz",
+      "h1": "Artists",
+      "denied": false,
+      "newPageErrors": 0
+    },
+    {
+      "url": "/anr",
+      "final": "http://127.0.0.1:4173/anr",
+      "h1": "A&R Room",
+      "denied": false,
+      "newPageErrors": 0
+    },
+    {
+      "url": "/anr/scouting",
+      "final": "http://127.0.0.1:4173/anr/scouting",
+      "h1": "A&R Room",
+      "denied": false,
+      "newPageErrors": 0
+    },
+    {
+      "url": "/intelligence",
+      "final": "http://127.0.0.1:4173/intelligence",
+      "h1": "Intelligence",
+      "denied": false,
+      "newPageErrors": 0
+    },
+    {
+      "url": "/marketing",
+      "final": "http://127.0.0.1:4173/marketing",
+      "h1": "Marketing",
+      "denied": false,
+      "newPageErrors": 0
+    },
+    {
+      "url": "/fans",
+      "final": "http://127.0.0.1:4173/fans",
+      "h1": "Fans",
+      "denied": false,
+      "newPageErrors": 0
+    },
+    {
+      "url": "/operations",
+      "final": "http://127.0.0.1:4173/operations",
+      "h1": "Operations",
+      "denied": false,
+      "newPageErrors": 0
+    },
+    {
+      "url": "/settings/integrations",
+      "final": "http://127.0.0.1:4173/settings/integrations",
+      "h1": "Settings",
+      "denied": false,
+      "newPageErrors": 0
+    },
+    {
+      "url": "/settings/ai",
+      "final": "http://127.0.0.1:4173/settings/ai",
+      "h1": "Settings",
+      "denied": false,
+      "newPageErrors": 0
+    },
+    {
+      "url": "/admin",
+      "final": "http://127.0.0.1:4173/admin",
+      "h1": "Admin",
+      "denied": false,
+      "newPageErrors": 0
+    },
+    {
+      "url": "/admin as artist",
+      "denied": true,
+      "h1": "Admin"
+    },
+    {
+      "url": "/artists/art_deadmau5 as rezz",
+      "denied": true
+    }
+  ],
+  "buttons": [
+    {
+      "name": "Forgot Password",
+      "state": "DISABLED"
+    },
+    {
+      "name": "Log sale",
+      "posts": [
+        {
+          "url": "http://127.0.0.1:4010/v3/analytics/sales",
+          "post": "{\"artistId\":\"art_attlas\",\"month\":\"2026-03\",\"revenue\":50}"
+        }
+      ]
+    }
+  ]
+}
