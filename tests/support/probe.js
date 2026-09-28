@@ -35,7 +35,14 @@ const ENV = {
     USE_REAL_DATA: 'false',
     DB_DIALECT: 'sqlite',
     GROQ_API_KEY: '',
-    AUTO_PRINT: 'false'
+    AUTO_PRINT: 'false',
+    // Deterministic Wikipedia responses (src/integrations/wikipedia.fixtures.js).
+    // The snapshot diffs responses byte-for-byte; a live Wikipedia call makes
+    // it depend on network access and rate limits (HTTP 429 -> wikipedia:null
+    // -> false failure). The fixture mirrors the real provider's return shape,
+    // including the known bad "Veil of Isis" match for LUMEN VEIL, so the
+    // probe verifies the route rejects non-music matches deterministically.
+    FIXTURE_WIKIPEDIA: '1'
 };
 
 /** Keys whose values are inherently non-deterministic across runs. */

@@ -215,7 +215,12 @@ function register(app, ctx) {
             } else {
                 // Use entityAudit module to fetch summary
                 const wikiAudit = await integrationFacade.auditWikipedia(artist.name);
-                if (wikiAudit.exists && wikiAudit.bioShort) {
+                // Require a music-related match. Wikipedia search returns the
+                // top hit unconditionally, so a fictional act like LUMEN VEIL
+                // matches the unrelated mythology article "Veil of Isis".
+                // Attaching that as the artist's bio would be a false claim,
+                // so non-music matches are rejected (wikipedia stays null).
+                if (wikiAudit.exists && wikiAudit.bioShort && wikiAudit.musicRelated) {
                     wikiData = {
                         summary: wikiAudit.bioShort,
                         thumbnail: wikiAudit.thumbnail,

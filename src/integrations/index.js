@@ -29,7 +29,7 @@ function createIntegrationFacade({
     audit = entityAudit,
     scout = scoutService
 } = {}) {
-    return {
+    const facade = {
         // ---- social / streaming aggregation (integrations/index.js) ----
         /** Merge live provider data over a mock base. Falls back silently. */
         fetchArtistData: (artistId, mockData) => integrations.fetchArtistData(artistId, mockData),
@@ -65,6 +65,28 @@ function createIntegrationFacade({
         SERVICES,
         limiters
     };
+
+    // TEST-ONLY: deterministic Wikipedia responses for the snapshot probe.
+    // The probe boots a real server and diffs responses against a saved
+    // baseline; a live Wikipedia call makes that diff depend on network
+    // access and rate limits. With FIXTURE_WIKIPEDIA=1 the probe gets canned
+    // auditWikipedia() results (same return shape as the real provider) and
+    // every other provider still runs for real. Never set in production.
+    if (process.env.FIXTURE_WIKIPEDIA === '1') {
+        const wikiFixtures = require('./wikipedia.fixtures');
+        facade.auditWikipedia = async (name) => {
+            if (Object.prototype.hasOwnProperty.call(wikiFixtures, name)) {
+                return wikiFixtures[name];
+            }
+            return {
+                status: 'not_found',
+                exists: false,
+                message: `No Wikipedia page found for "${name}"`
+            };
+        };
+    }
+
+    return facade;
 }
 
 module.exports = createIntegrationFacade();

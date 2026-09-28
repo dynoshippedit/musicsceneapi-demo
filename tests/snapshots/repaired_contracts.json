@@ -685,11 +685,7 @@
         "sustainabilityScore": "B",
         "upcomingShows": 9
       },
-      "wikipedia": {
-        "summary": "The veil of Isis is a metaphor and allegorical artistic motif representing the inaccessibility of nature's secrets, personified as the goddess Isis shrouded by a veil or mantle.",
-        "thumbnail": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/Auguste_Puttemans_Isis_2.jpg/330px-Auguste_Puttemans_Isis_2.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
-        "wikiUrl": "https://en.wikipedia.org/wiki/Veil_of_Isis"
-      }
+      "wikipedia": null
     }
   },
   "artist_development": {
