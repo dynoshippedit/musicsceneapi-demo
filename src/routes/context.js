@@ -116,6 +116,13 @@ function buildContext() {
         Campaign: models.Campaign,
         // Stripe billing (2026-09-28): per-label subscription state.
         Subscription: models.Subscription,
+        // Phase 2 (2026-09-28): OAuth, catalog, royalties.
+        ArtistOAuth: models.ArtistOAuth,
+        Recording: models.Recording,
+        Release: models.Release,
+        Work: models.Work,
+        WorkRecording: models.WorkRecording,
+        RoyaltyLine: models.RoyaltyLine,
 
         // auth
         authenticateToken,

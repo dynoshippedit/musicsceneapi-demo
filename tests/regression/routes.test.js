@@ -63,8 +63,9 @@ describe('route table — registration invariants', () => {
         // STEP 7 (D7, 2026-09-28): +1 route (POST /v3/auth/reset-password)
         // Stripe billing (2026-09-28): +3 routes
         // (POST /v3/billing/checkout, POST /v3/billing/webhook, GET /v3/billing/status)
-        assert.strictEqual(TABLE.length, 68,
-            `expected 68 registered routes, found ${TABLE.length}`);
+        // Phase 2 (2026-09-28): +21 routes (OAuth x4, catalog x15, royalties x2)
+        assert.strictEqual(TABLE.length, 89,
+            `expected 89 registered routes, found ${TABLE.length}`);
     });
 
     test('PINS: the known shadowed duplicate routes are still present', () => {
@@ -147,7 +148,7 @@ describe('route table — registration invariants', () => {
             'PINNED: label entity audit still unrouted');
     });
 
-    test('only the five documented routes are unauthenticated', () => {
+    test('only the six documented routes are unauthenticated', () => {
         const stack = app._router.stack.filter((l) => l.route);
         const unauth = [];
         for (const layer of stack) {
@@ -161,6 +162,10 @@ describe('route table — registration invariants', () => {
         unauth.sort();
         assert.deepStrictEqual(unauth, [
             'GET /health',
+            // Phase 2 OAuth (2026-09-28): public by design — the provider
+            // redirects the browser here without a JWT; authenticity comes
+            // from the single-use state token bound to the user.
+            'GET /v3/oauth/:provider/callback',
             'POST /v3/auth/forgot-password',
             'POST /v3/auth/login',
             'POST /v3/auth/reset-password',

@@ -190,6 +190,40 @@ async function initDB({ logger, labelData } = {}) {
             }
         }
 
+        // Phase 2 (2026-09-28): seed a small FICTIONAL demo catalog so the
+        // royalty import has keys to match. Demo ISRCs use the unassigned
+        // "ZZ" country code; demo UPCs use an 88888 prefix. artistId is a
+        // plain string (no FK) so seed order never matters.
+        const recordingCount = await Recording.count();
+        if (recordingCount === 0) {
+            if (logger) logger.info('Seeding demo catalog...');
+            const rec1 = await Recording.create({
+                artistId: 'art_novakin', title: 'Neon Skyline',
+                isrc: 'ZZAAA2600001', durationMs: 214000, releaseDate: '2026-06-01'
+            });
+            await Recording.create({
+                artistId: 'art_novakin', title: 'Glass Horizon',
+                isrc: 'ZZAAA2600002', durationMs: 187000, releaseDate: '2026-06-01'
+            });
+            await Recording.create({
+                artistId: 'art_lumenveil', title: 'Violet Static',
+                isrc: 'ZZBAA2600001', durationMs: 203000, releaseDate: '2026-08-15'
+            });
+            await Release.create({
+                artistId: 'art_novakin', title: 'Neon Skyline EP',
+                upc: '888880000001', releaseDate: '2026-06-01', type: 'ep'
+            });
+            const work1 = await Work.create({
+                artistId: 'art_novakin', title: 'Neon Skyline (composition)',
+                credits: [{ name: 'Mara Voss', role: 'songwriter' }, { name: 'Juno Park', role: 'producer' }]
+            });
+            await WorkRecording.create({ workId: work1.id, recordingId: rec1.id });
+            await RoyaltyLine.create({
+                artistId: 'art_novakin', recordingId: rec1.id, amountCents: 12500,
+                currency: 'USD', period: '2026-08', source: 'demo seed', importedBy: 'seed'
+            });
+        }
+
         // PHASE 4CF: seed A&R submissions from the active profile when empty
         // (mirrors artist seeding; values for pulsegrid are the two original
         // seeds — sub_1 votes:15, sub_2 votes:42).
@@ -258,4 +292,62 @@ const Subscription = sequelize.define('Subscription', {
     currentPeriodEnd: { type: DataTypes.DATE, allowNull: true }
 });
 
-module.exports = { sequelize, User, Artist, Stats, AuditEvent, AnrSubmission, SalesEntry, RoomDemo, RoomVote, RoomSetting, Campaign, Subscription, initDB };
+
+// ---------------------------------------------------------------------------
+// Phase 2 (2026-09-28): per-artist OAuth, catalog entities, royalty lines.
+// sync() creates absent tables; no explicit migration needed (new tables).
+// ---------------------------------------------------------------------------
+const ArtistOAuth = sequelize.define('ArtistOAuth', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    artistId: { type: DataTypes.STRING, allowNull: false },
+    provider: { type: DataTypes.STRING, allowNull: false }, // spotify|instagram|tiktok|youtube|twitter
+    accessTokenEnc: { type: DataTypes.TEXT, allowNull: false }, // AES-256-GCM, see src/oauth/tokenCrypto.js
+    refreshTokenEnc: { type: DataTypes.TEXT, allowNull: true },
+    expiresAt: { type: DataTypes.DATE, allowNull: true },
+    scopes: { type: DataTypes.STRING, allowNull: true },
+    providerUserId: { type: DataTypes.STRING, allowNull: true }
+}, { indexes: [{ unique: true, fields: ['artistId', 'provider'] }] });
+
+const Recording = sequelize.define('Recording', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    artistId: { type: DataTypes.STRING, allowNull: false },
+    title: { type: DataTypes.STRING, allowNull: false },
+    isrc: { type: DataTypes.STRING, allowNull: false, unique: true }, // 12 chars, uppercase
+    durationMs: { type: DataTypes.INTEGER, allowNull: true },
+    releaseDate: { type: DataTypes.STRING, allowNull: true } // SQLite date handling is strict, use String
+});
+
+const Release = sequelize.define('Release', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    artistId: { type: DataTypes.STRING, allowNull: false },
+    title: { type: DataTypes.STRING, allowNull: false },
+    upc: { type: DataTypes.STRING, allowNull: false, unique: true }, // 12 digits
+    releaseDate: { type: DataTypes.STRING, allowNull: true },
+    type: { type: DataTypes.STRING, defaultValue: 'single' } // single|ep|album
+});
+
+const Work = sequelize.define('Work', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    artistId: { type: DataTypes.STRING, allowNull: false },
+    title: { type: DataTypes.STRING, allowNull: false },
+    credits: { type: DataTypes.JSON, allowNull: true } // [{ name, role }]
+});
+
+const WorkRecording = sequelize.define('WorkRecording', {
+    workId: { type: DataTypes.INTEGER, primaryKey: true },
+    recordingId: { type: DataTypes.INTEGER, primaryKey: true }
+});
+
+const RoyaltyLine = sequelize.define('RoyaltyLine', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    artistId: { type: DataTypes.STRING, allowNull: false },
+    recordingId: { type: DataTypes.INTEGER, allowNull: true },
+    releaseId: { type: DataTypes.INTEGER, allowNull: true },
+    amountCents: { type: DataTypes.INTEGER, allowNull: false }, // integer cents, NEVER float
+    currency: { type: DataTypes.STRING, allowNull: false }, // 3-letter ISO, uppercase
+    period: { type: DataTypes.STRING, allowNull: false }, // e.g. '2026-09'
+    source: { type: DataTypes.STRING, allowNull: true },
+    importedBy: { type: DataTypes.STRING, allowNull: true }
+});
+
+module.exports = { sequelize, User, Artist, Stats, AuditEvent, AnrSubmission, SalesEntry, RoomDemo, RoomVote, RoomSetting, Campaign, Subscription, ArtistOAuth, Recording, Release, Work, WorkRecording, RoyaltyLine, initDB };

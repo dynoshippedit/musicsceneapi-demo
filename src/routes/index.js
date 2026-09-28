@@ -47,7 +47,10 @@ const DOMAIN_ORDER = [
     'operations',
     'analytics',
     'system',
-    'billing'
+    'billing',
+    'oauth',
+    'catalog',
+    'royalties'
 ];
 
 /**
