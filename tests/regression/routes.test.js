@@ -61,8 +61,10 @@ describe('route table — registration invariants', () => {
 
     test('registers the expected number of routes', () => {
         // STEP 7 (D7, 2026-09-28): +1 route (POST /v3/auth/reset-password)
-        assert.strictEqual(TABLE.length, 65,
-            `expected 65 registered routes, found ${TABLE.length}`);
+        // Stripe billing (2026-09-28): +3 routes
+        // (POST /v3/billing/checkout, POST /v3/billing/webhook, GET /v3/billing/status)
+        assert.strictEqual(TABLE.length, 68,
+            `expected 68 registered routes, found ${TABLE.length}`);
     });
 
     test('PINS: the known shadowed duplicate routes are still present', () => {
@@ -145,7 +147,7 @@ describe('route table — registration invariants', () => {
             'PINNED: label entity audit still unrouted');
     });
 
-    test('only the four documented routes are unauthenticated', () => {
+    test('only the five documented routes are unauthenticated', () => {
         const stack = app._router.stack.filter((l) => l.route);
         const unauth = [];
         for (const layer of stack) {
@@ -161,7 +163,10 @@ describe('route table — registration invariants', () => {
             'GET /health',
             'POST /v3/auth/forgot-password',
             'POST /v3/auth/login',
-            'POST /v3/auth/reset-password'
+            'POST /v3/auth/reset-password',
+            // Stripe billing (2026-09-28): public by design — authenticity
+            // comes from the Stripe-Signature header, not a bearer token.
+            'POST /v3/billing/webhook'
         ], `unexpected unauthenticated routes: ${unauth.join(', ')}`);
     });
 

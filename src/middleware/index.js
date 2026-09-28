@@ -59,7 +59,15 @@ function applyRequestPipeline(app, { logger }) {
     });
 
     // api L250
-    app.use(express.json());
+    // Stripe webhook signatures are computed over the RAW request body, so the
+    // raw bytes are stashed for the billing webhook before JSON parsing
+    // consumes the stream. All other routes are unaffected (verify is a no-op
+    // for them). MED-11 preserved: still no explicit size limit.
+    app.use(express.json({
+        verify: (req, _res, buf) => {
+            if (req.path === '/v3/billing/webhook') req.rawBody = buf;
+        }
+    }));
 
     // api L253-256 — Request logger (with token redaction added in Phase 3).
     app.use((req, res, next) => {

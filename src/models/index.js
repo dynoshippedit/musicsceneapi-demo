@@ -237,4 +237,25 @@ async function initDB({ logger, labelData } = {}) {
     }
 }
 
-module.exports = { sequelize, User, Artist, Stats, AuditEvent, AnrSubmission, SalesEntry, RoomDemo, RoomVote, RoomSetting, Campaign, initDB };
+// ---------------------------------------------------------------------------
+// Stripe billing (2026-09-28): per-label subscription state. One row per label
+// slug (dedicated-instance deployment seam — each label instance points at
+// its own database, so the row is keyed by the active profile slug). Tracks
+// the Stripe customer id, the subscription id, its lifecycle status, the end
+// of the current billing period, and whether the one-time setup fee was paid.
+// The checkout session id supports per-label checkout idempotency: an open
+// session is reused instead of opening a second one. sync() creates an
+// absent table; no explicit migration needed (new table, no column changes).
+// ---------------------------------------------------------------------------
+const Subscription = sequelize.define('Subscription', {
+    labelSlug: { type: DataTypes.STRING, primaryKey: true },
+    stripeCustomerId: { type: DataTypes.STRING, allowNull: true },
+    stripeSubscriptionId: { type: DataTypes.STRING, allowNull: true },
+    checkoutSessionId: { type: DataTypes.STRING, allowNull: true },
+    // none | incomplete | trialing | active | past_due | canceled
+    status: { type: DataTypes.STRING, defaultValue: 'none' },
+    setupFeePaid: { type: DataTypes.BOOLEAN, defaultValue: false },
+    currentPeriodEnd: { type: DataTypes.DATE, allowNull: true }
+});
+
+module.exports = { sequelize, User, Artist, Stats, AuditEvent, AnrSubmission, SalesEntry, RoomDemo, RoomVote, RoomSetting, Campaign, Subscription, initDB };

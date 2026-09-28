@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "musicsceneapi — Label Intelligence Platform (Demo)",
+    "title": "musicsceneapi \u2014 Label Intelligence Platform (Demo)",
     "version": "0.1.0-step7",
-    "description": "Generated 2026-09-28 from the pinned route table (tests/regression/routes.test.js: 65 registered routes) plus handler reads in src/routes/*.js. Auth is bearer JWT (login returns {token}, 24h). Four routes are public: GET /health, POST /v3/auth/login, POST /v3/auth/forgot-password, POST /v3/auth/reset-password. All other routes require the bearer token; some additionally require the admin role. Error bodies are JSON {error: string}; this API does NOT use RFC 9457 problem details. EXPLICITLY NOT SUPPORTED (despite claims in the legacy HTML docs): API keys, webhooks, /tracks, real-time Spotify data, MCP server, ISRC/UPC/ISWC identifiers, currency-aware royalties. Data-honesty policy (Phase 1B): every metric carries a provenance block {source, observedAt, basis: measured|estimated, note?}. The Spotify integration no longer fabricates monthlyListeners or stream counts; it reports followers and popularity verbatim. Known data-quality caveats: several integrations report not_implemented; the Stats history table is never written so projections run on synthetic history; the artist development projection is a labeled placeholder until grounded in real inputs."
+    "description": "Generated 2026-09-28 from the pinned route table (tests/regression/routes.test.js: 68 registered routes) plus handler reads in src/routes/*.js. Auth is bearer JWT (login returns {token}, 24h). Four routes are public: GET /health, POST /v3/auth/login, POST /v3/auth/forgot-password, POST /v3/auth/reset-password. All other routes require the bearer token; some additionally require the admin role. Error bodies are JSON {error: string}; this API does NOT use RFC 9457 problem details. EXPLICITLY NOT SUPPORTED (despite claims in the legacy HTML docs): API keys, webhooks, /tracks, real-time Spotify data, MCP server, ISRC/UPC/ISWC identifiers, currency-aware royalties. Data-honesty policy (Phase 1B): every metric carries a provenance block {source, observedAt, basis: measured|estimated, note?}. The Spotify integration no longer fabricates monthlyListeners or stream counts; it reports followers and popularity verbatim. Known data-quality caveats: several integrations report not_implemented; the Stats history table is never written so projections run on synthetic history; the artist development projection is a labeled placeholder until grounded in real inputs."
   },
   "servers": [
     {
@@ -67,12 +67,12 @@
         "security": []
       }
     },
-    "/v3/auth/login": {
+    "/v3/ai/analyze": {
       "post": {
-        "summary": "Login",
-        "description": "Body {email,password}. 401 on bad credentials (CRITICAL-1: empty body -> 401, never a token). Returns {token} (JWT, 24h, carries sessionVersion claim). Deactivated accounts -> 401.",
+        "summary": "AI analyze",
+        "description": "Structured analysis (growth/roi/tour prompts). Provider-unavailable without key.",
         "tags": [
-          "auth"
+          "ai"
         ],
         "responses": {
           "200": {
@@ -91,15 +91,19 @@
             "description": "Not found"
           }
         },
-        "security": []
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
-    "/v3/auth/forgot-password": {
-      "post": {
-        "summary": "Request password reset",
-        "description": "Body {email}. Always 200 with a generic message (no account-enumeration oracle). Mints a token stored as SHA-256 digest, 1h expiry; emailed via RESET_LINK_BASE. Token cleared if mail delivery fails.",
+    "/v3/ai/providers": {
+      "get": {
+        "summary": "AI providers",
+        "description": "Lists configured AI providers. 503 when none configured.",
         "tags": [
-          "auth"
+          "ai"
         ],
         "responses": {
           "200": {
@@ -118,15 +122,19 @@
             "description": "Not found"
           }
         },
-        "security": []
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
-    "/v3/auth/reset-password": {
+    "/v3/ai/query": {
       "post": {
-        "summary": "Redeem password-reset token",
-        "description": "Body {token,newPassword} (min 8 chars, max 72 UTF-8 bytes). Malformed/invalid/expired/consumed -> identical 400 \"Invalid or expired reset token\". Single-use via atomic conditional update. Success bumps sessionVersion (revokes all other sessions), clears token, emits user.password_reset audit.",
+        "summary": "AI query",
+        "description": "Free-form AI query. Provider-unavailable errors when no key.",
         "tags": [
-          "auth"
+          "ai"
         ],
         "responses": {
           "200": {
@@ -145,7 +153,933 @@
             "description": "Not found"
           }
         },
-        "security": []
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/analytics/geography": {
+      "get": {
+        "summary": "Geography analytics",
+        "description": "Geographic analysis.",
+        "tags": [
+          "analytics"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/analytics/projections": {
+      "get": {
+        "summary": "Projections",
+        "description": "Revenue projections. NOTE: Stats history table is never written (admitted in code: src/analytics/regression.js:61), so projections run on synthetic/empty history.",
+        "tags": [
+          "analytics"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/analytics/sales": {
+      "post": {
+        "summary": "Record sale",
+        "description": "Body: sales entry. Phase 4CF: durable DB state (SalesEntry table).",
+        "tags": [
+          "analytics"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/anr/demos": {
+      "post": {
+        "summary": "Add demo to room",
+        "description": "Add a demo.",
+        "tags": [
+          "anr"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/anr/demos/{demoId}/rating": {
+      "get": {
+        "summary": "Demo rating",
+        "description": "Per-demo rating.",
+        "tags": [
+          "anr"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "demoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v3/anr/evaluate": {
+      "post": {
+        "summary": "AI competitive evaluation",
+        "description": "AI evaluation with signabilityScore. Requires AI provider; without one returns provider-unavailable. Missing prompt -> 400 \"Prompt required\".",
+        "tags": [
+          "anr"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/anr/listening": {
+      "post": {
+        "summary": "A&R listening",
+        "description": "Listening session entry.",
+        "tags": [
+          "anr"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/anr/scout": {
+      "get": {
+        "summary": "A&R scout",
+        "description": "Scouting endpoint.",
+        "tags": [
+          "anr"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/anr/shortlist": {
+      "post": {
+        "summary": "Shortlist",
+        "description": "Shortlist management.",
+        "tags": [
+          "anr"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/anr/state": {
+      "get": {
+        "summary": "A&R room state",
+        "description": "Listening-room state.",
+        "tags": [
+          "anr"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/anr/stats/{demoId}": {
+      "get": {
+        "summary": "Demo stats",
+        "description": "Per-demo stats.",
+        "tags": [
+          "anr"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "demoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v3/anr/submissions": {
+      "get": {
+        "summary": "A&R submissions",
+        "description": "Full A&R submission pipeline with votes/statuses. NOTE (verified 2026-09-28): visible to the artist role without artist scoping.",
+        "tags": [
+          "anr"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "summary": "Submit demo",
+        "description": "Submit a demo to A&R.",
+        "tags": [
+          "anr"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/anr/submissions/{id}": {
+      "delete": {
+        "summary": "Delete submission",
+        "description": "Admin only. Requires the admin role (403 otherwise).",
+        "tags": [
+          "anr"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v3/anr/submissions/{id}/vote": {
+      "post": {
+        "summary": "Vote on submission",
+        "description": "One vote per user.",
+        "tags": [
+          "anr"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v3/anr/vote/{demoId}": {
+      "post": {
+        "summary": "Vote on room demo",
+        "description": "Vote tally recomputed after votes.",
+        "tags": [
+          "anr"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "demoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v3/anr/whiteboard": {
+      "post": {
+        "summary": "A&R whiteboard",
+        "description": "Whiteboard post.",
+        "tags": [
+          "anr"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/artists": {
+      "get": {
+        "summary": "List artists",
+        "description": "Paginated/searchable artist list. NOTE (verified 2026-09-28): visible to the artist role and currently exposes every artist's revenue/streaming/social figures \u2014 cross-artist financial visibility is a known design question.",
+        "tags": [
+          "artists"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "summary": "Create artist",
+        "description": "Admin only. Duplicate names -> 409 (Phase 4CF F-4). Requires the admin role (403 otherwise).",
+        "tags": [
+          "artists"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/artists/{id}": {
+      "get": {
+        "summary": "Get artist",
+        "description": "Single artist with access check: artists outside your artistAccess grant -> 403.",
+        "tags": [
+          "artists"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v3/artists/{id}/archive": {
+      "post": {
+        "summary": "Archive artist",
+        "description": "Admin only. Requires the admin role (403 otherwise).",
+        "tags": [
+          "artists"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v3/artists/{id}/development": {
+      "get": {
+        "summary": "Artist development report",
+        "description": "AI development report. Legacy endpoint kept for compatibility. Phase 1B: the projection is canned profile copy labeled projectionBasis=placeholder until grounded in real inputs.",
+        "tags": [
+          "artists"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v3/artists/{id}/entity-audit": {
+      "get": {
+        "summary": "Artist entity audit",
+        "description": "Entity-audit trail for one artist. Phase 1B: social links are name-derived and unverified (result carries linksVerified=false plus an unverified_social_links issue); no health-score points are awarded for link accuracy.",
+        "tags": [
+          "artists"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v3/artists/{id}/image": {
+      "put": {
+        "summary": "Update artist image",
+        "description": "Admin only. Manual image override. Requires the admin role (403 otherwise).",
+        "tags": [
+          "artists"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v3/artists/{id}/monthly-sales": {
+      "get": {
+        "summary": "Artist monthly sales",
+        "description": "With access check. Backed by durable SalesEntry state (Phase 4CF).",
+        "tags": [
+          "artists"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v3/artists/{id}/restore": {
+      "post": {
+        "summary": "Restore artist",
+        "description": "Admin only. Requires the admin role (403 otherwise).",
+        "tags": [
+          "artists"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "/v3/auth/change-password": {
@@ -177,6 +1111,60 @@
             "bearerAuth": []
           }
         ]
+      }
+    },
+    "/v3/auth/forgot-password": {
+      "post": {
+        "summary": "Request password reset",
+        "description": "Body {email}. Always 200 with a generic message (no account-enumeration oracle). Mints a token stored as SHA-256 digest, 1h expiry; emailed via RESET_LINK_BASE. Token cleared if mail delivery fails.",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": []
+      }
+    },
+    "/v3/auth/login": {
+      "post": {
+        "summary": "Login",
+        "description": "Body {email,password}. 401 on bad credentials (CRITICAL-1: empty body -> 401, never a token). Returns {token} (JWT, 24h, carries sessionVersion claim). Deactivated accounts -> 401.",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": []
       }
     },
     "/v3/auth/me": {
@@ -214,6 +1202,821 @@
         "description": "Deletes the calling user. Root/profile admin and self-delete-by-id rules apply (400/403 cases).",
         "tags": [
           "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/auth/reset-password": {
+      "post": {
+        "summary": "Redeem password-reset token",
+        "description": "Body {token,newPassword} (min 8 chars, max 72 UTF-8 bytes). Malformed/invalid/expired/consumed -> identical 400 \"Invalid or expired reset token\". Single-use via atomic conditional update. Success bumps sessionVersion (revokes all other sessions), clears token, emits user.password_reset audit.",
+        "tags": [
+          "auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": []
+      }
+    },
+    "/v3/billing/checkout": {
+      "post": {
+        "summary": "Create Stripe Checkout Session (setup fee + subscription)",
+        "description": "Admin only. Creates (or reuses) this label's Stripe customer and opens a Checkout Session in TEST MODE combining the ONE-TIME setup fee (STRIPE_SETUP_PRICE_ID) with the recurring MONTHLY subscription (STRIPE_SUBSCRIPTION_PRICE_ID). Returns the hosted checkout URL. Idempotent per label: an already-live subscription returns 200 with alreadyActive:true, and an still-open session is reused instead of opening a second one. 503 when Stripe is not configured.",
+        "tags": [
+          "billing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK \u2014 {url, sessionId, status} (or {alreadyActive:true, ...status} / {reused:true})"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked Bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not admin"
+          },
+          "502": {
+            "description": "Billing provider error"
+          },
+          "503": {
+            "description": "Stripe is not configured (STRIPE_SECRET_KEY / price IDs missing)"
+          }
+        }
+      }
+    },
+    "/v3/billing/status": {
+      "get": {
+        "summary": "Current subscription state for this label",
+        "description": "Admin only. Returns the local subscription read model for this label's instance: status (none|incomplete|trialing|active|past_due|canceled), setupFeePaid, currentPeriodEnd, and the Stripe customer/subscription ids. Stripe remains the source of truth for money; this row is updated by webhooks.",
+        "tags": [
+          "billing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK \u2014 {label, status, setupFeePaid, currentPeriodEnd, stripeCustomerId, stripeSubscriptionId}"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked Bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not admin"
+          },
+          "503": {
+            "description": "Stripe is not configured (STRIPE_SECRET_KEY missing)"
+          }
+        }
+      }
+    },
+    "/v3/billing/webhook": {
+      "post": {
+        "summary": "Stripe webhook receiver",
+        "description": "PUBLIC \u2014 no bearer token. Authenticity comes from the Stripe-Signature header, verified against STRIPE_WEBHOOK_SECRET over the RAW request body (the server stashes raw bytes before JSON parsing). Handles checkout.session.completed (-> active, setup fee paid), customer.subscription.updated (-> status follows Stripe), customer.subscription.deleted (-> canceled) and invoice.payment_failed (-> past_due). Unknown event types are acknowledged with 200 and ignored. 400 on bad signature, 503 when Stripe is not configured.",
+        "tags": [
+          "billing"
+        ],
+        "parameters": [
+          {
+            "name": "Stripe-Signature",
+            "in": "header",
+            "required": true,
+            "description": "Stripe's t=...,v1=... signature over the raw request body. Verified against STRIPE_WEBHOOK_SECRET.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Stripe event payload (e.g. checkout.session.completed)."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Event received and applied (or ignored, for unknown types)"
+          },
+          "400": {
+            "description": "Invalid webhook signature"
+          },
+          "503": {
+            "description": "Stripe is not configured"
+          }
+        }
+      }
+    },
+    "/v3/campaigns/stats": {
+      "get": {
+        "summary": "Campaign statistics",
+        "description": "Campaign stats; empty history returns roster_reference source.",
+        "tags": [
+          "campaigns"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/exports": {
+      "get": {
+        "summary": "Data export",
+        "description": "Export endpoint. Guarded by authenticateToken + checkExportAccess (pinned by routes.test.js).",
+        "tags": [
+          "exports"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/fans/demographics": {
+      "get": {
+        "summary": "Fan demographics",
+        "description": "Fan demographics & engagement.",
+        "tags": [
+          "fans"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/integrations/auth/{service}": {
+      "get": {
+        "summary": "Integration OAuth start",
+        "description": "Begins OAuth for a service. Many services: not implemented.",
+        "tags": [
+          "integrations"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "service",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v3/integrations/disconnect": {
+      "post": {
+        "summary": "Disconnect integration",
+        "description": "Disconnects a service.",
+        "tags": [
+          "integrations"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/integrations/fandom/audit": {
+      "get": {
+        "summary": "Fandom audit",
+        "description": "Fandom wiki audit for an artist.",
+        "tags": [
+          "integrations"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/integrations/fandom/roster": {
+      "get": {
+        "summary": "Fandom roster (scraped)",
+        "description": "Scraped Fandom wiki roster.",
+        "tags": [
+          "integrations"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/integrations/google-kg": {
+      "get": {
+        "summary": "Google Knowledge Graph proxy",
+        "description": "Artist entity lookup via Google KG.",
+        "tags": [
+          "integrations"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/integrations/status": {
+      "get": {
+        "summary": "Integration status",
+        "description": "Per-service connection status. NOTE: several services report not_implemented/unavailable; quotaUsed may be null.",
+        "tags": [
+          "integrations"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/integrations/test-limit/{service}": {
+      "get": {
+        "summary": "Rate-limit probe (debug)",
+        "description": "DEBUG endpoint: decrements the shared provider token bucket. NOTE (verified 2026-09-28): reachable by the artist role \u2014 an artist can drain shared provider limits.",
+        "tags": [
+          "integrations"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "service",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v3/label/overview": {
+      "get": {
+        "summary": "Label overview",
+        "description": "Aggregated label dashboard. Source is recorded_sales (real DB state), not the old synthetic mock; empty DB -> nulls/empty lists. Artist role sees a scoped view.",
+        "tags": [
+          "label"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/marketing/campaigns": {
+      "get": {
+        "summary": "List marketing campaigns",
+        "description": "Marketing campaigns.",
+        "tags": [
+          "marketing"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "summary": "Create marketing campaign",
+        "description": "Admin only. Requires validated fields (400 otherwise). Requires the admin role (403 otherwise).",
+        "tags": [
+          "marketing"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/operations/assets": {
+      "get": {
+        "summary": "Asset vault",
+        "description": "Label assets incl. master recordings. NOTE (verified 2026-09-28): visible to the artist role without scoping \u2014 leaked in probe.",
+        "tags": [
+          "operations"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/operations/contracts": {
+      "get": {
+        "summary": "Operations contracts",
+        "description": "Admin only (403 for artists, verified). Requires the admin role (403 otherwise).",
+        "tags": [
+          "operations"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/operations/logistics": {
+      "get": {
+        "summary": "Logistics",
+        "description": "Quantities, vendors, tracking numbers, warehouse locations. NOTE (verified 2026-09-28): visible to the artist role without scoping \u2014 leaked in probe.",
+        "tags": [
+          "operations"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/reports/generate-all": {
+      "post": {
+        "summary": "Generate all monthly reports",
+        "description": "Admin only. Batch report generation for auto-printing. Requires the admin role (403 otherwise).",
+        "tags": [
+          "reports"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/reports/monthly/{artistId}/{month}": {
+      "get": {
+        "summary": "Monthly report PDF",
+        "description": "Generates the monthly artist-report PDF. PDF embeds a generation timestamp (size varies).",
+        "tags": [
+          "reports"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "artistId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "month",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v3/rights/contracts": {
+      "get": {
+        "summary": "Rights contracts",
+        "description": "Contract generation is NOT implemented; returns an explicit unavailable/not-found failure. Never advertised as a working PDF (per code comment).",
+        "tags": [
+          "rights"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/royalties/calculate": {
+      "post": {
+        "summary": "Calculate royalties",
+        "description": "Body {splits?}. Default split is 70/30 artist/label on mock revenue floats. NO currency handling, NO integer cents, NO ISRC/UPC keying (verified 2026-09-28). Do not treat output as settled accounting.",
+        "tags": [
+          "royalties"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request / validation failure"
+          },
+          "401": {
+            "description": "Missing, invalid, or revoked bearer token"
+          },
+          "403": {
+            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v3/tours": {
+      "get": {
+        "summary": "Tours",
+        "description": "Consolidated global tours.",
+        "tags": [
+          "tours"
         ],
         "responses": {
           "200": {
@@ -378,1712 +2181,10 @@
           }
         ]
       }
-    },
-    "/v3/artists": {
-      "get": {
-        "summary": "List artists",
-        "description": "Paginated/searchable artist list. NOTE (verified 2026-09-28): visible to the artist role and currently exposes every artist's revenue/streaming/social figures — cross-artist financial visibility is a known design question.",
-        "tags": [
-          "artists"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      },
-      "post": {
-        "summary": "Create artist",
-        "description": "Admin only. Duplicate names -> 409 (Phase 4CF F-4). Requires the admin role (403 otherwise).",
-        "tags": [
-          "artists"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/artists/{id}": {
-      "get": {
-        "summary": "Get artist",
-        "description": "Single artist with access check: artists outside your artistAccess grant -> 403.",
-        "tags": [
-          "artists"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/v3/artists/{id}/archive": {
-      "post": {
-        "summary": "Archive artist",
-        "description": "Admin only. Requires the admin role (403 otherwise).",
-        "tags": [
-          "artists"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/v3/artists/{id}/restore": {
-      "post": {
-        "summary": "Restore artist",
-        "description": "Admin only. Requires the admin role (403 otherwise).",
-        "tags": [
-          "artists"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/v3/artists/{id}/image": {
-      "put": {
-        "summary": "Update artist image",
-        "description": "Admin only. Manual image override. Requires the admin role (403 otherwise).",
-        "tags": [
-          "artists"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/v3/artists/{id}/monthly-sales": {
-      "get": {
-        "summary": "Artist monthly sales",
-        "description": "With access check. Backed by durable SalesEntry state (Phase 4CF).",
-        "tags": [
-          "artists"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/v3/artists/{id}/development": {
-      "get": {
-        "summary": "Artist development report",
-        "description": "AI development report. Legacy endpoint kept for compatibility. Phase 1B: the projection is canned profile copy labeled projectionBasis=placeholder until grounded in real inputs.",
-        "tags": [
-          "artists"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/v3/artists/{id}/entity-audit": {
-      "get": {
-        "summary": "Artist entity audit",
-        "description": "Entity-audit trail for one artist. Phase 1B: social links are name-derived and unverified (result carries linksVerified=false plus an unverified_social_links issue); no health-score points are awarded for link accuracy.",
-        "tags": [
-          "artists"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/v3/label/overview": {
-      "get": {
-        "summary": "Label overview",
-        "description": "Aggregated label dashboard. Source is recorded_sales (real DB state), not the old synthetic mock; empty DB -> nulls/empty lists. Artist role sees a scoped view.",
-        "tags": [
-          "label"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/tours": {
-      "get": {
-        "summary": "Tours",
-        "description": "Consolidated global tours.",
-        "tags": [
-          "tours"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/fans/demographics": {
-      "get": {
-        "summary": "Fan demographics",
-        "description": "Fan demographics & engagement.",
-        "tags": [
-          "fans"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/analytics/geography": {
-      "get": {
-        "summary": "Geography analytics",
-        "description": "Geographic analysis.",
-        "tags": [
-          "analytics"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/analytics/projections": {
-      "get": {
-        "summary": "Projections",
-        "description": "Revenue projections. NOTE: Stats history table is never written (admitted in code: src/analytics/regression.js:61), so projections run on synthetic/empty history.",
-        "tags": [
-          "analytics"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/analytics/sales": {
-      "post": {
-        "summary": "Record sale",
-        "description": "Body: sales entry. Phase 4CF: durable DB state (SalesEntry table).",
-        "tags": [
-          "analytics"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/royalties/calculate": {
-      "post": {
-        "summary": "Calculate royalties",
-        "description": "Body {splits?}. Default split is 70/30 artist/label on mock revenue floats. NO currency handling, NO integer cents, NO ISRC/UPC keying (verified 2026-09-28). Do not treat output as settled accounting.",
-        "tags": [
-          "royalties"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/rights/contracts": {
-      "get": {
-        "summary": "Rights contracts",
-        "description": "Contract generation is NOT implemented; returns an explicit unavailable/not-found failure. Never advertised as a working PDF (per code comment).",
-        "tags": [
-          "rights"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/marketing/campaigns": {
-      "get": {
-        "summary": "List marketing campaigns",
-        "description": "Marketing campaigns.",
-        "tags": [
-          "marketing"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      },
-      "post": {
-        "summary": "Create marketing campaign",
-        "description": "Admin only. Requires validated fields (400 otherwise). Requires the admin role (403 otherwise).",
-        "tags": [
-          "marketing"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/campaigns/stats": {
-      "get": {
-        "summary": "Campaign statistics",
-        "description": "Campaign stats; empty history returns roster_reference source.",
-        "tags": [
-          "campaigns"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/anr/submissions": {
-      "get": {
-        "summary": "A&R submissions",
-        "description": "Full A&R submission pipeline with votes/statuses. NOTE (verified 2026-09-28): visible to the artist role without artist scoping.",
-        "tags": [
-          "anr"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      },
-      "post": {
-        "summary": "Submit demo",
-        "description": "Submit a demo to A&R.",
-        "tags": [
-          "anr"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/anr/submissions/{id}/vote": {
-      "post": {
-        "summary": "Vote on submission",
-        "description": "One vote per user.",
-        "tags": [
-          "anr"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/v3/anr/submissions/{id}": {
-      "delete": {
-        "summary": "Delete submission",
-        "description": "Admin only. Requires the admin role (403 otherwise).",
-        "tags": [
-          "anr"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/v3/anr/evaluate": {
-      "post": {
-        "summary": "AI competitive evaluation",
-        "description": "AI evaluation with signabilityScore. Requires AI provider; without one returns provider-unavailable. Missing prompt -> 400 \"Prompt required\".",
-        "tags": [
-          "anr"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/anr/scout": {
-      "get": {
-        "summary": "A&R scout",
-        "description": "Scouting endpoint.",
-        "tags": [
-          "anr"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/anr/shortlist": {
-      "post": {
-        "summary": "Shortlist",
-        "description": "Shortlist management.",
-        "tags": [
-          "anr"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/anr/state": {
-      "get": {
-        "summary": "A&R room state",
-        "description": "Listening-room state.",
-        "tags": [
-          "anr"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/anr/whiteboard": {
-      "post": {
-        "summary": "A&R whiteboard",
-        "description": "Whiteboard post.",
-        "tags": [
-          "anr"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/anr/listening": {
-      "post": {
-        "summary": "A&R listening",
-        "description": "Listening session entry.",
-        "tags": [
-          "anr"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/anr/demos": {
-      "post": {
-        "summary": "Add demo to room",
-        "description": "Add a demo.",
-        "tags": [
-          "anr"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/anr/vote/{demoId}": {
-      "post": {
-        "summary": "Vote on room demo",
-        "description": "Vote tally recomputed after votes.",
-        "tags": [
-          "anr"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "demoId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/v3/anr/stats/{demoId}": {
-      "get": {
-        "summary": "Demo stats",
-        "description": "Per-demo stats.",
-        "tags": [
-          "anr"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "demoId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/v3/anr/demos/{demoId}/rating": {
-      "get": {
-        "summary": "Demo rating",
-        "description": "Per-demo rating.",
-        "tags": [
-          "anr"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "demoId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/v3/ai/providers": {
-      "get": {
-        "summary": "AI providers",
-        "description": "Lists configured AI providers. 503 when none configured.",
-        "tags": [
-          "ai"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/ai/query": {
-      "post": {
-        "summary": "AI query",
-        "description": "Free-form AI query. Provider-unavailable errors when no key.",
-        "tags": [
-          "ai"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/ai/analyze": {
-      "post": {
-        "summary": "AI analyze",
-        "description": "Structured analysis (growth/roi/tour prompts). Provider-unavailable without key.",
-        "tags": [
-          "ai"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/integrations/status": {
-      "get": {
-        "summary": "Integration status",
-        "description": "Per-service connection status. NOTE: several services report not_implemented/unavailable; quotaUsed may be null.",
-        "tags": [
-          "integrations"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/integrations/auth/{service}": {
-      "get": {
-        "summary": "Integration OAuth start",
-        "description": "Begins OAuth for a service. Many services: not implemented.",
-        "tags": [
-          "integrations"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "service",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/v3/integrations/disconnect": {
-      "post": {
-        "summary": "Disconnect integration",
-        "description": "Disconnects a service.",
-        "tags": [
-          "integrations"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/integrations/test-limit/{service}": {
-      "get": {
-        "summary": "Rate-limit probe (debug)",
-        "description": "DEBUG endpoint: decrements the shared provider token bucket. NOTE (verified 2026-09-28): reachable by the artist role — an artist can drain shared provider limits.",
-        "tags": [
-          "integrations"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "service",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/v3/integrations/google-kg": {
-      "get": {
-        "summary": "Google Knowledge Graph proxy",
-        "description": "Artist entity lookup via Google KG.",
-        "tags": [
-          "integrations"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/integrations/fandom/roster": {
-      "get": {
-        "summary": "Fandom roster (scraped)",
-        "description": "Scraped Fandom wiki roster.",
-        "tags": [
-          "integrations"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/integrations/fandom/audit": {
-      "get": {
-        "summary": "Fandom audit",
-        "description": "Fandom wiki audit for an artist.",
-        "tags": [
-          "integrations"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/operations/logistics": {
-      "get": {
-        "summary": "Logistics",
-        "description": "Quantities, vendors, tracking numbers, warehouse locations. NOTE (verified 2026-09-28): visible to the artist role without scoping — leaked in probe.",
-        "tags": [
-          "operations"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/operations/assets": {
-      "get": {
-        "summary": "Asset vault",
-        "description": "Label assets incl. master recordings. NOTE (verified 2026-09-28): visible to the artist role without scoping — leaked in probe.",
-        "tags": [
-          "operations"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/operations/contracts": {
-      "get": {
-        "summary": "Operations contracts",
-        "description": "Admin only (403 for artists, verified). Requires the admin role (403 otherwise).",
-        "tags": [
-          "operations"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/reports/monthly/{artistId}/{month}": {
-      "get": {
-        "summary": "Monthly report PDF",
-        "description": "Generates the monthly artist-report PDF. PDF embeds a generation timestamp (size varies).",
-        "tags": [
-          "reports"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "artistId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "month",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-      }
-    },
-    "/v3/reports/generate-all": {
-      "post": {
-        "summary": "Generate all monthly reports",
-        "description": "Admin only. Batch report generation for auto-printing. Requires the admin role (403 otherwise).",
-        "tags": [
-          "reports"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/v3/exports": {
-      "get": {
-        "summary": "Data export",
-        "description": "Export endpoint. Guarded by authenticateToken + checkExportAccess (pinned by routes.test.js).",
-        "tags": [
-          "exports"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad request / validation failure"
-          },
-          "401": {
-            "description": "Missing, invalid, or revoked bearer token"
-          },
-          "403": {
-            "description": "Authenticated but not permitted (e.g. admin-only, or artist outside access grant)"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
     }
   },
   "x-notices": {
-    "shadowed_duplicates": "POST /v3/users (x3), PUT /v3/users/:id (x2), DELETE /v3/users/:id (x2) are registered multiple times; the FIRST registration wins and the rest are unreachable. Pinned by routes.test.js — do not \"fix\" by reordering.",
+    "shadowed_duplicates": "POST /v3/users (x3), PUT /v3/users/:id (x2), DELETE /v3/users/:id (x2) are registered multiple times; the FIRST registration wins and the rest are unreachable. Pinned by routes.test.js \u2014 do not \"fix\" by reordering.",
     "unrouted_frontend_call": "GET /v3/label/entity-audit is called by the frontend but has no route (pinned absent by routes.test.js).",
     "generated_from": "tests/regression/routes.test.js (65 routes) + src/routes/*.js handler reads, 2026-09-28. Regenerate when the route table changes."
   }

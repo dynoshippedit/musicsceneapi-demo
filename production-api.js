@@ -19,7 +19,7 @@
 //   src/analytics/     regression and synthetic history
 //   src/reports/       monthly PDF report builder
 //   src/jobs/          scheduled work (registered by server.js, not here)
-//   src/routes/        63 endpoints grouped by domain
+//   src/routes/        68 endpoints grouped by domain (incl. Stripe billing)
 //   src/utils/         charts and pure data-shaping helpers
 //
 // BEHAVIOR IS UNCHANGED. Endpoint paths, methods, auth requirements, request

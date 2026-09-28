@@ -133,6 +133,26 @@ const config = {
     // api L2493
     autoPrint: process.env.AUTO_PRINT === 'true',
 
+    // Stripe billing (2026-09-28). TEST MODE ONLY — see src/billing/stripeClient.js.
+    // When secretKey is unset (and STRIPE_STUB is not 'true'), the billing
+    // routes answer 503 and the rest of the app is unaffected.
+    stripe: {
+        secretKey: process.env.STRIPE_SECRET_KEY,
+        webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+        // One-time onboarding/setup fee Price id (mode: one-time on Stripe).
+        setupPriceId: process.env.STRIPE_SETUP_PRICE_ID,
+        // Recurring subscription Price id. MONTHLY billing was chosen over
+        // yearly (lower commitment for label onboarding; the interval is owned
+        // by the Stripe Price object — point this at a yearly Price to change
+        // the cadence without a code change).
+        subscriptionPriceId: process.env.STRIPE_SUBSCRIPTION_PRICE_ID,
+        successUrl: process.env.STRIPE_SUCCESS_URL || 'http://localhost:3000/billing/success',
+        cancelUrl: process.env.STRIPE_CANCEL_URL || 'http://localhost:3000/billing/cancel',
+        // TEST-ONLY: 'true' swaps the real SDK for an in-memory stub so the
+        // regression suite never touches api.stripe.com. Never set in prod.
+        stub: process.env.STRIPE_STUB === 'true'
+    },
+
     // api L226-227
     logging: {
         level: 'info',

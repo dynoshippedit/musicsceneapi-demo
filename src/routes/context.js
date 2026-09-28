@@ -114,6 +114,8 @@ function buildContext() {
         AnrSubmission: models.AnrSubmission,
         SalesEntry: models.SalesEntry,
         Campaign: models.Campaign,
+        // Stripe billing (2026-09-28): per-label subscription state.
+        Subscription: models.Subscription,
 
         // auth
         authenticateToken,

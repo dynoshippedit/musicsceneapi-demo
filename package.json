@@ -43,6 +43,7 @@
     "sequelize": "^6.37.7",
     "spotify-web-api-node": "^5.0.2",
     "sqlite3": "^5.1.7",
+    "stripe": "22.6.2",
     "winston": "^3.19.0",
     "zod": "^4.2.1"
   },
