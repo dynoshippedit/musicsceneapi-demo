@@ -22,7 +22,7 @@ if (process.argv.includes('--operator-smoke')) {
     smoke.apiHealth = (await fetch('http://127.0.0.1:3000/health')).status;
     assert.equal(smoke.apiHealth, 200);
     await page.goto('http://127.0.0.1:5173/login');
-    await page.locator('#access-id').fill('admin@mau5trap.com');
+    await page.locator('#access-id').fill('admin@pulsegrid.fm');
     await page.locator('#passphrase').fill('admin123');
     await page.locator('button[type=submit]').click();
     await page.waitForURL('**/dashboard');
@@ -64,7 +64,7 @@ try {
 
   page.on('response', res => { if (res.url().includes('tile.openstreetmap.org')) result.tiles.push({ url: res.url(), status: res.status() }); });
   await page.goto(UI + '/login');
-  await page.locator('#access-id').fill('admin@mau5trap.com');
+  await page.locator('#access-id').fill('admin@pulsegrid.fm');
   await page.locator('#passphrase').fill('admin123');
   await page.locator('button[type=submit]').click();
   await page.waitForURL('**/dashboard');
@@ -81,11 +81,11 @@ try {
   // Remaining checks do not need network map tiles. Avoid repeated public tile requests.
   await page.route('https://tile.openstreetmap.org/**', route => route.fulfill({ contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aT3sAAAAASUVORK5CYII=', 'base64') }));
   await check('AI sends chosen artist context and visibly reports unavailable provider', async () => {
-    await page.getByLabel('Artist context').selectOption('art_rezz');
+    await page.getByLabel('Artist context').selectOption('art_novakin');
     await page.locator('input[placeholder]').fill('Summarize the selected artist');
     const request = page.waitForRequest(r => r.url().endsWith('/v3/ai/query') && r.method() === 'POST');
     await page.getByRole('button', { name: /^RUN$/ }).click();
-    assert.equal((await request).postDataJSON().artistId, 'art_rezz');
+    assert.equal((await request).postDataJSON().artistId, 'art_novakin');
     await page.getByRole('log').getByText(/unavailable/).waitFor();
     assert.match(await page.locator('main').innerText(), /UNCONFIGURED/i);
   });
@@ -132,26 +132,28 @@ try {
   await check('graph labels select artists and links open the profile', async () => {
     await page.goto(UI + '/intelligence');
     await page.locator('svg[aria-label="Artist collaboration network"]').waitFor();
-    assert.equal(await page.locator('svg a').count(), 29);
-    await page.locator('svg a').filter({ hasText: /deadmau5/ }).click();
+    // Link count is dataset-dependent (the rebranded seed ships two artists);
+    // the contract is that the graph renders clickable artist nodes.
+    assert.ok(await page.locator('svg a').count() > 0, 'network graph has artist links');
+    await page.locator('svg a').filter({ hasText: /novakin/i }).click();
     const profile = page.locator('main a').filter({ hasText: /open artist profile/i });
     await profile.waitFor();
     await page.screenshot({ path: path.join(dir, 'intelligence-graph.png'), fullPage: true });
-    await profile.click(); await page.waitForURL('**/artists/art_deadmau5?tab=network');
+    await profile.click(); await page.waitForURL('**/artists/art_novakin?tab=network');
   });
   await check('sales form accepts multiple months and another artist in the same month', async () => {
     await page.goto(UI + '/dashboard');
     const form = page.locator('form').filter({ has: page.locator('input[type=month]') });
-    for (const [id, month, amount] of [['art_attlas','2026-06','100'], ['art_attlas','2026-07','200'], ['art_attlas','2026-08','300'], ['art_rezz','2026-08','0']]) {
+    for (const [id, month, amount] of [['art_lumenveil','2026-06','100'], ['art_lumenveil','2026-07','200'], ['art_lumenveil','2026-08','300'], ['art_novakin','2026-08','0']]) {
       await form.locator('select').selectOption(id); await form.locator('input[type=month]').fill(month); await form.locator('input[type=number]').fill(amount);
       const response = page.waitForResponse(r => r.url().endsWith('/v3/analytics/sales') && r.request().method() === 'POST');
       await form.locator('button[type=submit]').click(); assert.equal((await response).status(), 200);
       await page.waitForFunction(() => document.querySelector('input[type=number]')?.value === '');
     }
-    const data = (await api('/v3/analytics/projections?artistId=art_attlas&months=1')).body;
+    const data = (await api('/v3/analytics/projections?artistId=art_lumenveil&months=1')).body;
     assert.ok(data.chartData.datasets[0].data.filter(v => v !== null).length >= 3);
   });
-  for (const route of ['/dashboard','/artists','/artists/art_deadmau5?tab=entity','/anr','/anr/scouting','/intelligence','/marketing','/fans','/operations','/settings/integrations','/settings/ai','/admin']) {
+  for (const route of ['/dashboard','/artists','/artists/art_novakin?tab=entity','/anr','/anr/scouting','/intelligence','/marketing','/fans','/operations','/settings/integrations','/settings/ai','/admin']) {
     await page.goto(UI + route); await page.waitForTimeout(500);
     const metrics = await page.evaluate(() => ({ width: innerWidth, scroll: document.documentElement.scrollWidth }));
     assert.ok(metrics.scroll <= metrics.width + 2, `${route} overflow ${JSON.stringify(metrics)}`);
@@ -164,7 +166,7 @@ try {
     await page.screenshot({ path: path.join(dir, 'intelligence-mobile.png'), fullPage: true });
   });
   await check('stored admin claims cannot mount restricted UI before session verification', async () => {
-    const artistLogin = await api('/v3/auth/login', 'POST', { email: 'tours@rezz.com', password: 'rezz123' });
+    const artistLogin = await api('/v3/auth/login', 'POST', { email: 'tours@novakin.band', password: 'novakin123' });
     let adminRequests = 0;
     page.on('request', req => { if (req.url().endsWith('/v3/users')) adminRequests++; });
     await page.evaluate(token => {

@@ -263,6 +263,15 @@
       }
     }
   },
+  "analytics_sales_post": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "count": 1,
+      "id": "<VOLATILE>",
+      "success": true
+    }
+  },
   "anr_evaluate": {
     "status": 200,
     "contentType": "application/json",
@@ -1971,11 +1980,65 @@
     "contentType": "application/json",
     "body": {
       "activeArtists": 8,
-      "annualProjection": null,
-      "month": null,
-      "monthlyRevenue": null,
-      "quarterlyProjection": null,
-      "source": "recorded_sales",
+      "annualProjectionCents": {
+        "USD": null
+      },
+      "basis": "Counted review states only (reported, reconciled, approved). Disputed and estimated amounts are excluded from headline KPIs and reported separately in reviewTotals.",
+      "coverage": {
+        "directSales": {
+          "excludedUnperioded": 0,
+          "filteredBy": "occurredAt month",
+          "records": 0,
+          "value": "all months"
+        },
+        "manualAdjustments": {
+          "excludedUnperioded": 0,
+          "filteredBy": "declared month",
+          "records": 0,
+          "value": "all months"
+        },
+        "merchSettlements": {
+          "excludedUnperioded": 0,
+          "filteredBy": "showDate month",
+          "records": 0,
+          "value": "all months"
+        },
+        "note": "Disputed and estimated amounts are reported as separate lines and are never summed into trusted totals. Superseded records are excluded everywhere.",
+        "period": "all",
+        "royalties": {
+          "filteredBy": "statement/line period",
+          "records": 1,
+          "value": "all periods"
+        },
+        "separatedStates": [
+          "disputed",
+          "estimated"
+        ],
+        "trustedStates": [
+          "reported",
+          "reconciled",
+          "approved"
+        ]
+      },
+      "month": "2026-08",
+      "monthlyRevenueCents": {
+        "USD": 12500
+      },
+      "primaryCurrency": "USD",
+      "projectionNotes": {
+        "USD": "Record at least three months of counted income to calculate a projection."
+      },
+      "quarterlyProjectionCents": {
+        "USD": null
+      },
+      "reviewTotals": {
+        "USD": {
+          "countedCents": 12500,
+          "disputedCents": 0,
+          "estimatedCents": 0
+        }
+      },
+      "source": "reconciliation",
       "timestamp": "<VOLATILE>",
       "topArtists": []
     }
@@ -1985,11 +2048,65 @@
     "contentType": "application/json",
     "body": {
       "activeArtists": 1,
-      "annualProjection": null,
-      "month": null,
-      "monthlyRevenue": null,
-      "quarterlyProjection": null,
-      "source": "recorded_sales",
+      "annualProjectionCents": {
+        "USD": null
+      },
+      "basis": "Counted review states only (reported, reconciled, approved). Disputed and estimated amounts are excluded from headline KPIs and reported separately in reviewTotals.",
+      "coverage": {
+        "directSales": {
+          "excludedUnperioded": 0,
+          "filteredBy": "occurredAt month",
+          "records": 0,
+          "value": "all months"
+        },
+        "manualAdjustments": {
+          "excludedUnperioded": 0,
+          "filteredBy": "declared month",
+          "records": 0,
+          "value": "all months"
+        },
+        "merchSettlements": {
+          "excludedUnperioded": 0,
+          "filteredBy": "showDate month",
+          "records": 0,
+          "value": "all months"
+        },
+        "note": "Disputed and estimated amounts are reported as separate lines and are never summed into trusted totals. Superseded records are excluded everywhere.",
+        "period": "all",
+        "royalties": {
+          "filteredBy": "statement/line period",
+          "records": 1,
+          "value": "all periods"
+        },
+        "separatedStates": [
+          "disputed",
+          "estimated"
+        ],
+        "trustedStates": [
+          "reported",
+          "reconciled",
+          "approved"
+        ]
+      },
+      "month": "2026-08",
+      "monthlyRevenueCents": {
+        "USD": 12500
+      },
+      "primaryCurrency": "USD",
+      "projectionNotes": {
+        "USD": "Record at least three months of counted income to calculate a projection."
+      },
+      "quarterlyProjectionCents": {
+        "USD": null
+      },
+      "reviewTotals": {
+        "USD": {
+          "countedCents": 12500,
+          "disputedCents": 0,
+          "estimatedCents": 0
+        }
+      },
+      "source": "reconciliation",
       "timestamp": "<VOLATILE>",
       "topArtists": []
     }

@@ -457,7 +457,7 @@ function register(app, ctx) {
                     const { source, period, lines } = group;
                     // Within-file duplicates: full row-content hash only.
                     const seenHashes = new Set();
-                    const fresh = [];
+                    let fresh = [];
                     for (const line of lines) {
                         if (seenHashes.has(line.rowHash)) {
                             report.rejected.push({
@@ -496,12 +496,23 @@ function register(app, ctx) {
                         continue;
                     }
 
-                    // Revised file for the same (source, period): supersede
-                    // the prior statement AS A UNIT — every active line in it,
-                    // plus any legacy lines that predate statement identity.
+                    // A new file for the same (source, period) is a REVISION only
+                    // when it restates claims a prior statement made — detected
+                    // by shared catalogKey. Each overlapped statement is then
+                    // superseded AS A UNIT (a revised declaration replaces the
+                    // whole prior declaration). Otherwise the file is an
+                    // ADDITIONAL statement: prior statements stay active, and
+                    // rows byte-identical to an active row in the same
+                    // (source, period) are rejected as cross-statement
+                    // duplicates instead of being double-counted. Superseding
+                    // blindly on every new file silently destroyed unrelated
+                    // statements, so the trigger is explicit overlap.
                     let supersedesStatementId = null;
                     const supersededLineIds = [];
-                    const prior = await RoyaltyStatement.findOne({
+                    const newCatalogKeys = new Set(
+                        fresh.map((l) => l.catalogKey).filter((k) => k !== null && k !== undefined)
+                    );
+                    const activeStatements = await RoyaltyStatement.findAll({
                         where: { source, period, status: 'active' }, transaction: t
                     });
                     const supersedeLine = async (pl, why) => {
@@ -514,18 +525,26 @@ function register(app, ctx) {
                         supersededLineIds.push(pl.id);
                         report.superseded++;
                     };
-                    if (prior) {
-                        supersedesStatementId = prior.id;
+                    // Row hashes of active rows this file does NOT revise:
+                    // exact content matches are duplicates, never new income.
+                    const duplicateRowHashes = new Set();
+                    for (const prior of activeStatements) {
                         const priorLines = await RoyaltyLine.findAll({
                             where: { statementId: prior.id, reviewState: { [Op.ne]: 'superseded' } },
                             transaction: t
                         });
-                        for (const pl of priorLines) await supersedeLine(pl, `statement #${prior.id} replaced as a unit`);
-                        await prior.update({ status: 'superseded' }, { transaction: t });
+                        const overlaps = priorLines.some((pl) => pl.catalogKey && newCatalogKeys.has(pl.catalogKey));
+                        if (overlaps) {
+                            if (supersedesStatementId === null) supersedesStatementId = prior.id;
+                            for (const pl of priorLines) await supersedeLine(pl, `statement #${prior.id} replaced as a unit`);
+                            await prior.update({ status: 'superseded' }, { transaction: t });
+                        } else {
+                            for (const pl of priorLines) if (pl.rowHash) duplicateRowHashes.add(pl.rowHash);
+                        }
                     }
                     // Legacy lines imported before statement identity existed
-                    // carry no statementId; they belong to this (source,
-                    // period) and are superseded with the revision.
+                    // carry no statementId; they are superseded only when this
+                    // file restates them, otherwise they seed the duplicate set.
                     const legacyLines = await RoyaltyLine.findAll({
                         where: {
                             statementId: null, source, period,
@@ -533,7 +552,28 @@ function register(app, ctx) {
                         },
                         transaction: t
                     });
-                    for (const pl of legacyLines) await supersedeLine(pl, 'legacy line superseded by statement revision');
+                    for (const pl of legacyLines) {
+                        if (pl.catalogKey && newCatalogKeys.has(pl.catalogKey)) {
+                            await supersedeLine(pl, 'legacy line superseded by statement revision');
+                        } else if (pl.rowHash) {
+                            duplicateRowHashes.add(pl.rowHash);
+                        }
+                    }
+                    if (duplicateRowHashes.size) {
+                        const kept = [];
+                        for (const line of fresh) {
+                            if (line.rowHash && duplicateRowHashes.has(line.rowHash)) {
+                                report.rejected.push({
+                                    row: line.lineNo,
+                                    code: 'duplicate_across_statements',
+                                    reason: `duplicate — identical row already active in this source/period under another statement for "${line.catalogKey}"; skipped, not double-counted`
+                                });
+                                continue;
+                            }
+                            kept.push(line);
+                        }
+                        fresh = kept;
+                    }
 
                     const statement = await RoyaltyStatement.create({
                         source,

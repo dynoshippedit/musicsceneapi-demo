@@ -300,7 +300,9 @@ describe('financial corrections: spawned server', () => {
     test('same-file re-upload never double-counts', async () => {
         const body = 'isrc_or_upc,amount,currency,period,source\nZZPRC2600001,0.003,USD,2026-09,distributor\n';
         const imp = await srv.api('POST', '/v3/royalties/import', admin, csvFile(body));
-        assert.strictEqual(imp.status, 201);
+        // 200 already-imported (not 201): the file was already imported, nothing
+        // was created. Totals must still be unchanged.
+        assert.strictEqual(imp.status, 200);
         assert.strictEqual(imp.json.imported, 0, 'no new rows from the identical file');
         assert.strictEqual(imp.json.rejected.length, 1, 'row rejected as duplicate');
         assert.match(imp.json.rejected[0].reason, /duplicate/);
@@ -379,9 +381,11 @@ describe('financial corrections: spawned server', () => {
         const { json } = await srv.api('GET', '/v3/royalties/summary?artistId=art_novakin&period=2026-09', admin);
         const usd = json.totals.find((t) => t.currency === 'USD');
         assert.ok(usd.disputedCount >= 1, 'disputed lines are flagged in the summary');
-        // Trusted total excludes the disputed 10.00: only the revised 0.005 counts.
-        assert.strictEqual(usd.totalExact, '0.005', 'disputed 10.00 is NOT in the trusted total');
-        assert.strictEqual(usd.totalCents, 1);
+        // Trusted total excludes the disputed 10.00: the revised 0.005 plus the
+        // 7.50 approved line from the review test (a disjoint additional statement
+        // for the same source/period, so it stays active) count: 7.505 -> 751c.
+        assert.strictEqual(usd.totalExact, '7.505', 'disputed 10.00 is NOT in the trusted total');
+        assert.strictEqual(usd.totalCents, 751);
         assert.strictEqual(usd.disputedExact, '10.00', 'disputed amount shown as a separate line');
         assert.strictEqual(usd.disputedCents, 1000);
     });

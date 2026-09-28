@@ -48,14 +48,37 @@ async function buildReconciliation(models, { artistIds = null, period = null } =
 
     const artists = [...agg.byArtist.entries()]
         .sort(([a], [b]) => (a < b ? -1 : 1))
-        .map(([artistId, currencies]) => ({
-            artistId,
-            totals: Object.fromEntries(
+        .map(([artistId, currencies]) => {
+            const totals = Object.fromEntries(
                 [...currencies.entries()]
                     .sort(([a], [b]) => (a < b ? -1 : 1))
                     .map(([currency, b]) => [currency, bucketJson(b)])
-            )
-        }));
+            );
+            // Per-currency, per-source breakdown (trusted/counted income only).
+            // Kept for API compatibility and so the monthly close can explain
+            // every difference by income source; `totals` above carries the
+            // review-state buckets the finance UI uses.
+            const currenciesArr = [...currencies.entries()]
+                .sort(([a], [b]) => (a < b ? -1 : 1))
+                .map(([currency, b]) => {
+                    const j = bucketJson(b);
+                    const totalCents = j.royaltiesCents + j.merchSettlementsCents +
+                        j.directSalesCents + j.manualAdjustmentsCents;
+                    if (!Number.isSafeInteger(totalCents)) throw new Error('Total exceeds safe integer range');
+                    return {
+                        currency,
+                        royaltiesCents: j.royaltiesCents,
+                        royaltiesExact: j.royaltiesExact,
+                        merchSettlementsCents: j.merchSettlementsCents,
+                        directSalesCents: j.directSalesCents,
+                        manualAdjustmentsCents: j.manualAdjustmentsCents,
+                        totalCents,
+                        disputedCount: j.disputedCount,
+                        estimatedCount: j.estimatedCount
+                    };
+                });
+            return { artistId, totals, currencies: currenciesArr };
+        });
 
     const totals = Object.fromEntries(
         [...agg.totals.entries()]

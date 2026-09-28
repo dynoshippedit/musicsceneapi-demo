@@ -8,7 +8,7 @@
 
 .positioning {
   font-size: 0.9rem;
-  color: var(--text-muted, #8a8a93);
+  color: var(--color-text-muted);
   max-width: 60rem;
   margin: 0 0 1.5rem;
 }
@@ -26,7 +26,7 @@
   align-items: baseline;
   flex-wrap: wrap;
   padding: 0.5rem 0;
-  border-bottom: 1px solid var(--border, #2a2a31);
+  border-bottom: 1px solid var(--border-color);
   font-size: 0.9rem;
 }
 
@@ -37,32 +37,32 @@
 }
 
 .muted {
-  color: var(--text-muted, #8a8a93);
+  color: var(--color-text-muted);
   font-size: 0.8rem;
 }
 
 .note {
   font-size: 0.85rem;
-  color: var(--text-muted, #8a8a93);
+  color: var(--color-text-muted);
   max-width: 60rem;
 }
 
 .disclaimer {
   font-size: 0.8rem;
-  color: var(--text-faint, #6b6b75);
+  color: var(--color-text-faint);
   font-style: italic;
   max-width: 60rem;
 }
 
 .warn {
   font-size: 0.85rem;
-  color: var(--warning, #d9a13b);
+  color: var(--color-warning);
 }
 
 .matchBox {
   margin: 1rem 0;
   padding: 1rem;
-  border: 1px dashed var(--border, #2a2a31);
+  border: 1px dashed var(--border-color);
 }
 
 .matchForm {
@@ -75,7 +75,7 @@
 
 .gapBox {
   padding: 0.75rem 0;
-  border-bottom: 1px solid var(--border, #2a2a31);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .gapForm {
@@ -90,5 +90,5 @@
 .worksheet {
   margin-top: 1rem;
   padding: 1rem;
-  border: 1px solid var(--border, #2a2a31);
+  border: 1px solid var(--border-color);
 }

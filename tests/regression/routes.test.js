@@ -73,8 +73,12 @@ describe('route table — registration invariants', () => {
         //   ADDED GET /v3/financials/reconciliation, PATCH /v3/royalties/lines/:id/review,
         //   PATCH /v3/royalties/settlements/:id/review, PATCH /v3/direct-sales/:id/review,
         //   GET /v3/royalties/lines, GET /v3/royalties/settlements.
-        assert.strictEqual(TABLE.length, 110,
-            `expected 110 registered routes, found ${TABLE.length}`);
+        // Monthly close (2026-09-28, fix 3): +16 routes (src/routes/monthlyclose.js —
+        //   payouts, deposits, matches, gap annotations, adjustments, commission
+        //   contracts/worksheet, expected reports, mapping history/approval,
+        //   statement listing). All authenticated; writes are admin-gated.
+        assert.strictEqual(TABLE.length, 126,
+            `expected 126 registered routes, found ${TABLE.length}`);
     });
 
     test('PINS: the known shadowed duplicate routes are still present', () => {

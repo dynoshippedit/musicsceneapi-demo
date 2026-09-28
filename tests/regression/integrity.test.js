@@ -5,7 +5,7 @@
  *   B1  malformed royalties must 4xx without killing the API
  *   B2  rejected artist writes must not 200 / emit success audits
  *   B3  concurrent distinct-user votes must both persist
- *   FE-01 sales contract is {artistId, month, revenue}; old keys stay 400
+ *   FE-01 sales contract is {artistId, month, amount|amountCents}; old keys stay 400
  *
  * Own ephemeral port + temp SQLite. Never touches the operator database.
  */
@@ -144,24 +144,26 @@ test('rejected writes, concurrent votes, royalties and sales contract hold on di
     await boot();
     let token = await login();
 
-    // FE-01: mistaken client keys stay 400; the API contract is artistId/month/revenue.
+    // FE-01: mistaken client keys stay 400; the API contract is
+    // artistId/month/amount|amountCents (integer cents, no float revenue).
     const oldKeys = await api('POST', '/v3/analytics/sales', token, {
         artistId: 'art_novakin', amount: 100, date: new Date().toISOString()
     });
     assert.equal(oldKeys.status, 400);
-    assert.equal(oldKeys.body.error, 'Missing fields');
+    assert.equal(oldKeys.body.error, 'Missing fields: artistId, month');
 
     const sale = await api('POST', '/v3/analytics/sales', token, {
-        artistId: 'art_novakin', month: '2026-09', revenue: 100
+        artistId: 'art_novakin', month: '2026-09', amountCents: 10000
     });
     assert.equal(sale.status, 200);
     assert.equal(sale.body.success, true);
 
-    // $0 is a real sale (promo / write-off). `!revenue` used to 400 it.
+    // $0 is a real sale (promo / write-off). A missing amount used to 400 it;
+    // explicit zero must still be accepted.
     const zeroSale = await api('POST', '/v3/analytics/sales', token, {
-        artistId: 'art_novakin', month: '2026-08', revenue: 0
+        artistId: 'art_novakin', month: '2026-08', amountCents: 0
     });
-    assert.equal(zeroSale.status, 200, `zero-revenue sale rejected: ${JSON.stringify(zeroSale)}`);
+    assert.equal(zeroSale.status, 200, `zero-amount sale rejected: ${JSON.stringify(zeroSale)}`);
     assert.equal(zeroSale.body.success, true);
 
     // Omitted vote direction used to ++votes with userVote null.
@@ -179,7 +181,7 @@ test('rejected writes, concurrent votes, royalties and sales contract hold on di
 
     // Same class as B1: non-string month used to unhandled-reject and shut the API down.
     const badMonth = await api('POST', '/v3/analytics/sales', token, {
-        artistId: 'art_novakin', month: ['2026-09'], revenue: 1
+        artistId: 'art_novakin', month: ['2026-09'], amountCents: 1
     });
     assert.ok(badMonth.status >= 400 && badMonth.status < 500, `bad month status ${badMonth.status}`);
     const healthAfterSale = await api('GET', '/health');

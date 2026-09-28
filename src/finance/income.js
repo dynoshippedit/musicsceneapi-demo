@@ -34,7 +34,7 @@
 
 'use strict';
 
-const { sumDecimals, parseDecimal, decimalToCents } = require('./decimal');
+const { sumDecimals, parseDecimal, decimalToCents, formatDecimal } = require('./decimal');
 const { isCounted, isDisputed, isEstimated } = require('./reviewState');
 
 const MONTH_RE = /^\d{4}-\d{2}$/;
@@ -71,17 +71,29 @@ function newBucket() {
         estimatedCents: 0n,
         countedCount: 0,
         disputedCount: 0,
-        estimatedCount: 0
+        estimatedCount: 0,
+        // Counted-only per-category breakdown (BigInt cents), so the
+        // reconciliation can explain every difference by income source.
+        // Royalties land here boundary-rounded (once per group); the exact
+        // decimal sum is kept alongside in royaltiesExact.
+        royaltiesCents: 0n,
+        royaltiesExact: null,
+        merchCents: 0n,
+        salesCents: 0n,
+        adjustmentsCents: 0n
     };
 }
 
-function bucketAdd(map, currency, reviewState, cents) {
+function bucketAdd(map, currency, reviewState, cents, category = null) {
     const b = getBucket(map, currency);
     const c = BigInt(cents);
     if (isCounted(reviewState)) {
         b.countedCents += c;
         b.countedCount++;
         if ((reviewState || 'reported') === 'approved') b.approvedCents += c;
+        if (category === 'merch') b.merchCents += c;
+        else if (category === 'sales') b.salesCents += c;
+        else if (category === 'adjustments') b.adjustmentsCents += c;
     } else if (isDisputed(reviewState)) {
         b.disputedCents += c;
         b.disputedCount++;
@@ -192,6 +204,9 @@ function aggregateIncome(data, period = null) {
                     b.countedCents += cents;
                     b.countedCount += g.lines.length;
                     b.approvedCents += approvedCents;
+                    b.royaltiesCents += cents;
+                    const exact = sumDecimals(g.lines.map((l) => parseDecimal(l.amountDecimal)));
+                    b.royaltiesExact = b.royaltiesExact ? sumDecimals([b.royaltiesExact, exact]) : exact;
                 } else if (g.cls === 'disputed') {
                     b.disputedCents += cents;
                     b.disputedCount += g.lines.length;
@@ -223,8 +238,8 @@ function aggregateIncome(data, period = null) {
         if (!inPeriod(m)) continue;
         coverage.merchSettlements.records++;
         const ab = artistBucket(s.artistId);
-        bucketAdd(ab, s.currency, st, s.netCents);
-        bucketAdd(totals, s.currency, st, s.netCents);
+        bucketAdd(ab, s.currency, st, s.netCents, 'merch');
+        bucketAdd(totals, s.currency, st, s.netCents, 'merch');
         if (isCounted(st)) addMonth(m, s.currency, s.netCents);
         artistIds.add(s.artistId);
     }
@@ -239,8 +254,8 @@ function aggregateIncome(data, period = null) {
         coverage.directSales.records++;
         const artistId = s.artistId || 'unattributed';
         const ab = artistBucket(artistId);
-        bucketAdd(ab, s.currency, st, s.netCents);
-        bucketAdd(totals, s.currency, st, s.netCents);
+        bucketAdd(ab, s.currency, st, s.netCents, 'sales');
+        bucketAdd(totals, s.currency, st, s.netCents, 'sales');
         if (isCounted(st)) addMonth(m, s.currency, s.netCents);
         artistIds.add(artistId);
     }
@@ -254,8 +269,8 @@ function aggregateIncome(data, period = null) {
         if (!inPeriod(m)) continue;
         coverage.manualAdjustments.records++;
         const ab = artistBucket(a.artistId);
-        bucketAdd(ab, a.currency, st, a.amountCents);
-        bucketAdd(totals, a.currency, st, a.amountCents);
+        bucketAdd(ab, a.currency, st, a.amountCents, 'adjustments');
+        bucketAdd(totals, a.currency, st, a.amountCents, 'adjustments');
         if (isCounted(st)) addMonth(m, a.currency, a.amountCents);
         artistIds.add(a.artistId);
     }
@@ -281,7 +296,12 @@ function bucketJson(b) {
         estimatedCents: centsToNumber(b.estimatedCents),
         countedCount: b.countedCount,
         disputedCount: b.disputedCount,
-        estimatedCount: b.estimatedCount
+        estimatedCount: b.estimatedCount,
+        royaltiesCents: centsToNumber(b.royaltiesCents),
+        royaltiesExact: b.royaltiesExact ? formatDecimal(b.royaltiesExact) : '0',
+        merchSettlementsCents: centsToNumber(b.merchCents),
+        directSalesCents: centsToNumber(b.salesCents),
+        manualAdjustmentsCents: centsToNumber(b.adjustmentsCents)
     };
 }
 

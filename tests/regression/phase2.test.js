@@ -476,7 +476,8 @@ describe('Phase 2 — royalty CSV import (integer cents)', () => {
 
         // Same file again: nothing new is counted, every row is reported.
         const second = await srv.api('POST', '/v3/royalties/import', admin, csvFile(csv));
-        assert.strictEqual(second.status, 201);
+        // 200 already-imported (not 201): nothing was created by the re-upload.
+        assert.strictEqual(second.status, 200);
         assert.strictEqual(second.json.received, 2);
         assert.strictEqual(second.json.imported, 0);
         assert.strictEqual(second.json.rejected.length, 2);

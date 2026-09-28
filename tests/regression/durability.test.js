@@ -149,13 +149,13 @@ test('artist, A&R, sales and audit state survive a full process restart', async 
     assert.strictEqual(voted.body.votes, 1, 'vote counted');
 
     // Sales: three months for a seeded artist.
-    for (const [month, revenue] of [['2026-01', 1000], ['2026-02', 2000], ['2026-03', 3000]]) {
-        const sale = await api(admin, 'POST', '/v3/analytics/sales', { artistId: 'art_lumenveil', month, revenue });
+    for (const [month, amountCents] of [['2026-01', 1000], ['2026-02', 2000], ['2026-03', 3000]]) {
+        const sale = await api(admin, 'POST', '/v3/analytics/sales', { artistId: 'art_lumenveil', month, amountCents });
         assert.strictEqual(sale.status, 200, `sale ${month} logged`);
     }
 
     // Ghost-artistId guard (F-7): sale for a nonexistent artist is rejected.
-    const ghost = await api(admin, 'POST', '/v3/analytics/sales', { artistId: 'art_nope', month: '2026-04', revenue: 9 });
+    const ghost = await api(admin, 'POST', '/v3/analytics/sales', { artistId: 'art_nope', month: '2026-04', amountCents: 9 });
     assert.strictEqual(ghost.status, 404, 'ghost artistId rejected');
 
     // Duplicate artist → 409 (F-4).

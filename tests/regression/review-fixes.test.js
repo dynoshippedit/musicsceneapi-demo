@@ -140,7 +140,7 @@ test('room, campaigns and multimonth sales survive two restarts; restricted read
     assert.equal((await api(admin, 'GET', `/v3/anr/stats/${demoId}`)).body.artistVotes, 1);
     const draft = await api(admin, 'POST', '/v3/marketing/campaigns', { name: 'Durable plan', artistId: 'art_lumenveil', type: 'playlist-push', platforms: ['spotify'] });
     assert.equal(draft.status, 201); assert.equal(draft.body.status, 'draft');
-    const sale = (token, artistId, month, revenue) => api(token, 'POST', '/v3/analytics/sales', { artistId, month, revenue });
+    const sale = (token, artistId, month, amountCents) => api(token, 'POST', '/v3/analytics/sales', { artistId, month, amountCents });
     for (let month = 1; month <= 13; month++) {
         const label = month <= 12 ? `2025-${String(month).padStart(2, '0')}` : '2026-01';
         assert.equal((await sale(admin, 'art_lumenveil', label, month * 100)).status, 200);
@@ -151,18 +151,32 @@ test('room, campaigns and multimonth sales survive two restarts; restricted read
     for (const value of [-1, '123junk', ' ', true]) assert.equal((await sale(admin, 'art_novakin', '2025-05', value)).status, 400);
     assert.equal((await sale(admin, 'art_novakin', '2025-99', 1)).status, 400);
     for (const [method, route, body] of [
-        ['POST', '/v3/analytics/sales', { artistId: 'art_lumenveil', month: '2026-02', revenue: 999 }],
+        ['POST', '/v3/analytics/sales', { artistId: 'art_lumenveil', month: '2026-02', amountCents: 999 }],
         ['POST', '/v3/royalties/calculate', { artistId: 'art_lumenveil' }],
         ['POST', '/v3/ai/query', { prompt: 'secret', artistId: 'art_lumenveil' }],
         ['GET', '/v3/analytics/projections?artistId=art_lumenveil'],
         ['GET', '/v3/artists/art_lumenveil/entity-audit'],
         ['GET', '/v3/artists/art_lumenveil/development']
     ]) assert.equal((await api(artist, method, route, body)).status, 403, route);
-    assert.equal((await api(artist, 'GET', '/v3/label/overview')).body.monthlyRevenue, 70);
+    // The overview now reads the full counted-income pipeline (fix 2), not just
+    // manually logged sales: the seeded demo royalty for art_novakin (12500c in
+    // 2026-08, the latest month with income) is the headline, which is honest —
+    // the old float-sales history was silently ignoring royalty income.
+    assert.equal((await api(artist, 'GET', '/v3/label/overview')).body.monthlyRevenueCents.USD, 12500);
     assert.equal((await api(artist, 'GET', '/v3/marketing/campaigns')).body.campaigns.length, 0);
     const sparse = (await api(artist, 'GET', '/v3/analytics/projections?months=1')).body.chartData;
-    assert.deepEqual(sparse.labels, ['2025-01', '2025-02', '2025-03', '2025-04', '2025-05']);
-    assert.deepEqual(sparse.datasets[0].data, [40, null, 60, 70, null]); assert.equal(sparse.datasets[1].data.at(-1), 80);
+    // Projections read the full counted-income pipeline (fix 2), so the history
+    // spans the three manual entries plus the seeded demo royalty (2026-08,
+    // 12500c). Missing months are gaps (null), never zero sales.
+    assert.equal(sparse.labels[0], '2025-01');
+    assert.equal(sparse.labels.at(-2), '2026-08');
+    assert.equal(sparse.labels.at(-1), '2026-09', 'one forecast month appended');
+    const recorded = sparse.datasets[0].data;
+    assert.deepEqual(recorded.slice(0, 5), [40, null, 60, 70, null], 'manual entries with a null gap');
+    assert.equal(recorded.at(-2), 12500, 'seeded royalty in 2026-08');
+    assert.equal(recorded.at(-1), null, 'no recorded income in the forecast month');
+    assert.ok(recorded.slice(4, -2).every((v) => v === null), 'all other months are gaps');
+    assert.ok(Number.isFinite(sparse.datasets[1].data.at(-1)), 'forecast value is numeric');
     for (const endpoint of ['query', 'analyze']) {
         const ai = await api(admin, 'POST', `/v3/ai/${endpoint}`, { prompt: 'growth', artistId: 'art_novakin' });
         assert.equal(ai.status, 503); assert.equal(ai.body.answer, undefined);

@@ -103,15 +103,31 @@ function register(app, ctx) {
             const { isReviewState } = require('../finance/reviewState');
             const state = reviewState ? String(reviewState) : 'reported';
             if (!isReviewState(state) || state === 'superseded') return res.status(400).json({ error: 'reviewState must be one of: reported, reconciled, approved, disputed, estimated' });
-            const adj = await ManualAdjustment.create({
-                artistId, month, currency: 'USD', amountCents: cents,
-                source: 'manual_entry_api',
-                note: note ? String(note) : 'Logged via /v3/analytics/sales (manual entry, not source evidence)',
-                reviewState: state,
-                reviewedBy: req.user.email || null,
-                enteredBy: req.user.email || null,
-                enteredAt: new Date()
+            // Upsert by (artistId, month) for this entry source: logging the same
+            // month again replaces the amount, matching the old SalesEntry
+            // semantics. (General ledger adjustments via /v3/financials/* may
+            // legitimately share a month; only manual_entry_api rows upsert.)
+            let adj = await ManualAdjustment.findOne({
+                where: { artistId, month, source: 'manual_entry_api' }
             });
+            if (adj) {
+                await adj.update({
+                    amountCents: cents,
+                    note: note ? String(note) : adj.note,
+                    enteredBy: req.user.email || null,
+                    enteredAt: new Date()
+                });
+            } else {
+                adj = await ManualAdjustment.create({
+                    artistId, month, currency: 'USD', amountCents: cents,
+                    source: 'manual_entry_api',
+                    note: note ? String(note) : 'Logged via /v3/analytics/sales (manual entry, not source evidence)',
+                    reviewState: state,
+                    reviewedBy: req.user.email || null,
+                    enteredBy: req.user.email || null,
+                    enteredAt: new Date()
+                });
+            }
             const count = await ManualAdjustment.count({ where: { artistId } });
             res.json({ success: true, id: adj.id, count });
         } catch (err) {
