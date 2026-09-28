@@ -41,7 +41,46 @@ async function repairSalesSchema(sequelize) {
     return true;
 }
 
-module.exports = { repairSalesSchema, addUserSecurityColumns, addRoyaltyDedupColumns };
+module.exports = { repairSalesSchema, addUserSecurityColumns, addRoyaltyDedupColumns, addMonthlyCloseColumns };
+
+/**
+ * Monthly close (2026-09-28, fix 1): statement identity columns on
+ * RoyaltyLines + removal of the defective unique dedup indexes.
+ *
+ * The old unique indexes on (catalogKey, period, source[, sourceFileHash])
+ * were the schema half of the defect: they made the database itself reject
+ * legitimate second lines for the same recording/period/source (territory,
+ * rights-type, or rate-tier splits). Dedup now lives on the full
+ * row-content hash inside the import transaction; the unique indexes are
+ * dropped. New non-unique lookup indexes come from the model definition
+ * via sync(); this migration only repairs pre-existing databases.
+ *
+ * Idempotent: columns are added only when absent; DROP INDEX IF EXISTS is
+ * a no-op when the index is already gone.
+ */
+async function addMonthlyCloseColumns(sequelize) {
+    if (sequelize.getDialect() !== "sqlite") return false;
+    // On a fresh database the table does not exist yet when migrations run
+    // (sequelize.sync() creates it afterwards, with the new columns and
+    // indexes from the model definition). No-op instead of failing boot.
+    const [rows] = await sequelize.query('PRAGMA table_info("RoyaltyLines");');
+    if (!rows.length) return false;
+    const names = new Set(rows.map((r) => r.name));
+    let changed = false;
+    if (!names.has("statementId")) {
+        await sequelize.query('ALTER TABLE "RoyaltyLines" ADD COLUMN "statementId" INTEGER');
+        changed = true;
+    }
+    if (!names.has("rowHash")) {
+        await sequelize.query('ALTER TABLE "RoyaltyLines" ADD COLUMN "rowHash" VARCHAR(255)');
+        changed = true;
+    }
+    for (const idx of ["royalty_lines_catalog_period_source_hash", "royalty_lines_catalog_period_source"]) {
+        await sequelize.query(`DROP INDEX IF EXISTS "${idx}"`);
+        changed = true;
+    }
+    return changed;
+}
 
 /**
  * STEP 7 (D7, 2026-09-28): session revocation + deactivation columns on Users.

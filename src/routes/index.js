@@ -54,7 +54,13 @@ const DOMAIN_ORDER = [
     // Direct sales (2026-09-28): appended, never reordered. The registration
     // contract pins first-appearance order of the pre-split monolith;
     // appending a new domain changes no existing binding.
-    'directsales'
+    'directsales',
+    // Monthly close (2026-09-28): appended, never reordered. Cash, manual
+    // adjustments, commissions, expected reports, mapping history,
+    // statements. No path collides with existing routes (verified:
+    // /v3/financials/* except reconciliation+export, which live in
+    // directsales).
+    'monthlyclose'
 ];
 
 /**

@@ -64,11 +64,30 @@ function applyTransition(record, to, reviewer, evidence) {
     return record;
 }
 
-/** States whose records count toward reconciliation totals. */
-const COUNTED_STATES = ['reported', 'reconciled', 'approved', 'disputed', 'estimated'];
+/**
+ * States whose records count toward the TRUSTED reconciliation total and
+ * the dashboard KPIs (2026-09-28 fix 2/3).
+ *
+ * `disputed` and `estimated` are NEVER in this set: they are aggregated as
+ * separate, visible lines and never summed into the trusted total. Hiding
+ * a disputed or estimated amount inside the headline number was the
+ * defect — a reviewer must see exactly how much of the total is trusted
+ * versus flagged. `superseded` is excluded everywhere.
+ */
+const COUNTED_STATES = ['reported', 'reconciled', 'approved'];
 
 function isCounted(reviewState) {
     return COUNTED_STATES.includes(reviewState || 'reported');
+}
+
+/** True for records flagged disputed — shown separately, never in the trusted total. */
+function isDisputed(reviewState) {
+    return (reviewState || 'reported') === 'disputed';
+}
+
+/** True for estimate records — shown separately, never in the trusted total. */
+function isEstimated(reviewState) {
+    return (reviewState || 'reported') === 'estimated';
 }
 
 module.exports = {
@@ -78,5 +97,7 @@ module.exports = {
     isReviewState,
     canTransition,
     applyTransition,
-    isCounted
+    isCounted,
+    isDisputed,
+    isEstimated
 };

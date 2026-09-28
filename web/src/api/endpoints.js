@@ -200,3 +200,86 @@ export async function saveWhiteboard(token, message) {
 export async function saveListening(token, url) {
   return readJson(await apiFetch('/v3/anr/listening', { token, method: 'POST', body: { url } }));
 }
+
+// ---------- finance: monthly close ----------
+export async function getReconciliation(token, { artistId, period, signal } = {}) {
+  const params = new URLSearchParams();
+  if (artistId) params.set('artistId', artistId);
+  if (period) params.set('period', period);
+  const query = params.toString() ? `?${params}` : '';
+  return readJson(await apiFetch(`/v3/financials/reconciliation${query}`, { token, signal }));
+}
+
+export async function getPayouts(token, { matched, signal } = {}) {
+  const query = typeof matched === 'boolean' ? `?matched=${matched}` : '';
+  return readJson(await apiFetch(`/v3/financials/payouts${query}`, { token, signal }));
+}
+
+export async function getDeposits(token, { matched, signal } = {}) {
+  const query = typeof matched === 'boolean' ? `?matched=${matched}` : '';
+  return readJson(await apiFetch(`/v3/financials/deposits${query}`, { token, signal }));
+}
+
+export async function postDeposit(token, body, { signal } = {}) {
+  return readJson(await apiFetch('/v3/financials/deposits', { method: 'POST', body, token, signal }));
+}
+
+export async function postMatch(token, body, { signal } = {}) {
+  return readJson(await apiFetch('/v3/financials/matches', { method: 'POST', body, token, signal }));
+}
+
+export async function deleteMatch(token, body, { signal } = {}) {
+  return readJson(await apiFetch('/v3/financials/matches', { method: 'DELETE', body, token, signal }));
+}
+
+export async function annotateGap(token, id, body, { signal } = {}) {
+  return readJson(await apiFetch(`/v3/financials/gaps/${id}/annotate`, { method: 'POST', body, token, signal }));
+}
+
+export async function postAdjustment(token, body, { signal } = {}) {
+  return readJson(await apiFetch('/v3/financials/adjustments', { method: 'POST', body, token, signal }));
+}
+
+export async function reviewAdjustment(token, id, body, { signal } = {}) {
+  return readJson(await apiFetch(`/v3/financials/adjustments/${id}/review`, { method: 'PATCH', body, token, signal }));
+}
+
+export async function getCommissionContracts(token, { artistId, signal } = {}) {
+  const query = artistId ? `?artistId=${encodeURIComponent(artistId)}` : '';
+  return readJson(await apiFetch(`/v3/financials/commissions/contracts${query}`, { token, signal }));
+}
+
+export async function postCommissionContract(token, body, { signal } = {}) {
+  return readJson(await apiFetch('/v3/financials/commissions/contracts', { method: 'POST', body, token, signal }));
+}
+
+export async function getCommissionWorksheet(token, { artistId, period, contractId, signal } = {}) {
+  const params = new URLSearchParams({ artistId, period });
+  if (contractId) params.set('contractId', contractId);
+  return readJson(await apiFetch(`/v3/financials/commissions/worksheet?${params}`, { token, signal }));
+}
+
+export async function getExpectedReports(token, { signal } = {}) {
+  return readJson(await apiFetch('/v3/financials/expected-reports', { token, signal }));
+}
+
+export async function postExpectedReport(token, body, { signal } = {}) {
+  return readJson(await apiFetch('/v3/financials/expected-reports', { method: 'POST', body, token, signal }));
+}
+
+export async function getMappings(token, { source, signal } = {}) {
+  const query = source ? `?source=${encodeURIComponent(source)}` : '';
+  return readJson(await apiFetch(`/v3/financials/mappings${query}`, { token, signal }));
+}
+
+export async function approveMapping(token, id, body, { signal } = {}) {
+  return readJson(await apiFetch(`/v3/financials/mappings/${id}/approve`, { method: 'POST', body, token, signal }));
+}
+
+export async function getStatements(token, { source, period, signal } = {}) {
+  const params = new URLSearchParams();
+  if (source) params.set('source', source);
+  if (period) params.set('period', period);
+  const query = params.toString() ? `?${params}` : '';
+  return readJson(await apiFetch(`/v3/financials/statements${query}`, { token, signal }));
+}

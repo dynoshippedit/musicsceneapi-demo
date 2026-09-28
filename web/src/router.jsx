@@ -14,6 +14,12 @@ import { IntelligencePage } from './pages/IntelligencePage/IntelligencePage.jsx'
 import { MarketingPage } from './pages/MarketingPage/MarketingPage.jsx';
 import { FansPage } from './pages/FansPage/FansPage.jsx';
 import { OperationsPage } from './pages/OperationsPage/OperationsPage.jsx';
+import { FinanceLayout } from './pages/FinancePage/FinanceLayout.jsx';
+import { MonthlyCloseView } from './pages/FinancePage/MonthlyCloseView.jsx';
+import { ReconciliationView } from './pages/FinancePage/ReconciliationView.jsx';
+import { CashView } from './pages/FinancePage/CashView.jsx';
+import { CommissionsView } from './pages/FinancePage/CommissionsView.jsx';
+import { EvidenceView } from './pages/FinancePage/EvidenceView.jsx';
 import { SettingsLayout } from './pages/SettingsPage/SettingsLayout.jsx';
 import { IntegrationsView } from './pages/SettingsPage/IntegrationsView.jsx';
 import { AiSettingsView } from './pages/SettingsPage/AiSettingsView.jsx';
@@ -73,6 +79,24 @@ export const router = createBrowserRouter([
           {
             element: <PermissionRoute perm="operations" />,
             children: [{ path: '/operations', element: <OperationsPage /> }],
+          },
+          {
+            // Finance rides on the dashboard's visibility (perm "overview"); the
+            // backend authorizes every read and gates every write to admins.
+            element: <PermissionRoute perm="overview" />,
+            children: [
+              {
+                path: '/finance',
+                element: <FinanceLayout />,
+                children: [
+                  { index: true, element: <MonthlyCloseView /> },
+                  { path: 'reconciliation', element: <ReconciliationView /> },
+                  { path: 'cash', element: <CashView /> },
+                  { path: 'commissions', element: <CommissionsView /> },
+                  { path: 'evidence', element: <EvidenceView /> },
+                ],
+              },
+            ],
           },
           {
             path: '/settings',

@@ -8,6 +8,7 @@ export const NAV_PRIMARY = [
   { id: 'marketing', label: platformCopy.nav.marketing, icon: 'ri-megaphone-line', perm: 'marketing', to: '/marketing' },
   { id: 'fans', label: platformCopy.nav.fans, icon: 'ri-group-line', perm: 'fans', to: '/fans' },
   { id: 'operations', label: platformCopy.nav.operations, icon: 'ri-truck-line', perm: 'operations', to: '/operations' },
+  { id: 'finance', label: platformCopy.nav.finance, icon: 'ri-bank-card-line', perm: 'overview', to: '/finance', subtitle: 'financeSubtitle' },
   { id: 'admin', label: platformCopy.nav.admin, icon: 'ri-settings-3-line', perm: 'admin', adminOnly: true, to: '/admin' },
 ];
 

@@ -132,11 +132,15 @@ describe('review state machine (src/finance/reviewState.js)', () => {
         assert.ok(done.reviewedAt instanceof Date);
     });
 
-    test('isCounted excludes only superseded', () => {
-        for (const s of ['reported', 'reconciled', 'approved', 'disputed', 'estimated']) {
-            assert.ok(rs.isCounted(s), `${s} counts toward totals`);
+    test('isCounted: trusted states only — disputed/estimated never in the headline total', () => {
+        for (const s of ['reported', 'reconciled', 'approved']) {
+            assert.ok(rs.isCounted(s), `${s} counts toward the trusted total`);
         }
-        assert.ok(!rs.isCounted('superseded'), 'superseded excluded');
+        for (const s of ['disputed', 'estimated', 'superseded']) {
+            assert.ok(!rs.isCounted(s), `${s} excluded from the trusted total`);
+        }
+        assert.ok(rs.isDisputed('disputed') && !rs.isDisputed('reported'));
+        assert.ok(rs.isEstimated('estimated') && !rs.isEstimated('reported'));
     });
 });
 
@@ -360,7 +364,7 @@ describe('financial corrections: spawned server', () => {
         assert.strictEqual(denied.status, 403, 'review transitions are admin-only');
     });
 
-    test('disputed and estimated lines are visibly flagged, not silently counted', async () => {
+    test('disputed and estimated lines are flagged and excluded from the trusted total', async () => {
         const rec = await srv.api('POST', '/v3/catalog/recordings', admin,
             { title: 'Dispute Track', isrc: 'ZZDSP2600001', artistId: 'art_novakin' });
         assert.strictEqual(rec.status, 201);
@@ -375,6 +379,11 @@ describe('financial corrections: spawned server', () => {
         const { json } = await srv.api('GET', '/v3/royalties/summary?artistId=art_novakin&period=2026-09', admin);
         const usd = json.totals.find((t) => t.currency === 'USD');
         assert.ok(usd.disputedCount >= 1, 'disputed lines are flagged in the summary');
+        // Trusted total excludes the disputed 10.00: only the revised 0.005 counts.
+        assert.strictEqual(usd.totalExact, '0.005', 'disputed 10.00 is NOT in the trusted total');
+        assert.strictEqual(usd.totalCents, 1);
+        assert.strictEqual(usd.disputedExact, '10.00', 'disputed amount shown as a separate line');
+        assert.strictEqual(usd.disputedCents, 1000);
     });
 
     test('reconciliation endpoint: named correctly, with coverage statement', async () => {
@@ -388,36 +397,46 @@ describe('financial corrections: spawned server', () => {
             'P&L mentioned only to disclaim it');
         const cov = json.coverage;
         assert.ok(cov, 'coverage statement present');
-        assert.ok(cov.sources.includes('royalty_statements'), 'sources listed');
-        assert.ok(cov.sources.includes('merch_settlements'), 'sources listed');
-        assert.ok(cov.sources.includes('direct_sales'), 'sources listed');
-        assert.ok(cov.reviewStatesExcluded.includes('superseded'), 'superseded excluded by policy');
-        assert.match(cov.exclusions, /not a profit-and-loss/i, 'not-a-P&L stated');
-        assert.match(cov.disclaimer, /not a credit rating/i, 'credit-rating disclaimer present');
-        assert.match(cov.disclaimer, /never filled with a manufactured figure/i, 'evidence-gap rule stated');
+        assert.deepStrictEqual(cov.trustedStates, ['reported', 'reconciled', 'approved']);
+        assert.deepStrictEqual(cov.separatedStates, ['disputed', 'estimated']);
+        assert.ok(cov.royalties && cov.merchSettlements && cov.directSales && cov.manualAdjustments,
+            'per-category period filtering documented');
+        assert.ok(cov.cash && /not income/i.test(cov.cash.note), 'cash documented as evidence, not income');
+        const disclaimers = json.disclaimers.join(' ');
+        assert.match(disclaimers, /not a credit rating/i, 'credit-rating disclaimer present');
+        assert.match(disclaimers, /never added to income totals/i, 'no-double-counting stated');
         const novakin = json.artists.find((a) => a.artistId === 'art_novakin');
         assert.ok(novakin, 'artist bucket present');
-        const usd = novakin.currencies.find((c) => c.currency === 'USD');
+        const usd = novakin.totals.USD;
         assert.ok(usd, 'USD bucket present');
-        assert.ok(Number.isSafeInteger(usd.totalCents), 'totals are integer cents');
-        assert.ok('royaltiesExact' in usd, 'exact royalty sum exposed');
-        assert.ok('disputedCount' in usd, 'disputed flag exposed');
+        assert.ok(Number.isSafeInteger(usd.countedCents), 'totals are integer cents');
+        assert.ok('disputedCents' in usd && 'estimatedCents' in usd, 'separated states exposed');
+        // Cash section: evidence, never income.
+        assert.ok(json.cash, 'cash section present');
+        assert.ok(Array.isArray(json.cash.matched), 'matched pairs listed');
+        assert.ok(Array.isArray(json.cash.unmatchedPayouts), 'unmatched payouts visible');
+        assert.ok(Array.isArray(json.cash.unmatchedDeposits), 'unmatched deposits visible');
+        assert.ok(Array.isArray(json.cash.gaps), 'cash gaps listed');
+        assert.ok(Array.isArray(json.evidenceGaps), 'evidence gaps listed');
     });
 
-    test('reconciliation totals exclude superseded and use exact decimals', async () => {
+    test('reconciliation totals: trusted only, exact decimals, disputed separate', async () => {
         // art_novakin USD for 2026-09:
-        //   royalty 0.005 (revised; the 0.003 was superseded) +
-        //   royalty 7.50 (approved in the review test) +
-        //   royalty 10.00 (disputed; counts, flagged) +
-        //   = 17.505 exact -> 1751 cents (round-half-up).
+        //   royalty 0.005 (revised; the 0.003 was superseded) -> 1 cent +
+        //   royalty 7.50 (approved in the review test) -> 750 cents =
+        //   trusted 751 cents.
+        //   royalty 10.00 (disputed) -> 1000 cents, SEPARATE, not in trusted.
         const { json } = await srv.api(
             'GET', '/v3/financials/reconciliation?artistId=art_novakin&period=2026-09', admin);
         const novakin = json.artists.find((a) => a.artistId === 'art_novakin');
-        const usd = novakin.currencies.find((c) => c.currency === 'USD');
-        assert.strictEqual(usd.royaltiesExact, '17.505');
-        assert.strictEqual(usd.royaltiesCents, 1751);
-        assert.strictEqual(usd.totalCents, 1751);
+        const usd = novakin.totals.USD;
+        assert.strictEqual(usd.countedCents, 751, 'trusted total: 0.005 + 7.50');
+        assert.strictEqual(usd.disputedCents, 1000, 'disputed 10.00 is a separate line');
+        assert.strictEqual(usd.estimatedCents, 0);
         assert.ok(usd.disputedCount >= 1, 'disputed line flagged');
+        // Label-level totals agree with the artist bucket (single artist here).
+        assert.strictEqual(json.totals.USD.countedCents, 751);
+        assert.strictEqual(json.totals.USD.disputedCents, 1000);
     });
 
     test('direct-sale review endpoint: validation and admin gating', async () => {

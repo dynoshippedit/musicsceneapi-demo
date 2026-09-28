@@ -190,6 +190,7 @@ async function initDB({ logger, labelData } = {}) {
         await require('./migrations').repairSalesSchema(sequelize);
         await require('./migrations').addUserSecurityColumns(sequelize);
         await require('./migrations').addRoyaltyDedupColumns(sequelize);
+        await require('./migrations').addMonthlyCloseColumns(sequelize);
         await sequelize.sync(); // Create absent tables; existing schema changes use explicit migrations.
 
         // SEED USERS IF EMPTY — api L182-190
@@ -411,18 +412,27 @@ const RoyaltyLine = sequelize.define('RoyaltyLine', {
     reviewedBy: { type: DataTypes.STRING, allowNull: true },
     reviewEvidence: { type: DataTypes.TEXT, allowNull: true },
     reviewedAt: { type: DataTypes.DATE, allowNull: true },
-    supersedesId: { type: DataTypes.INTEGER, allowNull: true } // the record this one supersedes
+    supersedesId: { type: DataTypes.INTEGER, allowNull: true }, // the record this one supersedes
+    // Statement identity (2026-09-28 fix 1): every imported line belongs to
+    // the statement (source file) it arrived in. Unit-level supersede works
+    // on statements, not rows — a revised file supersedes the prior
+    // statement AND every active line in it, as one unit.
+    statementId: { type: DataTypes.INTEGER, allowNull: true },
+    // Row-content hash: SHA-256 over the canonicalized row values
+    // (catalogKey, exact amount, currency, period, source). Only
+    // byte/content-identical rows within one statement are duplicates —
+    // a second legitimate line for the same recording/period/source
+    // (territory, rights-type, or rate-tier split) imports normally.
+    rowHash: { type: DataTypes.STRING, allowNull: true }
 }, {
-    // Royalty import idempotency + supersede (research correction
-    // 2026-09-28): the dedup key includes the source file hash.
-    // Re-uploading the SAME file (same hash) is rejected as a duplicate and
-    // can never double-count. Uploading a REVISED file (same catalog key +
-    // period + source, different hash) SUPERSEDES the prior line: the old
-    // row is marked superseded (excluded from totals) and the new row
-    // points at it via supersedesId. The unique constraint backstops
-    // concurrent imports; the route pre-checks and reports per row.
+    // Statement + row identity (2026-09-28 fix 1). The OLD unique index on
+    // (catalogKey, period, source, sourceFileHash) was the defect: it made
+    // the database itself reject legitimate second lines for the same
+    // recording/period/source. Dedup now lives on the full row-content
+    // hash inside the import transaction; this index is a plain lookup.
     indexes: [
-        { unique: true, name: 'royalty_lines_catalog_period_source_hash', fields: ['catalogKey', 'period', 'source', 'sourceFileHash'] }
+        { name: 'royalty_lines_statement', fields: ['statementId'] },
+        { name: 'royalty_lines_artist_period', fields: ['artistId', 'period'] }
     ]
 });
 
@@ -498,4 +508,203 @@ const ArtistPaymentMapping = sequelize.define('ArtistPaymentMapping', {
     ]
 });
 
-module.exports = { sequelize, User, Artist, Stats, AuditEvent, AnrSubmission, SalesEntry, RoomDemo, RoomVote, RoomSetting, Campaign, Subscription, ArtistOAuth, Recording, Release, Work, WorkRecording, RoyaltyLine, MerchSettlement, PaymentConnection, DirectSale, ArtistPaymentMapping, initDB };
+// ---------------------------------------------------------------------------
+// Monthly close (2026-09-28): statement identity, manual adjustments, cash
+// evidence, commission contracts, expected reports, mapping history.
+// sync() creates absent tables; existing DBs are upgraded by the explicit
+// migration addMonthlyCloseColumns in src/models/migrations.js.
+// ---------------------------------------------------------------------------
+
+// RoyaltyStatement: one row per imported statement file. Identity is
+// (source, period, sourceFileHash): the same file re-uploaded is rejected
+// as a duplicate; a revised file for the same (source, period) supersedes
+// the prior statement AND every active line in it, as one unit. Lines carry
+// statementId; the statement links back via supersedesId.
+const RoyaltyStatement = sequelize.define('RoyaltyStatement', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    source: { type: DataTypes.STRING, allowNull: false, defaultValue: '' },
+    period: { type: DataTypes.STRING, allowNull: false }, // e.g. '2026-09'
+    sourceFileHash: { type: DataTypes.STRING, allowNull: false }, // SHA-256 hex of the uploaded file
+    originalFilename: { type: DataTypes.STRING, allowNull: true },
+    formatHash: { type: DataTypes.STRING, allowNull: true }, // SHA-256 of normalized header (mapping history)
+    rowCount: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 }, // lines imported with this statement
+    mappingVersion: { type: DataTypes.INTEGER, allowNull: true }, // SourceMapping version used for this import
+    importVersion: { type: DataTypes.STRING, allowNull: false },
+    importedBy: { type: DataTypes.STRING, allowNull: true },
+    importedAt: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+    status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'active' }, // active | superseded
+    supersedesId: { type: DataTypes.INTEGER, allowNull: true } // the statement this one replaced
+}, {
+    indexes: [
+        { unique: true, name: 'royalty_statements_source_period_hash', fields: ['source', 'period', 'sourceFileHash'] },
+        { name: 'royalty_statements_source_period', fields: ['source', 'period', 'status'] }
+    ]
+});
+RoyaltyStatement.hasMany(RoyaltyLine, { as: 'lines', foreignKey: 'statementId' });
+RoyaltyLine.belongsTo(RoyaltyStatement, { as: 'statement', foreignKey: 'statementId' });
+
+// ManualAdjustment: the old manual LogSaleForm entry, rebuilt as a labeled
+// manual adjustment inside the common financial pipeline. Integer cents —
+// NEVER float — with provenance (enteredBy, enteredAt) and the same review
+// state machine as every other income category. Feeds reconciliation and
+// the dashboard KPIs; nothing float-based touches the KPI path.
+const ManualAdjustment = sequelize.define('ManualAdjustment', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    artistId: { type: DataTypes.STRING, allowNull: false },
+    month: { type: DataTypes.STRING, allowNull: false }, // YYYY-MM, the period this adjustment belongs to
+    amountCents: { type: DataTypes.INTEGER, allowNull: false }, // integer cents, may be negative; NEVER float
+    currency: { type: DataTypes.STRING, allowNull: false }, // 3-letter ISO, uppercase
+    note: { type: DataTypes.STRING, allowNull: true },
+    source: { type: DataTypes.STRING, allowNull: false, defaultValue: 'manual' },
+    enteredBy: { type: DataTypes.STRING, allowNull: true },
+    enteredAt: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+    reviewState: { type: DataTypes.STRING, allowNull: false, defaultValue: 'reported' },
+    reviewedBy: { type: DataTypes.STRING, allowNull: true },
+    reviewEvidence: { type: DataTypes.TEXT, allowNull: true },
+    reviewedAt: { type: DataTypes.DATE, allowNull: true }
+}, {
+    indexes: [
+        { name: 'manual_adjustments_artist_month', fields: ['artistId', 'month'] }
+    ]
+});
+
+// Payout: money the provider sent to the label's bank. Persisted by the
+// direct-sales sync (idempotent on provider+providerPayoutId). CASH EVIDENCE
+// of income already reported in statements — never additional income.
+// Matched to a BankDeposit by a human reviewer (matchedBy/At/Note);
+// matching never auto-approves. Unmatched payouts stay visible as
+// unresolved cash items.
+const Payout = sequelize.define('Payout', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    provider: { type: DataTypes.STRING, allowNull: false, defaultValue: 'stripe' },
+    providerPayoutId: { type: DataTypes.STRING, allowNull: false }, // e.g. Stripe payout id
+    amountCents: { type: DataTypes.INTEGER, allowNull: false }, // integer cents, NEVER float
+    currency: { type: DataTypes.STRING, allowNull: false }, // 3-letter ISO, uppercase
+    arrivalAt: { type: DataTypes.DATE, allowNull: true },
+    status: { type: DataTypes.STRING, allowNull: true }, // provider status (paid, pending, failed, ...)
+    payoutType: { type: DataTypes.STRING, allowNull: true },
+    syncedAt: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+    syncedBy: { type: DataTypes.STRING, allowNull: true },
+    matchedDepositId: { type: DataTypes.INTEGER, allowNull: true },
+    matchedAt: { type: DataTypes.DATE, allowNull: true },
+    matchedBy: { type: DataTypes.STRING, allowNull: true },
+    matchNote: { type: DataTypes.TEXT, allowNull: true }
+}, {
+    indexes: [
+        { unique: true, name: 'payouts_provider_payout', fields: ['provider', 'providerPayoutId'] }
+    ]
+});
+
+// BankDeposit: money the label recorded as received in its bank account.
+// Recorded by a human with provenance (enteredBy). A deposit MATCHED to a
+// payout is cash evidence of the same income — never additional income
+// (no double-counting). An UNMATCHED deposit is an unresolved item, never
+// silently added to income.
+const BankDeposit = sequelize.define('BankDeposit', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    amountCents: { type: DataTypes.INTEGER, allowNull: false }, // integer cents, NEVER float
+    currency: { type: DataTypes.STRING, allowNull: false }, // 3-letter ISO, uppercase
+    bankRef: { type: DataTypes.STRING, allowNull: false }, // bank statement reference
+    description: { type: DataTypes.STRING, allowNull: true },
+    depositAt: { type: DataTypes.DATE, allowNull: true },
+    enteredBy: { type: DataTypes.STRING, allowNull: true },
+    matchedPayoutId: { type: DataTypes.INTEGER, allowNull: true },
+    matchedAt: { type: DataTypes.DATE, allowNull: true },
+    matchedBy: { type: DataTypes.STRING, allowNull: true },
+    matchNote: { type: DataTypes.TEXT, allowNull: true }
+}, {
+    indexes: [
+        { name: 'bank_deposits_bank_ref', fields: ['bankRef'] }
+    ]
+});
+
+// CashGapAnnotation: human-owned follow-up on a computed cash difference
+// (reported income vs cash received, per period+currency). The numbers are
+// always computed deterministically; the annotation carries who owns the
+// gap and what happens next. AI never approves or closes gaps.
+const CashGapAnnotation = sequelize.define('CashGapAnnotation', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    gapKey: { type: DataTypes.STRING, allowNull: false }, // e.g. '2026-09|USD'
+    period: { type: DataTypes.STRING, allowNull: false },
+    currency: { type: DataTypes.STRING, allowNull: false },
+    owner: { type: DataTypes.STRING, allowNull: true },
+    nextAction: { type: DataTypes.STRING, allowNull: true },
+    status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'open' }, // open | resolved
+    updatedBy: { type: DataTypes.STRING, allowNull: true },
+    updatedAt: { type: DataTypes.DATE, allowNull: true }
+}, {
+    indexes: [
+        { unique: true, name: 'cash_gap_annotations_key', fields: ['gapKey'] }
+    ]
+});
+
+// CommissionContract: the contract basis for a commission worksheet,
+// stored as DATA on the artist/team — never inferred by AI. rateBps is
+// integer basis points (1500 = 15.00%) so the calculation is exact.
+// basis names a deterministic base (see src/finance/commission.js:
+// counted_net_income | counted_gross_income | cash_receipts); exclusions is
+// a JSON object of category/source keys excluded from the base.
+// sourceDescription records WHERE the contract terms came from.
+const CommissionContract = sequelize.define('CommissionContract', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    artistId: { type: DataTypes.STRING, allowNull: false },
+    name: { type: DataTypes.STRING, allowNull: true },
+    rateBps: { type: DataTypes.INTEGER, allowNull: false }, // basis points, exact
+    basis: { type: DataTypes.STRING, allowNull: false }, // counted_net_income | counted_gross_income | cash_receipts
+    effectiveFrom: { type: DataTypes.STRING, allowNull: false }, // YYYY-MM-DD
+    effectiveTo: { type: DataTypes.STRING, allowNull: true }, // YYYY-MM-DD, null = open-ended
+    exclusions: { type: DataTypes.JSON, allowNull: true }, // { categories: [...], royaltySources: [...] }
+    sourceDescription: { type: DataTypes.TEXT, allowNull: true }, // where the terms came from
+    enteredBy: { type: DataTypes.STRING, allowNull: true }
+}, {
+    indexes: [
+        { name: 'commission_contracts_artist', fields: ['artistId'] }
+    ]
+});
+
+// ExpectedReport: the expected-report calendar. Per customer/label, which
+// statements are expected (source, period, expected-by date). The
+// reconciliation flags an expected report with no matching active statement
+// as an EVIDENCE GAP — shown, never auto-filled. A changed schema hash or
+// unexplained variance is flagged the same way.
+const ExpectedReport = sequelize.define('ExpectedReport', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    customer: { type: DataTypes.STRING, allowNull: false },
+    labelName: { type: DataTypes.STRING, allowNull: true },
+    period: { type: DataTypes.STRING, allowNull: false }, // YYYY-MM the report is expected for
+    expectedBy: { type: DataTypes.STRING, allowNull: false }, // YYYY-MM-DD
+    source: { type: DataTypes.STRING, allowNull: false, defaultValue: 'royalty' },
+    expectedSchemaHash: { type: DataTypes.STRING, allowNull: true }, // expected column-layout hash
+    notes: { type: DataTypes.STRING, allowNull: true },
+    enteredBy: { type: DataTypes.STRING, allowNull: true }
+}, {
+    indexes: [
+        { unique: true, name: 'expected_reports_customer_source_period', fields: ['customer', 'source', 'period'] }
+    ]
+});
+
+// SourceMapping: mapping history for messy source files. When a reviewer
+// approves the field mapping for a source's column layout, the mapping is
+// persisted with a version + evidence. A repeat import with the same column
+// signature (headerHash) reuses the approved mapping; a changed column
+// layout never silently inherits it — the import is flagged for re-review.
+const SourceMapping = sequelize.define('SourceMapping', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    source: { type: DataTypes.STRING, allowNull: false },
+    mappingVersion: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },
+    formatHash: { type: DataTypes.STRING, allowNull: true }, // SHA-256 of normalized header (mapping identity)
+    headerHash: { type: DataTypes.STRING, allowNull: false }, // dedup identity for the column layout
+    columnMapping: { type: DataTypes.JSON, allowNull: true }, // logical field -> actual column name
+    status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'seen' }, // seen | approved
+    approvedBy: { type: DataTypes.STRING, allowNull: true },
+    approvedAt: { type: DataTypes.DATE, allowNull: true },
+    evidence: { type: DataTypes.TEXT, allowNull: true },
+    supersededBy: { type: DataTypes.INTEGER, allowNull: true },
+    importedBy: { type: DataTypes.STRING, allowNull: true }
+}, {
+    indexes: [
+        { unique: true, name: 'source_mappings_source_header', fields: ['source', 'headerHash'] }
+    ]
+});
+
+module.exports = { sequelize, User, Artist, Stats, AuditEvent, AnrSubmission, SalesEntry, RoomDemo, RoomVote, RoomSetting, Campaign, Subscription, ArtistOAuth, Recording, Release, Work, WorkRecording, RoyaltyLine, RoyaltyStatement, MerchSettlement, PaymentConnection, DirectSale, ArtistPaymentMapping, ManualAdjustment, Payout, BankDeposit, CashGapAnnotation, CommissionContract, ExpectedReport, SourceMapping, initDB };

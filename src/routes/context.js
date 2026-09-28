@@ -123,11 +123,21 @@ function buildContext() {
         Work: models.Work,
         WorkRecording: models.WorkRecording,
         RoyaltyLine: models.RoyaltyLine,
+        RoyaltyStatement: models.RoyaltyStatement,
         MerchSettlement: models.MerchSettlement,
         // Direct sales (2026-09-28): label-owned payment accounts + attribution.
         PaymentConnection: models.PaymentConnection,
         DirectSale: models.DirectSale,
         ArtistPaymentMapping: models.ArtistPaymentMapping,
+        // Monthly close (2026-09-28): manual adjustments, cash evidence,
+        // commission contracts, expected reports, mapping history.
+        ManualAdjustment: models.ManualAdjustment,
+        Payout: models.Payout,
+        BankDeposit: models.BankDeposit,
+        CashGapAnnotation: models.CashGapAnnotation,
+        CommissionContract: models.CommissionContract,
+        ExpectedReport: models.ExpectedReport,
+        SourceMapping: models.SourceMapping,
 
         // auth
         authenticateToken,

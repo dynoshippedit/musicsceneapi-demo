@@ -33,7 +33,9 @@ function register(app, ctx) {
         prospects, anrSubmissions, anrState, userIntegrations, salesData, apiCache,
         aiService, performLinearRegression, generateSyntheticHistory,
         integrationFacade, fetchArtistData, getIntegrationStatus, SERVICES, limiters,
-        generateMonthlyReport, profile
+        generateMonthlyReport, profile,
+        // Monthly close (2026-09-28): KPI pipeline models.
+        RoyaltyLine, MerchSettlement, DirectSale, ManualAdjustment
     } = ctx;
 
     // Get global tours (consolidated)
@@ -86,17 +88,41 @@ function register(app, ctx) {
 
     });
 
+    // Label overview: headline KPIs derive from the SAME reviewed income
+    // pipeline as the reconciliation (2026-09-28, fix 2) — one source of
+    // truth. No floating-point money anywhere in this path: royalties sum
+    // their exact decimals, everything else is integer cents, and disputed
+    // / estimated amounts are excluded from the headline KPIs (reported
+    // separately). The old manual SalesEntry float history is retired from
+    // the KPI path; manual entries are now labeled ManualAdjustments with
+    // provenance inside the common pipeline.
     app.get('/v3/label/overview', authenticateToken, async (req, res) => {
         try {
+            const { buildLabelKpis } = require('../finance/kpi');
             const sales = require('../services/salesService');
             const roster = (await artistRepo.findAllHybrid()).filter(a => hasArtistAccess(req.user, a.id));
-            const rows = await sales.history(roster.map(a => a.id));
-            const { future } = sales.forecast(rows, 12);
-            res.json({ monthlyRevenue: rows.at(-1)?.revenue ?? null, month: rows.at(-1)?.month ?? null,
-                quarterlyProjection: future.length ? future.slice(0, 3).reduce((sum, r) => sum + r.revenue, 0) : null,
-                annualProjection: future.length ? future.reduce((sum, r) => sum + r.revenue, 0) : null,
+            const kpis = await buildLabelKpis(
+                { RoyaltyLine, MerchSettlement, DirectSale, ManualAdjustment },
+                sales,
+                { artistIds: roster.map(a => a.id) }
+            );
+            res.json({
+                source: 'reconciliation',
+                basis: kpis.basis,
+                month: kpis.month,
+                primaryCurrency: kpis.primaryCurrency,
+                // Per-currency integer cents. The dashboard renders the
+                // primary currency headline and offers the rest.
+                monthlyRevenueCents: kpis.monthlyRevenueCents,
+                quarterlyProjectionCents: kpis.quarterlyProjectionCents,
+                annualProjectionCents: kpis.annualProjectionCents,
+                projectionNotes: kpis.projectionNotes,
+                reviewTotals: kpis.reviewTotals,
                 activeArtists: roster.filter(a => a.status !== 'archived' && a.tier !== 'archived').length,
-                topArtists: [], source: 'recorded_sales', timestamp: new Date().toISOString() });
+                topArtists: [],
+                coverage: kpis.coverage,
+                timestamp: kpis.generatedAt
+            });
         } catch (err) {
             logger.error('Overview failed:', err);
             res.status(503).json({ error: 'Revenue data is unavailable' });

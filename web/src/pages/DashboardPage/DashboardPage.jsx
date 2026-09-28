@@ -44,17 +44,30 @@ export function DashboardPage() {
   if (error && !data) return <ErrorState variant="fullscreen" message={errorMessage} status={error.status} onRetry={retryAll} />;
   if (!data) return <LoadingScreen />;
 
+  // KPIs come from the reviewed income pipeline (same source as the
+  // reconciliation) as integer cents; the /100 is display-only.
+  const pc = data.primaryCurrency || 'USD';
+  const cents = (map) => (map && typeof map[pc] === 'number' ? map[pc] : null);
+  const display = (map) => { const c = cents(map); return c === null ? null : c / 100; };
+  const review = data.reviewTotals?.[pc];
   return (
     <>
       <div className={styles.grid}>
-        <StatCard label={text.kpiMonthlyRevenue} value={formatters.moneyCompact(data.monthlyRevenue)} />
-        <StatCard label={text.kpiQuarterlyProjection} value={formatters.moneyCompact(data.quarterlyProjection)} />
-        <StatCard label={text.kpiAnnualProjection} value={formatters.moneyCompact(data.annualProjection)} />
+        <StatCard label={text.kpiMonthlyRevenue} value={formatters.moneyCompact(display(data.monthlyRevenueCents))} />
+        <StatCard label={text.kpiQuarterlyProjection} value={formatters.moneyCompact(display(data.quarterlyProjectionCents))} />
+        <StatCard label={text.kpiAnnualProjection} value={formatters.moneyCompact(display(data.annualProjectionCents))} />
         <StatCard label={text.kpiActiveArtists} value={formatters.integer(data.activeArtists)} />
       </div>
       {error && <ErrorState variant="panel" message={errorMessage} status={error.status} onRetry={retryAll} />}
 
-      <p className="label">RECORDED SALES{data.month ? ` · LATEST MONTH ${data.month}` : ' · NO SALES RECORDED'}</p>
+      <p className="label">REVIEWED INCOME{data.month ? ` · LATEST MONTH ${data.month}` : ' · NO INCOME RECORDED'} · {pc}</p>
+      {review && (
+        <p className={styles.reviewLine}>
+          Trusted (reported, reconciled, approved): {formatters.money(review.countedCents / 100)}
+          {' · '}Disputed (separate): {formatters.money(review.disputedCents / 100)}
+          {' · '}Estimated (separate): {formatters.money(review.estimatedCents / 100)}        </p>
+      )}
+      {data.basis && <p className={styles.basisLine}>{data.basis}</p>}
       <div className={styles.mainRow}>
         <Section
           title={text.forecastTitle}
@@ -107,7 +120,7 @@ function LogSaleForm({ token, artists, onLogged }) {
     setError(null);
     try {
       if (!artists.some(a => a.id === artistId)) throw new Error('Select an available artist');
-      await postSales(token, { artistId, month, revenue: Number(amount) });
+      await postSales(token, { artistId, month, amount: amount, note: 'Manual entry from the dashboard (labeled adjustment, not source evidence)' });
       setAmount('');
       onLogged();
     } catch (failure) {

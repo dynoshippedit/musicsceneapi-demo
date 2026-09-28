@@ -13,3 +13,16 @@
 @media (max-width: 1023px) {
   .saleForm { grid-template-columns: 1fr; }
 }
+
+.reviewLine {
+  font-size: 0.85rem;
+  color: var(--text-muted, #8a8a93);
+  margin: 0.25rem 0 0;
+}
+
+.basisLine {
+  font-size: 0.75rem;
+  color: var(--text-faint, #6b6b75);
+  margin: 0.25rem 0 1rem;
+  max-width: 60rem;
+}

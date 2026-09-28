@@ -120,7 +120,9 @@ function register(app, ctx) {
     const {
         authenticateToken, hasArtistAccess, checkExportAccess, logger,
         PaymentConnection, DirectSale, ArtistPaymentMapping,
-        RoyaltyLine, MerchSettlement, artistRepo
+        RoyaltyLine, RoyaltyStatement, MerchSettlement, ManualAdjustment,
+        Payout, BankDeposit, CashGapAnnotation, ExpectedReport, SourceMapping,
+        artistRepo
     } = ctx;
 
     const provider = () => getProvider('stripe');
@@ -269,20 +271,42 @@ function register(app, ctx) {
                 return res.status(502).json({ error: `Stripe pull failed: ${e.message || 'unknown error'}` });
             }
             // Payouts are reconciliation visibility (money the provider sent
-            // to the label's bank), never per-artist revenue. Best-effort:
-            // a payout-pull failure degrades to a recorded error and never
-            // blocks the sales sync.
+            // to the label's bank), never per-artist revenue. Persisted
+            // idempotently (provider + providerPayoutId) so the cash
+            // section of the reconciliation can match them against bank
+            // deposits. Best-effort: a payout-pull failure degrades to a
+            // recorded error and never blocks the sales sync.
             let payoutReport;
             try {
                 const pulledPayouts = await p.pullPayouts({ client, accountId: conn.accountId, limit: 100 });
+                let persisted = 0;
+                let alreadyStored = 0;
+                for (const po of pulledPayouts.payouts) {
+                    const [, created] = await Payout.findOrCreate({
+                        where: { provider: 'stripe', providerPayoutId: po.providerPayoutId },
+                        defaults: {
+                            provider: 'stripe',
+                            providerPayoutId: po.providerPayoutId,
+                            amountCents: po.amountCents,
+                            currency: po.currency,
+                            arrivalAt: po.arrivalAt,
+                            status: po.status,
+                            payoutType: po.type,
+                            syncedBy: req.user.email || null
+                        }
+                    });
+                    if (created) persisted++; else alreadyStored++;
+                }
                 payoutReport = {
                     pulled: pulledPayouts.payouts.length,
                     skipped: pulledPayouts.skipped,
                     unsupported: !!pulledPayouts.unsupported,
+                    persisted,
+                    alreadyStored,
                     payouts: pulledPayouts.payouts
                 };
             } catch (e) {
-                payoutReport = { pulled: 0, skipped: 0, unsupported: false, error: e.message || 'payout pull failed', payouts: [] };
+                payoutReport = { pulled: 0, skipped: 0, unsupported: false, persisted: 0, alreadyStored: 0, error: e.message || 'payout pull failed', payouts: [] };
             }
             const mappings = await ArtistPaymentMapping.findAll({
                 where: { provider: 'stripe' }, order: [['id', 'ASC']]
@@ -481,9 +505,17 @@ function register(app, ctx) {
     // accountant-approved policy governs it. It is not a credit rating and
     // implies no funder acceptance.
     //
-    // Royalty amounts are summed at exact source-decimal precision, then
-    // rounded once at the boundary (round-half-up). Superseded records are
-    // excluded; disputed/estimated records are included but flagged.
+    // Reconciliation (monthly close, 2026-09-28 fixes 2 + 3, research
+    // update 8): income from the reviewed records, cash evidence alongside
+    // it, and evidence gaps — never a P&L, never a credit rating. Built by
+    // src/finance/reconciliation.js, the SAME pipeline that feeds the
+    // dashboard KPIs: one source of truth, so the two can never tell
+    // unrelated stories.
+    //
+    // Period filtering is per-category and honest:
+    //   royalties -> statement/line period; merch -> showDate month;
+    //   direct sales -> occurredAt month; manual adjustments -> declared
+    //   month. Cash is bank-level evidence, not period-filtered income.
     // ------------------------------------------------------------------
     app.get('/v3/financials/reconciliation', authenticateToken, async (req, res) => {
         if (!req.user) return res.status(401).json({ error: 'Authentication required' });
@@ -493,96 +525,23 @@ function register(app, ctx) {
             return res.status(403).json({ error: 'Not authorized for this artist' });
         }
         delete where.__check;
-        const currencyFilter = req.query.currency ? String(req.query.currency).toUpperCase() : null;
-        const periodFilter = req.query.period ? String(req.query.period) : null;
+        const artistFilter = req.query.artistId ? String(req.query.artistId) : null;
+        const period = req.query.period ? String(req.query.period) : null;
+        if (period && !/^\d{4}-\d{2}$/.test(period)) {
+            return res.status(400).json({ error: 'period must be YYYY-MM' });
+        }
         try {
-            const { sumDecimals, decimalToCents, formatDecimal, parseDecimal } = require('../finance/decimal');
-            const { isCounted } = require('../finance/reviewState');
-            const [royaltyLines, settlements, sales] = await Promise.all([
-                RoyaltyLine.findAll({ where: { ...where, ...(currencyFilter ? { currency: currencyFilter } : {}), ...(periodFilter ? { period: periodFilter } : {}) } }),
-                MerchSettlement.findAll({ where: { ...where, ...(currencyFilter ? { currency: currencyFilter } : {}) } }),
-                DirectSale.findAll({ where: { provider: 'stripe', ...where, ...(currencyFilter ? { currency: currencyFilter } : {}) } })
-            ]);
-            // per-artist -> per-currency buckets
-            const artists = new Map();
-            const bucket = (artistId, currency) => {
-                let a = artists.get(artistId);
-                if (!a) { a = { artistId, currencies: new Map() }; artists.set(artistId, a); }
-                let c = a.currencies.get(currency);
-                if (!c) {
-                    c = {
-                        currency, royaltiesExact: { mantissa: 0n, scale: 0 },
-                        royaltiesCents: 0, merchSettlementsCents: 0, directSalesCents: 0,
-                        totalCents: 0, disputedCount: 0, estimatedCount: 0
-                    };
-                    a.currencies.set(currency, c);
-                }
-                return c;
-            };
-            const counted = (r) => isCounted(r.reviewState);
-            for (const l of royaltyLines) {
-                if (!counted(l)) continue; // superseded: excluded
-                const b = bucket(l.artistId, l.currency);
-                let d;
-                try {
-                    d = l.amountDecimal ? parseDecimal(l.amountDecimal) : { mantissa: BigInt(l.amountCents), scale: 2 };
-                } catch {
-                    return res.status(500).json({ error: 'Corrupt decimal on royalty line' });
-                }
-                b.royaltiesExact = sumDecimals([b.royaltiesExact, d]);
-                if (l.reviewState === 'disputed') b.disputedCount++;
-                if (l.reviewState === 'estimated') b.estimatedCount++;
-            }
-            for (const s of settlements) {
-                if (!s.artistId || !counted(s)) continue;
-                const b = bucket(s.artistId, s.currency);
-                b.merchSettlementsCents += s.netCents;
-                if (s.reviewState === 'disputed') b.disputedCount++;
-                if (s.reviewState === 'estimated') b.estimatedCount++;
-                if (!Number.isSafeInteger(b.merchSettlementsCents)) throw new Error('Total exceeds safe integer range');
-            }
-            for (const s of sales) {
-                if (!s.artistId || !counted(s)) continue;
-                const b = bucket(s.artistId, s.currency);
-                b.directSalesCents += s.netCents;
-                if (!Number.isSafeInteger(b.directSalesCents)) throw new Error('Total exceeds safe integer range');
-            }
-            // Boundary rounding: exact royalty sum -> cents, once.
-            for (const a of artists.values()) {
-                for (const c of a.currencies.values()) {
-                    const rc = decimalToCents(c.royaltiesExact);
-                    if (rc > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error('Total exceeds safe integer range');
-                    c.royaltiesCents = Number(rc);
-                    c.royaltiesExact = formatDecimal(c.royaltiesExact);
-                    c.totalCents = c.royaltiesCents + c.merchSettlementsCents + c.directSalesCents;
-                    if (!Number.isSafeInteger(c.totalCents)) throw new Error('Total exceeds safe integer range');
-                }
-            }
-            res.json({
-                type: 'income_and_cash_reconciliation',
-                coverage: {
-                    sources: ['royalty_statements', 'merch_settlements', 'direct_sales'],
-                    period: periodFilter || 'all',
-                    currency: currencyFilter || 'all',
-                    reviewStatesIncluded: ['reported', 'reconciled', 'approved', 'disputed', 'estimated'],
-                    reviewStatesExcluded: ['superseded'],
-                    exclusions: 'Costs, expenses, taxes payable, and other liabilities are NOT included. ' +
-                        'This is an income and cash reconciliation, not a profit-and-loss statement. ' +
-                        'It becomes a P&L only with cost inputs and an accountant-approved policy.',
-                    precision: 'Royalty amounts are preserved at exact source-decimal precision and summed ' +
-                        'exactly; integer cents are round-half-up at the reporting boundary only.',
-                    disclaimer: 'This reconciliation is not a credit rating and does not imply acceptance ' +
-                        'by any funder, lender, or investor. When evidence is absent the gap is shown, ' +
-                        'never filled with a manufactured figure.'
-                },
-                artists: [...artists.values()].map((a) => ({
-                    artistId: a.artistId,
-                    currencies: [...a.currencies.values()]
-                }))
-            });
+            const { buildReconciliation } = require('../finance/reconciliation');
+            const artistIds = artistFilter ? [artistFilter]
+                : (await artistRepo.findAllHybrid()).filter(a => hasArtistAccess(req.user, a.id)).map(a => a.id);
+            const recon = await buildReconciliation(
+                { RoyaltyLine, MerchSettlement, DirectSale, ManualAdjustment, Payout, BankDeposit, CashGapAnnotation, ExpectedReport, SourceMapping, RoyaltyStatement },
+                { artistIds, period }
+            );
+            res.json({ type: 'income_and_cash_reconciliation', ...recon });
         } catch (err) {
             if (logger) logger.error(err);
-            res.status(500).json({ error: err.message || 'Database error' });
+            res.status(500).json({ error: err.message || 'Reconciliation failed' });
         }
     });
 
@@ -632,11 +591,12 @@ function register(app, ctx) {
         const artistFilter = req.query.artistId ? String(req.query.artistId) : null;
         const where = artistFilter ? { artistId: artistFilter } : {};
         try {
-            const { isCounted } = require('../finance/reviewState');
-            const [royaltyLines, settlements, sales] = await Promise.all([
+            const { isCounted, isDisputed, isEstimated } = require('../finance/reviewState');
+            const [royaltyLines, settlements, sales, adjustments] = await Promise.all([
                 RoyaltyLine.findAll({ where, order: [['id', 'ASC']] }),
                 MerchSettlement.findAll({ where, order: [['id', 'ASC']] }),
-                DirectSale.findAll({ where: { provider: 'stripe', ...where }, order: [['id', 'ASC']] })
+                DirectSale.findAll({ where: { provider: 'stripe', ...where }, order: [['id', 'ASC']] }),
+                ManualAdjustment.findAll({ where, order: [['id', 'ASC']] })
             ]);
             const exportedAt = new Date().toISOString();
             const exportedBy = (req.user && req.user.email) || '';
@@ -658,7 +618,9 @@ function register(app, ctx) {
                 '', '', '',
                 '', '', '', '',
                 'type=income_and_cash_reconciliation;excludes=costs,expenses,liabilities;' +
-                'superseded_excluded_from_totals=true;not_a_credit_rating=true',
+                'superseded_excluded_from_totals=true;not_a_credit_rating=true;' +
+                'trusted_states=reported,reconciled,approved;disputed_and_estimated_reported_separately_never_in_trusted_total=true;' +
+                'cash_is_evidence_not_income=true;no_double_counting=true',
                 '', '', exportedAt, exportedBy]);
             for (const l of royaltyLines) {
                 row(['royalty_line', l.artistId, l.currency, '', '', '', l.amountCents,
@@ -666,7 +628,7 @@ function register(app, ctx) {
                     l.period, '', l.source || '', l.sourceFileHash || '', l.rowRef || '', l.importVersion || '',
                     l.reviewState || 'reported', l.reviewedBy || '', l.reviewEvidence || '',
                     '', '', '', '',
-                    `catalogKey=${l.catalogKey}${l.supersedesId ? ` supersedes=${l.supersedesId}` : ''}`,
+                    `catalogKey=${l.catalogKey} statement=${l.statementId ?? ''}${l.supersedesId ? ` supersedes=${l.supersedesId}` : ''}`,
                     l.importedBy || '', iso(l.createdAt), exportedAt, exportedBy]);
             }
             for (const s of settlements) {
@@ -678,7 +640,12 @@ function register(app, ctx) {
                     `${s.venue} fees=${s.feesCents} taxes=${s.taxesCents} attendance=${s.attendance ?? ''}${s.supersedesId ? ` supersedes=${s.supersedesId}` : ''}`,
                     s.importedBy || '', iso(s.createdAt), exportedAt, exportedBy]);
             }
-            const pnl = new Map(); // artistId -> currency -> {r,m,d}
+            const pnl = new Map(); // artistId -> currency -> {r,m,d,a,disputed,estimated}
+            const pnlGet = (artistId, currency) => {
+                const key = `${artistId}|${currency}`;
+                if (!pnl.has(key)) pnl.set(key, { r: 0, m: 0, d: 0, a: 0, disputed: 0, estimated: 0 });
+                return pnl.get(key);
+            };
             for (const s of sales) {
                 row(['direct_sale', s.artistId || '', s.currency, s.amountCents,
                     s.amountRefundedCents, s.netCents, '', '', '', '',
@@ -689,35 +656,46 @@ function register(app, ctx) {
                     (s.productIds || []).join('|'), (s.priceIds || []).join('|'),
                     s.description || '', s.importedBy || '', iso(s.createdAt),
                     exportedAt, exportedBy]);
-                if (s.artistId && isCounted(s.reviewState)) {
-                    const key = `${s.artistId}|${s.currency}`;
-                    const b = pnl.get(key) || { r: 0, m: 0, d: 0 };
-                    b.d += s.netCents;
-                    pnl.set(key, b);
-                }
+                const b = pnlGet(s.artistId || 'unattributed', s.currency);
+                if (isCounted(s.reviewState)) b.d += s.netCents;
+                else if (isDisputed(s.reviewState)) b.disputed += s.netCents;
+                else if (isEstimated(s.reviewState)) b.estimated += s.netCents;
             }
             for (const l of royaltyLines) {
-                if (!isCounted(l.reviewState)) continue;
-                const key = `${l.artistId}|${l.currency}`;
-                const b = pnl.get(key) || { r: 0, m: 0, d: 0 };
-                b.r += l.amountCents;
-                pnl.set(key, b);
+                const b = pnlGet(l.artistId, l.currency);
+                if (isCounted(l.reviewState)) b.r += l.amountCents;
+                else if (isDisputed(l.reviewState)) b.disputed += l.amountCents;
+                else if (isEstimated(l.reviewState)) b.estimated += l.amountCents;
             }
             for (const s of settlements) {
-                if (!s.artistId || !isCounted(s.reviewState)) continue;
-                const key = `${s.artistId}|${s.currency}`;
-                const b = pnl.get(key) || { r: 0, m: 0, d: 0 };
-                b.m += s.netCents;
-                pnl.set(key, b);
+                if (!s.artistId) continue;
+                const b = pnlGet(s.artistId, s.currency);
+                if (isCounted(s.reviewState)) b.m += s.netCents;
+                else if (isDisputed(s.reviewState)) b.disputed += s.netCents;
+                else if (isEstimated(s.reviewState)) b.estimated += s.netCents;
+            }
+            for (const a of adjustments) {
+                row(['manual_adjustment', a.artistId, a.currency, '', '', a.amountCents, a.amountCents, '', '', '',
+                    a.month, '', a.source || 'manual', '', '', '',
+                    a.reviewState || 'reported', a.reviewedBy || '', a.reviewEvidence || '',
+                    '', '', '', '',
+                    `note=${a.note || ''} enteredBy=${a.enteredBy || ''} enteredAt=${iso(a.enteredAt)}`,
+                    a.enteredBy || '', iso(a.createdAt), exportedAt, exportedBy]);
+                const b = pnlGet(a.artistId, a.currency);
+                if (isCounted(a.reviewState)) b.a += a.amountCents;
+                else if (isDisputed(a.reviewState)) b.disputed += a.amountCents;
+                else if (isEstimated(a.reviewState)) b.estimated += a.amountCents;
             }
             for (const [key, b] of [...pnl.entries()].sort()) {
                 const [artistId, currency] = key.split('|');
-                const total = b.r + b.m + b.d;
-                row(['reconciliation_summary', artistId, currency, '', '', total, total, '', '', '',
+                const trusted = b.r + b.m + b.d + b.a;
+                row(['reconciliation_summary', artistId, currency, '', '', trusted, trusted, '', '', '',
                     '', '', 'derived', '', '', '',
                     '', '', '',
                     '', '', '', '',
-                    `royalties=${b.r} merch_settlements=${b.m} direct_sales=${b.d} (income and cash reconciliation; not a P&L; not a credit rating)`,
+                    `royalties=${b.r} merch_settlements=${b.m} direct_sales=${b.d} manual_adjustments=${b.a} ` +
+                    `trusted_total=${trusted} disputed_separate=${b.disputed} estimated_separate=${b.estimated} ` +
+                    `(income and cash reconciliation; not a P&L; not a credit rating; disputed/estimated never in trusted total)`,
                     '', '', exportedAt, exportedBy]);
             }
             const stamp = exportedAt.replace(/[:.]/g, '').slice(0, 15);

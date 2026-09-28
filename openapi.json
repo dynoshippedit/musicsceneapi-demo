@@ -194,7 +194,7 @@
     "/v3/analytics/projections": {
       "get": {
         "summary": "Projections",
-        "description": "Revenue projections. NOTE: Stats history table is never written (admitted in code: src/analytics/regression.js:61), so projections run on synthetic/empty history.",
+        "description": "Linear-trend projections over counted, reviewed income (reported/reconciled/approved) \u2014 the same pipeline as the reconciliation. Disputed and estimated amounts are excluded. Deterministic; not a guarantee.",
         "tags": [
           "analytics"
         ],
@@ -225,7 +225,7 @@
     "/v3/analytics/sales": {
       "post": {
         "summary": "Record sale",
-        "description": "Body: sales entry. Phase 4CF: durable DB state (SalesEntry table).",
+        "description": "Log a manual income adjustment (integer cents, with provenance) into the reviewed income pipeline. The old float sales entries are retired from the KPI path. Body: artistId, month (YYYY-MM), amount (decimal dollars) or amountCents (integer), note?, reviewState?.",
         "tags": [
           "analytics"
         ],
@@ -2262,7 +2262,7 @@
     "/v3/label/overview": {
       "get": {
         "summary": "Label overview",
-        "description": "Aggregated label dashboard. Source is recorded_sales (real DB state), not the old synthetic mock; empty DB -> nulls/empty lists. Artist role sees a scoped view.",
+        "description": "Label overview. Headline KPIs (monthly revenue, quarterly/annual projections) derive from the SAME reviewed income pipeline as the financial reconciliation \u2014 one source of truth, integer cents, no floating-point money. Disputed and estimated amounts are excluded from the headline KPIs and reported separately.",
         "tags": [
           "label"
         ],
@@ -3368,7 +3368,7 @@
     "/v3/financials/export": {
       "get": {
         "summary": "Export financial records (CSV)",
-        "description": "Exports every financial record the API imported or derived - direct sales, royalty lines, merch settlements, and per-artist P&L rows - with source provenance and attribution status. Filter by artistId and currency.",
+        "description": "Full financial CSV export: every imported record (royalty lines with statement/provenance, merch settlements, direct sales, manual adjustments) plus reconciliation summary rows with trusted/disputed/estimated separated. Superseded records are included (marked) but excluded from totals. Cash is evidence, not income \u2014 no double counting.",
         "tags": [
           "Financials"
         ],
@@ -3421,7 +3421,7 @@
     "/v3/financials/reconciliation": {
       "get": {
         "summary": "Income and cash reconciliation",
-        "description": "Income and cash reconciliation (royalties + merch settlements + direct sales), per artist per currency, with a coverage statement. This is NOT a profit-and-loss statement \u2014 costs, expenses, and liabilities are not included. Superseded records are excluded; disputed/estimated records are flagged. Not a credit rating; implies no funder acceptance.",
+        "description": "Monthly-close reconciliation: trusted income (reported + reconciled + approved only; disputed/estimated shown separately, never in the trusted total) per artist per currency, cash evidence alongside income (matched payouts/deposits are cash evidence of the same income, never additional income; unmatched deposits are unresolved items, never silently added to income), per-(period,currency) cash gaps with owner/next-action, and evidence gaps (missing expected reports, changed schemas, mappings awaiting re-review, unexplained variance). Built by the same pipeline as the dashboard KPIs. This is NOT a profit-and-loss statement \u2014 costs, expenses, and liabilities are not included. Not a credit rating; implies no funder acceptance.",
         "tags": [
           "Financials"
         ],
@@ -3440,7 +3440,27 @@
           "403": {
             "description": "Not authorized for this artist"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "artistId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "artist id filter"
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "YYYY-MM \u2014 per-category period filtering is documented in the coverage statement"
+          }
+        ]
       }
     },
     "/v3/royalties/lines/{id}/review": {
@@ -3738,6 +3758,812 @@
             "description": "List of records with review state"
           }
         }
+      }
+    },
+    "/v3/financials/payouts": {
+      "get": {
+        "summary": "List persisted payouts",
+        "description": "Provider payouts persisted by the direct-sales sync (idempotent). Cash evidence \u2014 never counted as additional income.",
+        "tags": [
+          "Monthly close"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "currency",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "3-letter ISO filter"
+          },
+          {
+            "name": "matched",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "'true'|'false' filter"
+          }
+        ]
+      }
+    },
+    "/v3/financials/deposits": {
+      "get": {
+        "summary": "List bank deposits",
+        "description": "Bank deposits recorded by a human. Unmatched deposits are unresolved items and never silently enter income.",
+        "tags": [
+          "Monthly close"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "matched",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "'true'|'false' filter"
+          }
+        ]
+      },
+      "post": {
+        "summary": "Record a bank deposit",
+        "description": "Record money received in the bank account, with a bank reference and provenance. Body: amountCents (integer), currency, bankRef, description?, depositAt?. Admin only.",
+        "tags": [
+          "Monthly close"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden (admin only)"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/financials/matches": {
+      "post": {
+        "summary": "Match a payout to a bank deposit",
+        "description": "Record a human match between a provider payout and a bank deposit (same currency required). Amount differences are flagged, never auto-resolved. Body: payoutId, depositId, note?. Admin only.",
+        "tags": [
+          "Monthly close"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden (admin only)"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unmatch a payout and deposit",
+        "description": "Remove a payout<->deposit match. Body: payoutId, depositId. Admin only.",
+        "tags": [
+          "Monthly close"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden (admin only)"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/financials/gaps/{id}/annotate": {
+      "post": {
+        "summary": "Annotate a cash gap",
+        "description": "Set the owner and next action on a computed cash gap (annotation id from the reconciliation cash.gaps[].annotationId). Body: owner?, nextAction?. Admin only.",
+        "tags": [
+          "Monthly close"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden (admin only)"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/financials/adjustments": {
+      "post": {
+        "summary": "Create a manual income adjustment",
+        "description": "Create a labeled manual income adjustment (integer cents, may be negative for corrections) with provenance. Enters the reviewed income pipeline; disputed/estimated states are excluded from trusted totals. Body: artistId, month (YYYY-MM), amountCents, currency?, source?, note?, reviewState?. Admin only.",
+        "tags": [
+          "Monthly close"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden (admin only)"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/financials/adjustments/{id}/review": {
+      "patch": {
+        "summary": "Review-transition a manual adjustment",
+        "description": "Move a manual adjustment through reported -> reconciled -> approved (+disputed/estimated), with reviewer identity and evidence. Body: reviewState, evidence?. Admin only.",
+        "tags": [
+          "Monthly close"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden (admin only)"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/financials/commissions/contracts": {
+      "get": {
+        "summary": "List commission contracts",
+        "description": "Commission contract basis records: rate (integer basis points), base, effective dates, exclusions, source. Body of the commission worksheet.",
+        "tags": [
+          "Monthly close"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "artistId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "artist id filter"
+          }
+        ]
+      },
+      "post": {
+        "summary": "Store a commission contract",
+        "description": "Store the contract basis as data: rateBps (integer 0..10000), basis (counted_net_income|counted_gross_income|cash_receipts), effectiveFrom/effectiveTo (YYYY-MM-DD), exclusions ({categories, royaltySources}), name?, sourceDescription?. Never inferred \u2014 always entered. Admin only.",
+        "tags": [
+          "Monthly close"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden (admin only)"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/financials/commissions/worksheet": {
+      "get": {
+        "summary": "Draft commission worksheet",
+        "description": "Deterministic draft worksheet from the stored contract and the trusted review states (round-half-up, integer math). Shows basis, source, exclusions, and approval depth. Draft only \u2014 not a payment instruction; no AI involved. Query: artistId, period (YYYY-MM), contractId?.",
+        "tags": [
+          "Monthly close"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "artistId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "artist id"
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "YYYY-MM"
+          },
+          {
+            "name": "contractId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "contract id (defaults to the contract covering the period)"
+          }
+        ]
+      }
+    },
+    "/v3/financials/expected-reports": {
+      "get": {
+        "summary": "Expected-report calendar",
+        "description": "Per customer/label: which statements are expected, which arrived, and evidence gaps (missing, overdue, changed schema). Gaps are shown, never auto-filled.",
+        "tags": [
+          "Monthly close"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        }
+      },
+      "post": {
+        "summary": "Upsert an expected report",
+        "description": "Record that a customer/label is expected to deliver a statement for a period. Body: customer, labelName?, period (YYYY-MM), expectedBy (YYYY-MM-DD), source?, expectedSchemaHash?, notes?. Admin only.",
+        "tags": [
+          "Monthly close"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden (admin only)"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/financials/mappings": {
+      "get": {
+        "summary": "Mapping history",
+        "description": "Persisted field-mapping history per source: version, format hash, status, approver, evidence. Approved mappings are reused only for identical formats.",
+        "tags": [
+          "Monthly close"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "source filter"
+          }
+        ]
+      }
+    },
+    "/v3/financials/mappings/{id}/approve": {
+      "post": {
+        "summary": "Approve a column mapping",
+        "description": "Approve a recorded column layout for reuse on identical formats. Body: evidence?. Admin only.",
+        "tags": [
+          "Monthly close"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden (admin only)"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/financials/statements": {
+      "get": {
+        "summary": "List royalty statements",
+        "description": "Statement-level import provenance: source, period, file hash, row count, status, supersedes linkage, mapping version. The statement is the import unit.",
+        "tags": [
+          "Monthly close"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "source filter"
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "YYYY-MM filter"
+          }
+        ]
       }
     }
   },

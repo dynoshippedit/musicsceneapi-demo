@@ -35,14 +35,27 @@
  *     totals only.
  *   - NO DDEX: CSV is the interchange format until a customer supplies
  *     DDEX files.
- *   - IDEMPOTENCY + SUPERSEDE: a royalty line is identified by
- *     (catalogKey, period, source, sourceFileHash). Re-uploading the SAME
- *     file (same SHA-256) reports each repeated row as a "duplicate"
- *     rejection; totals never double-count. Uploading a REVISED file (same
- *     key + period + source, different hash) SUPERSEDES the prior line:
- *     the old row is marked superseded (excluded from totals) and the new
- *     row links to it via supersedesId. A DB-level unique constraint
- *     backstops concurrent imports.
+ *   - IDEMPOTENCY + SUPERSEDE (statement identity, 2026-09-28 fix 1): the
+ *     import unit is the STATEMENT — one source file for one (source,
+ *     period), recorded in RoyaltyStatement with its SHA-256 file hash,
+ *     import version, importer, and timestamp. Every line carries
+ *     statementId; the statement links to the statement it replaced via
+ *     supersedesId. Re-uploading the SAME file (same SHA-256) reports each
+ *     row as an "already imported" duplicate; totals never double-count.
+ *     Uploading a REVISED file (same source + period, different hash)
+ *     SUPERSEDES the prior statement AS A UNIT: every active line in it is
+ *     marked superseded (excluded from totals, retained for audit).
+ *   - DUPLICATE DETECTION is on the full row-content hash (catalog key,
+ *     exact amount, currency, period, source). Only content-identical rows
+ *     within one file are rejected as duplicates — a second legitimate
+ *     line for the same recording/period/source (territory, rights-type,
+ *     or rate-tier split) imports normally. The old
+ *     (catalogKey, period, source) dedup key was the defect and is gone.
+ *   - FIELD MAPPING (research update 8): logical columns resolve through
+ *     header aliases; the detected mapping is persisted per (source,
+ *     column signature) with a version, and a reviewer approves it with
+ *     evidence. A changed layout never silently inherits an old mapping —
+ *     the import is flagged for re-review.
  *   - REVIEW STATE: every imported line starts as `reported`. Transitions
  *     (reported -> reconciled -> approved, plus disputed / estimated) carry
  *     reviewer identity + evidence via the review endpoints.
@@ -79,6 +92,20 @@ const upload = multer({
 
 const REQUIRED_COLUMNS = ['isrc_or_upc', 'currency', 'period', 'source'];
 const AMOUNT_COLUMNS = ['amount', 'amount_cents'];
+// Field-mapping aliases (research update 8: mapping history). Logical fields
+// resolve through these per-source header aliases so messy distributor
+// files with variant column names map deterministically. The detected
+// mapping is persisted per (source, columnSignature) with a version, and a
+// reviewer approves it with evidence; a changed layout never silently
+// inherits an approved mapping — it is flagged for re-review.
+const LOGICAL_COLUMNS = {
+    key: ['isrc_or_upc', 'isrc', 'upc', 'catalog', 'catalog_id', 'catalogue', 'recording'],
+    amount: ['amount', 'total', 'amount_usd', 'gross_amount', 'royalty_amount', 'earnings', 'net_amount', 'payable'],
+    amount_cents: ['amount_cents', 'cents', 'total_cents', 'amountcents'],
+    currency: ['currency', 'cur', 'ccy'],
+    period: ['period', 'statement_period', 'month', 'reporting_period'],
+    source: ['source', 'distributor', 'provider', 'label_source', 'service']
+};
 const CURRENCY_RE = /^[A-Z]{3}$/;
 const CENTS_RE = /^-?\d+$/;
 const DECIMAL_RE = /^[+-]?\d+(\.\d+)?$/;
@@ -86,6 +113,98 @@ const DECIMAL_RE = /^[+-]?\d+(\.\d+)?$/;
 /** SHA-256 hex of a buffer — the source-file identity for idempotency. */
 function fileHash(buffer) {
     return crypto.createHash('sha256').update(buffer).digest('hex');
+}
+
+/**
+ * Row-content hash (2026-09-28 fix 1): SHA-256 over the FULL normalized
+ * source row — every column in stable order, header/value pairs. Only
+ * content-identical rows are duplicates. A second legitimate line for the
+ * same recording/period/source that differs in ANY column (territory,
+ * rights type, rate tier, a different amount) has a different hash and
+ * imports normally. Hashing only the logical fields would silently drop
+ * territory/rights splits — that was the defect.
+ *
+ * @param {object} fullRow normalized header -> trimmed string value
+ */
+function rowContentHash(fullRow) {
+    const pairs = Object.keys(fullRow).sort().map((h) => [h, fullRow[h]]);
+    return crypto.createHash('sha256').update(JSON.stringify(pairs)).digest('hex');
+}
+
+/** Most common value in a list (ties -> first seen). */
+function modeValue(values) {
+    const counts = new Map();
+    let best = null;
+    let bestCount = 0;
+    for (const v of values) {
+        const c = (counts.get(v) || 0) + 1;
+        counts.set(v, c);
+        if (c > bestCount) { bestCount = c; best = v; }
+    }
+    return best;
+}
+
+/**
+ * Mapping history (research update 8). Persist the detected column layout
+ * per (source, columnSignature); a repeat import with the same layout
+ * reuses the stored mapping (approved or seen); a changed layout for a
+ * source that already has an APPROVED mapping is recorded but NEVER
+ * silently inherits the old mapping — the report flags it for re-review.
+ */
+async function resolveColumnMapping(SourceMapping, source, columnSignature, detectedMapping, t, importedBy) {
+    const existing = await SourceMapping.findOne({
+        where: { source, headerHash: columnSignature }, transaction: t
+    });
+    if (existing) {
+        // Approved mappings are reused silently for identical formats.
+        // Anything else (a layout seen before but never approved — e.g. a
+        // changed schema still awaiting re-review) stays visibly
+        // review-required on every repeat: the changed format is never
+        // trusted just because it was seen twice.
+        const isApproved = existing.status === 'approved';
+        return {
+            reused: true,
+            status: existing.status,
+            version: existing.mappingVersion,
+            approvedBy: existing.approvedBy || null,
+            reviewRequired: !isApproved,
+            message: isApproved
+                ? `reusing approved mapping v${existing.mappingVersion} (approved by ${existing.approvedBy})`
+                : `column layout v${existing.mappingVersion} was recorded before but is NOT approved — re-review required before trusting it`
+        };
+    }
+    const approved = await SourceMapping.findOne({
+        where: { source, status: 'approved' },
+        order: [['mappingVersion', 'DESC']],
+        transaction: t
+    });
+    const maxVersion = await SourceMapping.max('mappingVersion', { where: { source }, transaction: t });
+    const record = await SourceMapping.create({
+        source,
+        mappingVersion: (maxVersion || 0) + 1,
+        formatHash: columnSignature,
+        headerHash: columnSignature,
+        columnMapping: detectedMapping,
+        status: 'seen',
+        importedBy: importedBy || null
+    }, { transaction: t });
+    if (approved) {
+        return {
+            reused: false,
+            status: 'seen',
+            version: record.mappingVersion,
+            reviewRequired: true,
+            message: `column layout changed since approved mapping v${approved.mappingVersion} (approved by ${approved.approvedBy}); ` +
+                'the new layout was recorded but NOT silently inherited — re-review required before trusting it'
+        };
+    }
+    return {
+        reused: false,
+        status: 'seen',
+        version: record.mappingVersion,
+        reviewRequired: false,
+        message: 'first sighting of this column layout for this source; recorded for review'
+    };
 }
 
 /** Minimal CSV parser: handles quoted fields, embedded commas/quotes, CRLF. */
@@ -175,7 +294,7 @@ function validateRow(raw, lineNo) {
 }
 
 function register(app, ctx) {
-    const { authenticateToken, hasArtistAccess, logger, Recording, Release, RoyaltyLine, MerchSettlement, DirectSale } = ctx;
+    const { authenticateToken, hasArtistAccess, logger, Recording, Release, RoyaltyLine, RoyaltyStatement, SourceMapping, MerchSettlement, DirectSale } = ctx;
 
     const requireAdmin = (req, res, next) => {
         if (!req.user || req.user.role !== 'admin') {
@@ -199,33 +318,67 @@ function register(app, ctx) {
             return res.status(400).json({ error: 'CSV is empty' });
         }
         const header = rows[0].map((h) => String(h).trim().toLowerCase());
-        const missing = REQUIRED_COLUMNS.filter((c) => !header.includes(c));
-        const hasAmount = AMOUNT_COLUMNS.some((c) => header.includes(c));
-        if (missing.length > 0 || !hasAmount) {
+        // Field mapping: resolve logical fields through column aliases.
+        // The detected mapping (logical -> actual header) is persisted per
+        // (source, columnSignature) for mapping history (research update 8).
+        const detectedMapping = {};
+        const missing = [];
+        for (const logical of Object.keys(LOGICAL_COLUMNS)) {
+            const found = LOGICAL_COLUMNS[logical].find((a) => header.includes(a));
+            if (found) {
+                detectedMapping[logical] = found;
+            } else if (logical !== 'amount' && logical !== 'amount_cents') {
+                missing.push(logical);
+            }
+        }
+        const hasAmount = Boolean(detectedMapping.amount || detectedMapping.amount_cents);
+        if (!hasAmount) missing.push('amount|amount_cents');
+        if (missing.length > 0) {
             return res.status(400).json({
-                error: `CSV header is missing required columns: ${[...missing, ...(hasAmount ? [] : ['amount|amount_cents'])].join(', ')}. ` +
-                    `Expected: ${[...REQUIRED_COLUMNS, 'amount'].join(',')} (amount_cents accepted as legacy integer)`
+                error: `CSV header is missing required columns: ${missing.join(', ')}. ` +
+                    `Expected logical columns: key (isrc_or_upc, or aliases: isrc, upc, catalog), ` +
+                    `amount (aliases: total, royalty_amount, earnings), amount_cents (legacy integer), ` +
+                    `currency, period, source`
             });
         }
         const idx = {};
-        for (const col of [...REQUIRED_COLUMNS, ...AMOUNT_COLUMNS]) idx[col] = header.indexOf(col);
+        for (const [logical, actual] of Object.entries(detectedMapping)) idx[logical] = header.indexOf(actual);
+        // Column signature: SHA-256 over the normalized header — the mapping
+        // identity. A changed signature for a source with an approved mapping
+        // is flagged for re-review, never silently inherited.
+        const columnSignature = fileHash(Buffer.from(header.join('|'), 'utf8'));
 
-        const report = { received: rows.length - 1, imported: 0, superseded: 0, rejected: [] };
+        const report = { received: rows.length - 1, imported: 0, superseded: 0, rejected: [], statements: [], mapping: null };
         const valid = [];
 
         for (let i = 1; i < rows.length; i++) {
             const lineNo = i + 1;
-            const raw = {};
-            for (const col of [...REQUIRED_COLUMNS, ...AMOUNT_COLUMNS]) raw[col] = idx[col] >= 0 ? (rows[i][idx[col]] ?? '') : '';
+            // Full normalized source row: every column, header -> trimmed
+            // string value. This is the dedup identity AND the provenance
+            // that shows why two rows for the same recording differ
+            // (territory, rights type, rate tier, ...).
+            const fullRow = {};
+            for (let c = 0; c < header.length; c++) {
+                fullRow[header[c]] = String(rows[i][c] ?? '').trim();
+            }
+            const raw = {
+                isrc_or_upc: idx.key >= 0 ? (rows[i][idx.key] ?? '') : '',
+                amount: detectedMapping.amount && idx.amount >= 0 ? (rows[i][idx.amount] ?? '') : '',
+                amount_cents: detectedMapping.amount_cents && idx.amount_cents >= 0 ? (rows[i][idx.amount_cents] ?? '') : '',
+                currency: idx.currency >= 0 ? (rows[i][idx.currency] ?? '') : '',
+                period: idx.period >= 0 ? (rows[i][idx.period] ?? '') : '',
+                source: idx.source >= 0 ? (rows[i][idx.source] ?? '') : ''
+            };
             const checked = validateRow(raw, lineNo);
             if (checked.error) {
                 report.rejected.push({ row: lineNo, reason: checked.error });
                 continue;
             }
-            valid.push(checked.value);
+            valid.push({ ...checked.value, fullRow });
         }
 
-        // Source identity for idempotency/supersede (research correction).
+        // Statement identity (2026-09-28 fix 1): the import unit is the
+        // STATEMENT (source file for one source + period), not the row.
         const hash = fileHash(req.file.buffer);
         const importVersion = `royalty-${Date.now()}-${hash.slice(0, 12)}`;
 
@@ -243,7 +396,7 @@ function register(app, ctx) {
                 if (rel) { releaseId = rel.id; artistId = rel.artistId; }
             }
             if (!artistId) {
-                report.rejected.push({ row: v.lineNo, reason: `no recording or release found for "${v.key}"` });
+                report.rejected.push({ row: v.lineNo, code: 'unmatched_catalog', reason: `no recording or release found for "${v.key}"` });
                 continue;
             }
             toInsert.push({
@@ -263,62 +416,159 @@ function register(app, ctx) {
                 rowRef: `line ${v.lineNo}`,
                 importVersion,
                 reviewState: 'reported',
-                lineNo: v.lineNo
+                lineNo: v.lineNo,
+                // Row-content hash: SHA-256 over the FULL normalized
+                // source row. Only content-identical rows are duplicates —
+                // a second legitimate line for the same recording/period/
+                // source that differs in any column (territory, rights
+                // type, rate tier, amount) imports normally.
+                rowHash: rowContentHash(v.fullRow)
             });
         }
 
+        // File-level source for mapping history: explicit form field wins,
+        // otherwise the most common row source.
+        const fileSource = String(req.body.source || '').trim() ||
+            modeValue(toInsert.map((l) => l.source)) || '';
+
         try {
             await ctx.sequelize.transaction(async (t) => {
-                const seenInFile = new Set();
+                // --- Mapping history (research update 8). Persist the
+                // detected column layout per (source, columnSignature). A
+                // repeat import with the same layout reuses the approved
+                // mapping; a changed layout never silently inherits it —
+                // the import is flagged for re-review.
+                report.mapping = await resolveColumnMapping(
+                    SourceMapping, fileSource, columnSignature, detectedMapping, t, req.user.email);
+
+                // --- Group rows into statements by (source, period). One
+                // file may carry several statements; each is handled as a
+                // unit below.
+                const groups = new Map();
                 for (const line of toInsert) {
-                    const dupKey = `${line.catalogKey}|${line.period}|${line.source}`;
-                    const duplicateReason = (where) =>
-                        `duplicate royalty line for "${line.catalogKey}" period ${line.period}` +
-                        (line.source ? ` source "${line.source}"` : ' (no source)') +
-                        ` — ${where}; skipped, not double-counted`;
-                    if (seenInFile.has(dupKey)) {
-                        report.rejected.push({ row: line.lineNo, reason: duplicateReason('repeated inside this file') });
+                    const gk = `${line.source}|||${line.period}`;
+                    if (!groups.has(gk)) groups.set(gk, { source: line.source, period: line.period, lines: [] });
+                    groups.get(gk).lines.push(line);
+                }
+                const ordered = [...groups.values()].sort((a, b) =>
+                    a.source === b.source ? (a.period < b.period ? -1 : 1) : (a.source < b.source ? -1 : 1));
+
+                for (const group of ordered) {
+                    const { source, period, lines } = group;
+                    // Within-file duplicates: full row-content hash only.
+                    const seenHashes = new Set();
+                    const fresh = [];
+                    for (const line of lines) {
+                        if (seenHashes.has(line.rowHash)) {
+                            report.rejected.push({
+                                row: line.lineNo,
+                                code: 'exact_duplicate_row',
+                                reason: `exact duplicate row within this file (identical content) for "${line.catalogKey}" period ${line.period}` +
+                                    (line.source ? ` source "${line.source}"` : '') +
+                                    '; skipped, not double-counted'
+                            });
+                            continue;
+                        }
+                        seenHashes.add(line.rowHash);
+                        fresh.push(line);
+                    }
+
+                    // Same file (same SHA-256) already imported: reject every
+                    // row as an already-imported duplicate. Totals unchanged.
+                    const sameFile = await RoyaltyStatement.findOne({
+                        where: { source, period, sourceFileHash: hash }, transaction: t
+                    });
+                    if (sameFile) {
+                        for (const line of fresh) {
+                            report.rejected.push({
+                                row: line.lineNo,
+                                code: 'already_imported',
+                                reason: `duplicate — this file was already imported as statement #${sameFile.id} ` +
+                                    `(SHA-256 ${hash.slice(0, 12)}…); skipped, not double-counted`
+                            });
+                        }
+                        report.statements.push({
+                            id: sameFile.id, source, period,
+                            status: 'duplicate_file', imported: 0, superseded: 0
+                        });
+                        report.alreadyImported = true;
+                        report.duplicateOfStatementId = sameFile.id;
                         continue;
                     }
-                    seenInFile.add(dupKey);
-                    // Supersede check: the active (non-superseded) line for
-                    // this key. Same file hash -> duplicate rejection. A
-                    // different hash -> the new line SUPERSEDES the old one;
-                    // revised statements replace, never duplicate.
-                    const existing = await RoyaltyLine.findOne({
+
+                    // Revised file for the same (source, period): supersede
+                    // the prior statement AS A UNIT — every active line in it,
+                    // plus any legacy lines that predate statement identity.
+                    let supersedesStatementId = null;
+                    const supersededLineIds = [];
+                    const prior = await RoyaltyStatement.findOne({
+                        where: { source, period, status: 'active' }, transaction: t
+                    });
+                    const supersedeLine = async (pl, why) => {
+                        await pl.update({
+                            reviewState: 'superseded',
+                            reviewedBy: req.user.email,
+                            reviewEvidence: `superseded by revised statement import ${importVersion} (${why})`,
+                            reviewedAt: new Date()
+                        }, { transaction: t });
+                        supersededLineIds.push(pl.id);
+                        report.superseded++;
+                    };
+                    if (prior) {
+                        supersedesStatementId = prior.id;
+                        const priorLines = await RoyaltyLine.findAll({
+                            where: { statementId: prior.id, reviewState: { [Op.ne]: 'superseded' } },
+                            transaction: t
+                        });
+                        for (const pl of priorLines) await supersedeLine(pl, `statement #${prior.id} replaced as a unit`);
+                        await prior.update({ status: 'superseded' }, { transaction: t });
+                    }
+                    // Legacy lines imported before statement identity existed
+                    // carry no statementId; they belong to this (source,
+                    // period) and are superseded with the revision.
+                    const legacyLines = await RoyaltyLine.findAll({
                         where: {
-                            catalogKey: line.catalogKey,
-                            period: line.period,
-                            source: line.source,
+                            statementId: null, source, period,
                             reviewState: { [Op.ne]: 'superseded' }
                         },
                         transaction: t
                     });
-                    if (existing) {
-                        if (existing.sourceFileHash === hash) {
-                            report.rejected.push({ row: line.lineNo, reason: duplicateReason('already imported (same file)') });
-                            continue;
-                        }
-                        await existing.update({
-                            reviewState: 'superseded',
-                            reviewedBy: req.user.email,
-                            reviewEvidence: `superseded by import ${importVersion} (revised file ${hash.slice(0, 12)})`,
-                            reviewedAt: new Date()
-                        }, { transaction: t });
-                        const { lineNo: _lineNo, ...row } = line;
-                        await RoyaltyLine.create({ ...row, supersedesId: existing.id }, { transaction: t });
+                    for (const pl of legacyLines) await supersedeLine(pl, 'legacy line superseded by statement revision');
+
+                    const statement = await RoyaltyStatement.create({
+                        source,
+                        period,
+                        sourceFileHash: hash,
+                        originalFilename: req.file.originalname || null,
+                        formatHash: columnSignature,
+                        rowCount: fresh.length,
+                        mappingVersion: report.mapping ? report.mapping.version : null,
+                        importVersion,
+                        importedBy: req.user.email,
+                        status: 'active',
+                        supersedesId: supersedesStatementId
+                    }, { transaction: t });
+
+                    for (const line of fresh) {
+                        const { lineNo: _lineNo, fullRow: _fullRow, ...row } = line;
+                        await RoyaltyLine.create({ ...row, statementId: statement.id }, { transaction: t });
                         report.imported++;
-                        report.superseded++;
-                        continue;
                     }
-                    const { lineNo: _lineNo, ...row } = line;
-                    await RoyaltyLine.create(row, { transaction: t });
-                    report.imported++;
+                    report.statements.push({
+                        id: statement.id, source, period, status: 'active',
+                        imported: fresh.length,
+                        superseded: supersededLineIds.length,
+                        supersedesStatementId,
+                        supersededLineIds
+                    });
                 }
             });
         } catch (err) {
             if (logger) logger.error(err);
             return res.status(500).json({ error: 'Database error during import' });
+        }
+        if (report.alreadyImported) {
+            return res.status(200).json(report);
         }
 
         res.status(201).json(report);
@@ -587,7 +837,13 @@ function register(app, ctx) {
             // Exact-decimal accumulation: sum at source precision, round
             // once at the boundary. Falls back to amountCents for legacy
             // rows that predate precision preservation.
+            //
+            // 2026-09-28 fix 2: the headline total counts ONLY the trusted
+            // states (reported, reconciled, approved). Disputed and
+            // estimated lines are summed as separate, visible lines and
+            // never enter the trusted total.
             const { sumDecimals, decimalToCents, formatDecimal, parseDecimal } = require('../finance/decimal');
+            const { isCounted, isDisputed, isEstimated } = require('../finance/reviewState');
             const byCurrency = new Map();
             for (const line of lines) {
                 let d;
@@ -598,18 +854,29 @@ function register(app, ctx) {
                 } catch {
                     return res.status(500).json({ error: 'Corrupt decimal on royalty line' });
                 }
-                const cur = byCurrency.get(line.currency) || { currency: line.currency, exact: { mantissa: 0n, scale: 0 }, lineCount: 0, disputedCount: 0, estimatedCount: 0 };
-                cur.exact = sumDecimals([cur.exact, d]);
+                const st = line.reviewState || 'reported';
+                const cur = byCurrency.get(line.currency) || {
+                    currency: line.currency,
+                    exact: { mantissa: 0n, scale: 0 },
+                    disputedExact: { mantissa: 0n, scale: 0 },
+                    estimatedExact: { mantissa: 0n, scale: 0 },
+                    lineCount: 0, disputedCount: 0, estimatedCount: 0
+                };
                 cur.lineCount += 1;
-                if (line.reviewState === 'disputed') cur.disputedCount += 1;
-                if (line.reviewState === 'estimated') cur.estimatedCount += 1;
+                if (isCounted(st)) cur.exact = sumDecimals([cur.exact, d]);
+                else if (isDisputed(st)) { cur.disputedExact = sumDecimals([cur.disputedExact, d]); cur.disputedCount += 1; }
+                else if (isEstimated(st)) { cur.estimatedExact = sumDecimals([cur.estimatedExact, d]); cur.estimatedCount += 1; }
                 byCurrency.set(line.currency, cur);
             }
             const totals = [];
             for (const cur of byCurrency.values()) {
                 const cents = decimalToCents(cur.exact);
-                if (cents > BigInt(Number.MAX_SAFE_INTEGER)) {
-                    return res.status(500).json({ error: 'Total exceeds safe integer range' });
+                const disputedCents = decimalToCents(cur.disputedExact);
+                const estimatedCents = decimalToCents(cur.estimatedExact);
+                for (const v of [cents, disputedCents, estimatedCents]) {
+                    if (v > BigInt(Number.MAX_SAFE_INTEGER) || v < BigInt(Number.MIN_SAFE_INTEGER)) {
+                        return res.status(500).json({ error: 'Total exceeds safe integer range' });
+                    }
                 }
                 totals.push({
                     currency: cur.currency,
@@ -618,7 +885,12 @@ function register(app, ctx) {
                     lineCount: cur.lineCount,
                     disputedCount: cur.disputedCount,
                     estimatedCount: cur.estimatedCount,
-                    precision: 'exact-decimal sum, round-half-up at the reporting boundary'
+                    disputedExact: formatDecimal(cur.disputedExact),
+                    disputedCents: Number(disputedCents),
+                    estimatedExact: formatDecimal(cur.estimatedExact),
+                    estimatedCents: Number(estimatedCents),
+                    precision: 'exact-decimal sum, round-half-up at the reporting boundary',
+                    trustedStates: 'reported, reconciled, approved (disputed/estimated reported separately, never in the total)'
                 });
             }
             // Direct-sales totals per artist (2026-09-28): the label's own
@@ -637,6 +909,10 @@ function register(app, ctx) {
                 const byCur = new Map();
                 for (const s of sales) {
                     if (!s.artistId) continue;
+                    // Trusted states only (2026-09-28 fix 2): disputed and
+                    // estimated sales are reported separately, never in the
+                    // headline figure.
+                    if (!isCounted(s.reviewState)) continue;
                     const cur = byCur.get(s.currency) || { currency: s.currency, netCents: 0, saleCount: 0 };
                     cur.netCents += s.netCents;
                     cur.saleCount += 1;
@@ -670,6 +946,24 @@ function register(app, ctx) {
             const where = {};
             for (const f of filters) {
                 if (req.query[f]) where[f] = String(req.query[f]);
+            }
+            // Per-artist enforcement (2026-09-28 fix): non-admin callers
+            // must hold artist grants; an explicit artistId must be within
+            // their grants; without one the list is scoped to their grants.
+            // Fail-closed: no grants -> 403.
+            if (req.user.role !== 'admin') {
+                const { normalizeArtistAccess, hasArtistAccess } = require('../auth');
+                const access = normalizeArtistAccess(req.user.artistAccess);
+                if (access.length === 0) {
+                    return res.status(403).json({ error: 'Not authorized' });
+                }
+                if (where.artistId) {
+                    if (!hasArtistAccess(req.user, where.artistId)) {
+                        return res.status(403).json({ error: 'Not authorized for this artist' });
+                    }
+                } else if (!access.includes('all')) {
+                    where.artistId = access.length === 1 ? access[0] : { [Op.in]: access };
+                }
             }
             if (req.query.reviewState) {
                 if (!isReviewState(req.query.reviewState)) {
