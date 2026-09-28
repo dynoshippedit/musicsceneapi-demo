@@ -133,6 +133,20 @@ async function applyEvent(event, { Subscription, logger }) {
         return;
     }
 
+    if (type === 'invoice.payment_succeeded') {
+        const row = await findRow();
+        if (!row) return;
+        // A successful payment after past_due clears the flag immediately
+        // instead of waiting for the next subscription.updated event (which
+        // may arrive late or not at all). Only past_due flips back — a
+        // canceled subscription stays canceled.
+        if (row.status === 'past_due') {
+            row.status = 'active';
+            await row.save();
+        }
+        return;
+    }
+
     logger.info('billing webhook: ignoring unhandled event type', { type });
 }
 

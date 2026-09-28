@@ -41,7 +41,7 @@ async function repairSalesSchema(sequelize) {
     return true;
 }
 
-module.exports = { repairSalesSchema, addUserSecurityColumns };
+module.exports = { repairSalesSchema, addUserSecurityColumns, addRoyaltyDedupColumns };
 
 /**
  * STEP 7 (D7, 2026-09-28): session revocation + deactivation columns on Users.
@@ -69,5 +69,52 @@ async function addUserSecurityColumns(sequelize) {
             changed = true;
         }
     }
+    return changed;
+}
+
+/**
+ * Royalty import idempotency (2026-09-28): catalogKey column + unique
+ * (catalogKey, period, source) index on RoyaltyLines.
+ *
+ * Idempotent: the column is added only when absent, the backfill only touches
+ * rows that still lack a key, and the index uses IF NOT EXISTS. Existing rows
+ * get their key from the linked Recording (isrc) or Release (upc); rows that
+ * resolve to nothing get a unique 'legacy:<id>' placeholder so the unique
+ * index can be built. NULL sources become '' because SQLite treats NULLs as
+ * distinct inside UNIQUE indexes; imports always write '' for a blank source.
+ */
+async function addRoyaltyDedupColumns(sequelize) {
+    if (sequelize.getDialect() !== "sqlite") return false;
+    // On a fresh database the table does not exist yet when migrations run
+    // (sequelize.sync() creates it afterwards, with the new columns and the
+    // unique index from the model definition). No-op instead of failing boot.
+    const [rows] = await sequelize.query('PRAGMA table_info("RoyaltyLines");');
+    if (!rows.length) return false;
+    const names = new Set(rows.map((r) => r.name));
+    let changed = false;
+    if (!names.has("catalogKey")) {
+        await sequelize.query('ALTER TABLE "RoyaltyLines" ADD COLUMN "catalogKey" VARCHAR(255) NOT NULL DEFAULT \'\'');
+        changed = true;
+    }
+    // Defensive: a partial database may lack the catalog tables entirely.
+    const [tbls] = await sequelize.query(
+        `SELECT name FROM sqlite_master WHERE type='table' AND name IN ('Recordings','Releases')`);
+    const have = new Set(tbls.map((t) => t.name));
+    if (have.has('Recordings')) {
+        await sequelize.query(`UPDATE "RoyaltyLines" SET "catalogKey" =
+            COALESCE((SELECT "isrc" FROM "Recordings" WHERE "Recordings"."id" = "RoyaltyLines"."recordingId"),
+                     'legacy:' || "id")
+            WHERE "catalogKey" = '' AND "recordingId" IS NOT NULL`);
+    }
+    if (have.has('Releases')) {
+        await sequelize.query(`UPDATE "RoyaltyLines" SET "catalogKey" =
+            COALESCE((SELECT "upc" FROM "Releases" WHERE "Releases"."id" = "RoyaltyLines"."releaseId"),
+                     'legacy:' || "id")
+            WHERE "catalogKey" = '' AND "releaseId" IS NOT NULL`);
+    }
+    await sequelize.query(`UPDATE "RoyaltyLines" SET "catalogKey" = 'legacy:' || "id"
+        WHERE "catalogKey" = '' OR "catalogKey" IS NULL`);
+    await sequelize.query(`UPDATE "RoyaltyLines" SET "source" = '' WHERE "source" IS NULL`);
+    await sequelize.query('CREATE UNIQUE INDEX IF NOT EXISTS "royalty_lines_catalog_period_source" ON "RoyaltyLines" ("catalogKey", "period", "source")');
     return changed;
 }

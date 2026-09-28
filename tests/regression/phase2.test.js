@@ -435,4 +435,67 @@ describe('Phase 2 — royalty CSV import (integer cents)', () => {
         assert.strictEqual(status, 201);
         assert.strictEqual(json.imported, 1);
     });
+
+    test('re-importing the same CSV reports all rows as duplicates; totals unchanged', async () => {
+        const csv = [
+            'isrc_or_upc,amount_cents,currency,period,source',
+            'ZZAAA2600001,1000,USD,2026-10,distributor',
+            '888880000001,2000,EUR,2026-10,distributor',
+        ].join('\n');
+        const first = await srv.api('POST', '/v3/royalties/import', admin, csvFile(csv));
+        assert.strictEqual(first.status, 201);
+        assert.strictEqual(first.json.imported, 2);
+        assert.strictEqual(first.json.rejected.length, 0);
+
+        const before = await srv.api('GET', '/v3/royalties/summary?artistId=art_novakin&period=2026-10', admin);
+        assert.strictEqual(before.status, 200);
+        assert.strictEqual(before.json.totals.find((t) => t.currency === 'USD').totalCents, 1000);
+        assert.strictEqual(before.json.totals.find((t) => t.currency === 'EUR').totalCents, 2000);
+
+        // Same file again: nothing new is counted, every row is reported.
+        const second = await srv.api('POST', '/v3/royalties/import', admin, csvFile(csv));
+        assert.strictEqual(second.status, 201);
+        assert.strictEqual(second.json.received, 2);
+        assert.strictEqual(second.json.imported, 0);
+        assert.strictEqual(second.json.rejected.length, 2);
+        assert.ok(second.json.rejected.every((r) => /duplicate/i.test(r.reason)),
+            `expected duplicate reasons, got: ${JSON.stringify(second.json.rejected)}`);
+
+        const after = await srv.api('GET', '/v3/royalties/summary?artistId=art_novakin&period=2026-10', admin);
+        assert.strictEqual(after.status, 200);
+        assert.deepStrictEqual(after.json.totals, before.json.totals, 'totals unchanged after re-import');
+    });
+
+    test('duplicate rows inside one CSV are rejected, not double-counted', async () => {
+        const csv = [
+            'isrc_or_upc,amount_cents,currency,period,source',
+            'ZZAAA2600001,500,USD,2026-11,distributor',
+            'ZZAAA2600001,500,USD,2026-11,distributor',
+        ].join('\n');
+        const { status, json } = await srv.api('POST', '/v3/royalties/import', admin, csvFile(csv));
+        assert.strictEqual(status, 201);
+        assert.strictEqual(json.received, 2);
+        assert.strictEqual(json.imported, 1);
+        assert.strictEqual(json.rejected.length, 1);
+        assert.match(json.rejected[0].reason, /duplicate/i);
+
+        const { json: sum } = await srv.api('GET', '/v3/royalties/summary?artistId=art_novakin&period=2026-11', admin);
+        assert.strictEqual(sum.totals.find((t) => t.currency === 'USD').totalCents, 500,
+            'repeated row counted exactly once');
+    });
+
+    test('same key and period from a different source is not a duplicate', async () => {
+        const csv = [
+            'isrc_or_upc,amount_cents,currency,period,source',
+            'ZZAAA2600001,700,USD,2026-11,spotify',
+        ].join('\n');
+        const { status, json } = await srv.api('POST', '/v3/royalties/import', admin, csvFile(csv));
+        assert.strictEqual(status, 201);
+        assert.strictEqual(json.imported, 1, 'different source = different statement');
+        assert.strictEqual(json.rejected.length, 0);
+
+        const { json: sum } = await srv.api('GET', '/v3/royalties/summary?artistId=art_novakin&period=2026-11', admin);
+        assert.strictEqual(sum.totals.find((t) => t.currency === 'USD').totalCents, 1200,
+            '500 (distributor) + 700 (spotify)');
+    });
 });

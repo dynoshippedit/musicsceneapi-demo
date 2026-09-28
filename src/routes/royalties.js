@@ -21,6 +21,11 @@
  *     cross-currency conversion is performed — per-currency totals only.
  *   - NO DDEX: CSV is the interchange format until a customer supplies
  *     DDEX files.
+ *   - IDEMPOTENCY: a royalty statement is uniquely identified by
+ *     (catalogKey, period, source). Re-importing the same CSV — or repeating
+ *     a row inside one CSV — reports each repeated row as a "duplicate"
+ *     rejection; totals never double-count. A DB-level unique constraint
+ *     backstops concurrent imports.
  */
 
 'use strict';
@@ -174,20 +179,43 @@ function register(app, ctx) {
             }
             toInsert.push({
                 artistId,
+                catalogKey: v.key,
                 recordingId,
                 releaseId,
                 amountCents: v.amountCents,
                 currency: v.currency,
                 period: v.period,
-                source: v.source,
-                importedBy: req.user.email
+                source: v.source || '',
+                importedBy: req.user.email,
+                lineNo: v.lineNo
             });
         }
 
         try {
             await ctx.sequelize.transaction(async (t) => {
+                const seenInFile = new Set();
                 for (const line of toInsert) {
-                    await RoyaltyLine.create(line, { transaction: t });
+                    const dupKey = `${line.catalogKey}|${line.period}|${line.source}`;
+                    const duplicateReason = (where) =>
+                        `duplicate royalty line for "${line.catalogKey}" period ${line.period}` +
+                        (line.source ? ` source "${line.source}"` : ' (no source)') +
+                        ` — ${where}; skipped, not double-counted`;
+                    if (seenInFile.has(dupKey)) {
+                        report.rejected.push({ row: line.lineNo, reason: duplicateReason('repeated inside this file') });
+                        continue;
+                    }
+                    seenInFile.add(dupKey);
+                    const existing = await RoyaltyLine.findOne({
+                        where: { catalogKey: line.catalogKey, period: line.period, source: line.source },
+                        transaction: t
+                    });
+                    if (existing) {
+                        report.rejected.push({ row: line.lineNo, reason: duplicateReason('already imported') });
+                        continue;
+                    }
+                    const { lineNo: _lineNo, ...row } = line;
+                    await RoyaltyLine.create(row, { transaction: t });
+                    report.imported++;
                 }
             });
         } catch (err) {
@@ -195,7 +223,6 @@ function register(app, ctx) {
             return res.status(500).json({ error: 'Database error during import' });
         }
 
-        report.imported = toInsert.length;
         res.status(201).json(report);
     });
 
@@ -242,7 +269,6 @@ function register(app, ctx) {
         }
     });
 
-    void hasArtistAccess;
 }
 
 module.exports = { register, parseCsv, validateRow };

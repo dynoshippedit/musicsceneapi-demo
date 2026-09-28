@@ -152,6 +152,7 @@ async function initDB({ logger, labelData } = {}) {
         if (logger) logger.info('Database connection established.');
         await require('./migrations').repairSalesSchema(sequelize);
         await require('./migrations').addUserSecurityColumns(sequelize);
+        await require('./migrations').addRoyaltyDedupColumns(sequelize);
         await sequelize.sync(); // Create absent tables; existing schema changes use explicit migrations.
 
         // SEED USERS IF EMPTY — api L182-190
@@ -219,7 +220,7 @@ async function initDB({ logger, labelData } = {}) {
             });
             await WorkRecording.create({ workId: work1.id, recordingId: rec1.id });
             await RoyaltyLine.create({
-                artistId: 'art_novakin', recordingId: rec1.id, amountCents: 12500,
+                artistId: 'art_novakin', catalogKey: 'ZZAAA2600001', recordingId: rec1.id, amountCents: 12500,
                 currency: 'USD', period: '2026-08', source: 'demo seed', importedBy: 'seed'
             });
         }
@@ -341,13 +342,22 @@ const WorkRecording = sequelize.define('WorkRecording', {
 const RoyaltyLine = sequelize.define('RoyaltyLine', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     artistId: { type: DataTypes.STRING, allowNull: false },
+    catalogKey: { type: DataTypes.STRING, allowNull: false }, // uppercased ISRC or UPC — dedup key
     recordingId: { type: DataTypes.INTEGER, allowNull: true },
     releaseId: { type: DataTypes.INTEGER, allowNull: true },
     amountCents: { type: DataTypes.INTEGER, allowNull: false }, // integer cents, NEVER float
     currency: { type: DataTypes.STRING, allowNull: false }, // 3-letter ISO, uppercase
     period: { type: DataTypes.STRING, allowNull: false }, // e.g. '2026-09'
-    source: { type: DataTypes.STRING, allowNull: true },
+    source: { type: DataTypes.STRING, allowNull: true }, // '' when the CSV left it blank (never NULL from imports)
     importedBy: { type: DataTypes.STRING, allowNull: true }
+}, {
+    // Royalty import idempotency: re-importing the same statement (same
+    // catalog key + period + source) can never double-count. The import
+    // route pre-checks and reports duplicates per row; this constraint is
+    // the backstop against concurrent imports.
+    indexes: [
+        { unique: true, name: 'royalty_lines_catalog_period_source', fields: ['catalogKey', 'period', 'source'] }
+    ]
 });
 
 module.exports = { sequelize, User, Artist, Stats, AuditEvent, AnrSubmission, SalesEntry, RoomDemo, RoomVote, RoomSetting, Campaign, Subscription, ArtistOAuth, Recording, Release, Work, WorkRecording, RoyaltyLine, initDB };

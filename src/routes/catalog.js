@@ -23,6 +23,9 @@
 
 'use strict';
 
+const { Op } = require('sequelize');
+const { normalizeArtistAccess } = require('../auth');
+
 const ISRC_RE = /^[A-Z]{2}[A-Z0-9]{3}[0-9]{7}$/;
 const UPC_RE = /^[0-9]{12}$/;
 const RELEASE_TYPES = ['single', 'ep', 'album'];
@@ -119,15 +122,18 @@ function registerCrud(app, ctx, opts) {
     const { path, Model, validate, uniqueField } = opts;
     const base = `/v3/catalog/${path}`;
 
-    /** List scope: admin may filter by ?artistId=; artist role sees own only. */
+    /** List scope: admin may filter by ?artistId=; artist role sees own grants only. */
     const listWhere = (req) => {
         if (req.user.role === 'admin') {
             return req.query.artistId ? { artistId: String(req.query.artistId) } : {};
         }
-        const access = req.user.artistAccess;
-        if (typeof access === 'string' && /^art_[A-Za-z0-9]+$/.test(access)) {
-            return { artistId: access };
-        }
+        // Same normalization as hasArtistAccess on detail routes: a scalar
+        // grant, an array of grants, and 'all' all behave identically here.
+        // Fail-closed: no grants -> null -> 403, exactly like before.
+        const access = normalizeArtistAccess(req.user.artistAccess);
+        if (access.includes('all')) return {};
+        if (access.length === 1) return { artistId: access[0] };
+        if (access.length > 1) return { artistId: { [Op.in]: access } };
         return null;
     };
 

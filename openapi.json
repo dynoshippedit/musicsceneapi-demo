@@ -1316,7 +1316,7 @@
     "/v3/billing/webhook": {
       "post": {
         "summary": "Stripe webhook receiver",
-        "description": "PUBLIC \u2014 no bearer token. Authenticity comes from the Stripe-Signature header, verified against STRIPE_WEBHOOK_SECRET over the RAW request body (the server stashes raw bytes before JSON parsing). Handles checkout.session.completed (-> active, setup fee paid), customer.subscription.updated (-> status follows Stripe), customer.subscription.deleted (-> canceled) and invoice.payment_failed (-> past_due). Unknown event types are acknowledged with 200 and ignored. 400 on bad signature, 503 when Stripe is not configured.",
+        "description": "PUBLIC \u2014 no bearer token. Authenticity comes from the Stripe-Signature header, verified against STRIPE_WEBHOOK_SECRET over the RAW request body (the server stashes raw bytes before JSON parsing). Handles checkout.session.completed (-> active, setup fee paid), customer.subscription.updated (-> status follows Stripe), customer.subscription.deleted (-> canceled), invoice.payment_failed (-> past_due) and invoice.payment_succeeded (-> active again when previously past_due). Unknown event types are acknowledged with 200 and ignored. 400 on bad signature, 503 when Stripe is not configured.",
         "tags": [
           "billing"
         ],
@@ -1352,7 +1352,8 @@
           "503": {
             "description": "Stripe is not configured"
           }
-        }
+        },
+        "security": []
       }
     },
     "/v3/campaigns/stats": {
@@ -2286,7 +2287,8 @@
               "type": "string"
             }
           }
-        ]
+        ],
+        "security": []
       }
     },
     "/v3/oauth/status": {
@@ -2913,13 +2915,13 @@
     "/v3/royalties/import": {
       "post": {
         "summary": "Import a royalty CSV",
-        "description": "Admin only. Multipart upload (field \"file\"). Columns: isrc_or_upc,amount_cents,currency,period,source. amount_cents is an INTEGER (cents) \u2014 decimals are rejected; currency is a 3-letter ISO code. Rows keyed by ISRC/UPC must match an existing recording/release; unmatched rows are reported, not dropped. Returns a per-row import report. No DDEX.",
+        "description": "Admin only. Multipart upload (field \"file\"). Columns: isrc_or_upc,amount_cents,currency,period,source. amount_cents is an INTEGER (cents) \u2014 decimals are rejected; currency is a 3-letter ISO code. Rows keyed by ISRC/UPC must match an existing recording/release; unmatched rows are reported, not dropped. Returns a per-row import report. No DDEX. Imports are idempotent: (catalog key, period, source) is unique, so re-importing the same file reports repeated rows as duplicate rejections instead of double-counting.",
         "tags": [
           "royalties"
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "201": {
+            "description": "Created \u2014 per-row import report (imported count + rejections, including duplicates)"
           },
           "400": {
             "description": "Bad request"
