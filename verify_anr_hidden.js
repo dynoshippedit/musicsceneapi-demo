@@ -15,7 +15,7 @@ async function verifyHiddenVoting() {
     console.log('--- Verifying A&R Hidden Voting System ---');
 
     try {
-        const tokenAdmin = await login('admin@mau5trap.com', 'admin123');
+        const tokenAdmin = await login('admin@pulsegrid.fm', 'admin123');
 
         // 1. Check Privacy (Sanitization)
         console.log('Checking Privacy (GET /anr/state)...');

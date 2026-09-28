@@ -13,7 +13,7 @@ class TwitterIntegration {
     /**
      * Fetch Twitter user data by username
      * @param {string} username - Twitter handle (without @)
-     * @returns {Object} Twitter metrics mapped to mau5trap schema
+     * @returns {Object} Twitter metrics mapped to pulsegrid schema
      */
     async getUserData(username) {
         try {

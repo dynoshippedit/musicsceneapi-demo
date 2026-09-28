@@ -9,7 +9,7 @@
  * PHASE 4CF — CANONICAL SOURCE OF TRUTH (Objective 3):
  * The database is now the single authoritative store for artist product
  * state. `labelData` (the active profile's roster dataset — see
- * src/profile/labels/mau5trap.js) is demoted to reference/seed data plus an
+ * src/profile/labels/pulsegrid.js) is demoted to reference/seed data plus an
  * in-process mirror that is kept consistent with the DB while the process
  * lives. Every read resolves DB-first with a memory fallback, so:
  *

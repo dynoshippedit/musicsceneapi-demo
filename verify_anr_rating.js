@@ -21,8 +21,8 @@ async function verifyRatings() {
     try {
         // 1. Authenticate Users
         console.log('Authenticating users...');
-        const tokenAdmin = await login('admin@mau5trap.com', 'admin123'); // Weight 10
-        const tokenRezz = await login('tours@rezz.com', 'rezz123');       // Weight 5
+        const tokenAdmin = await login('admin@pulsegrid.fm', 'admin123'); // Weight 10
+        const tokenNovakin = await login('tours@novakin.band', 'novakin123');       // Weight 5
 
         // 2. Create Fresh Demo
         const demoTitle = `Test Demo ${Date.now()}`;
@@ -42,9 +42,9 @@ async function verifyRatings() {
         console.log('User 1 (Admin) adding vote AGAIN...');
         await axios.post(`${API_URL}/anr/vote/${targetDemoId}`, { action: 'add' }, { headers: { Authorization: `Bearer ${tokenAdmin}` } });
 
-        // 5. Rezz Vote (Unitary)
-        console.log('\nUser 2 (Rezz) adding vote...');
-        const res2 = await axios.post(`${API_URL}/anr/vote/${targetDemoId}`, { action: 'add' }, { headers: { Authorization: `Bearer ${tokenRezz}` } });
+        // 5. Novakin Vote (Unitary)
+        console.log('\nUser 2 (Novakin) adding vote...');
+        const res2 = await axios.post(`${API_URL}/anr/vote/${targetDemoId}`, { action: 'add' }, { headers: { Authorization: `Bearer ${tokenNovakin}` } });
         console.log(`Vote 2 Result: hasVoted=${res2.data.hasVoted}, Count=${res2.data.demo.artistVotes} / ${res2.data.demo.totalVotes}`);
 
         if (res2.data.demo.artistVotes !== 2) throw new Error(`Unitary Vote Incorrect: Got ${res2.data.demo.artistVotes}, Expected 2`);
@@ -54,7 +54,7 @@ async function verifyRatings() {
         const res3 = await axios.post(`${API_URL}/anr/vote/${targetDemoId}`, { action: 'remove' }, { headers: { Authorization: `Bearer ${tokenAdmin}` } });
         console.log(`Vote 3 Result: hasVoted=${res3.data.hasVoted}, Count=${res3.data.demo.artistVotes} / ${res3.data.demo.totalVotes}`);
 
-        // Remove Admin from 2 should leave 1 (Rezz)
+        // Remove Admin from 2 should leave 1 (Novakin)
         if (res3.data.demo.artistVotes !== 1) throw new Error(`Unitary Vote Removal Incorrect: Got ${res3.data.demo.artistVotes}, Expected 1`);
 
         console.log('\nSUCCESS: Explicit Action (Add/Remove) Voting logic verified.');

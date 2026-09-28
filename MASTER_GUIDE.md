@@ -1,4 +1,4 @@
-# ðŸŽ§ COMPLETE mau5trap Intelligence Platform
+# ðŸŽ§ COMPLETE pulsegrid Intelligence Platform
 ## Your Full Production System - Master Guide
 
 ---
@@ -11,21 +11,21 @@
 3. **PRODUCTION_FEATURES.md** - What the production system does
 
 ### ðŸ” Production System (NEW!)
-4. **mau5trap-production-api.js** - Multi-tenant backend with auth
+4. **production-api.js** - Multi-tenant backend with auth
 5. **package-production.json** - Production dependencies
 6. **.env.production** - Production environment config
 7. **login.html** - Secure login page
 8. **PRODUCTION_DEPLOYMENT.md** - Full deployment guide
 
 ### ðŸ’» Development System
-9. **mau5trap-api-server.js** - Original backend (mock data)
+9. **pulsegrid-api-server.js** - Original backend (mock data)
 10. **package.json** - Development dependencies
 11. **.env.example** - Development config template
 12. **test-api.js** - API testing script
 
 ### ðŸŽ¨ Frontend
-13. **mau5trap-intelligence-platform.html** - Standalone demo (91KB)
-14. **mau5trap-frontend-connected.html** - Connected to API
+13. **pulsegrid-intelligence-platform.html** - Standalone demo (91KB)
+14. **pulsegrid-frontend-connected.html** - Connected to API
 15. **login.html** - Production login page
 
 ### ðŸ“š Documentation
@@ -42,7 +42,7 @@
 **Best for:** Showing the concept, getting buy-in
 
 **Steps:**
-1. Open `mau5trap-intelligence-platform.html` in browser
+1. Open `pulsegrid-intelligence-platform.html` in browser
 2. Show the interactive dashboard
 3. Done!
 
@@ -58,7 +58,7 @@
 1. Read `PRODUCTION_FEATURES.md` (what you get)
 2. Read `PRODUCTION_DEPLOYMENT.md` (how to deploy)
 3. Deploy to Railway (~15 minutes)
-4. Set up subdomain: `analytics.mau5trap.com`
+4. Set up subdomain: `analytics.pulsegrid.fm`
 5. Create user accounts for team
 6. Go live!
 
@@ -70,8 +70,8 @@
 
 ### What You Asked For:
 
-âœ… **"Link with mau5trap.com"**
-- Subdomain: `analytics.mau5trap.com`
+âœ… **"Link with pulsegrid.fm"**
+- Subdomain: `analytics.pulsegrid.fm`
 - Professional, secure, isolated
 
 âœ… **"Give users logins for their own data"**
@@ -81,7 +81,7 @@
 
 âœ… **"Only their data"**
 - Perfect data isolation
-- REZZ's manager can't see deadmau5
+- NOVAKIN's manager can't see lumenveil
 - Role-based access control
 
 âœ… **"Not accessible to rest of site"**
@@ -105,7 +105,7 @@
 
 ### Admin (You)
 ```javascript
-Email: admin@mau5trap.com
+Email: admin@pulsegrid.fm
 Access: EVERYTHING
 - All 36 artists
 - All revenue data
@@ -116,18 +116,18 @@ Access: EVERYTHING
 
 ### Tour Manager
 ```javascript
-Email: tours@rezz.com
-Access: ONLY REZZ
-- REZZ's tour schedule
-- REZZ's merch sales
-- REZZ's revenue
-- REZZ's reports
+Email: tours@novakin.band
+Access: ONLY NOVAKIN
+- NOVAKIN's tour schedule
+- NOVAKIN's merch sales
+- NOVAKIN's revenue
+- NOVAKIN's reports
 - Cannot see other artists
 ```
 
 ### Artist
 ```javascript
-Email: joel@deadmau5.com
+Email: demo@novakin.band
 Access: ONLY THEIR DATA (Read-Only)
 - Their own stats
 - Their own revenue
@@ -148,10 +148,10 @@ Monthly Revenue: $5,000,000
 Active Artists: 36
 
 ALL ARTISTS:
-â–º deadmau5         $3.4M    5.0x ROI
-â–º REZZ             $1.2M    6.5x ROI  
-â–º BlackGummy       $185K    8.7x ROI
-â–º ATTLAS           $369K    5.9x ROI
+â–º lumenveil         $3.4M    5.0x ROI
+â–º NOVAKIN             $1.2M    6.5x ROI  
+â–º GLASSWOLFE       $185K    8.7x ROI
+â–º ECHO HARBOR           $369K    5.9x ROI
 â–º [+ 32 more...]
 
 [User Management]
@@ -163,7 +163,7 @@ ALL ARTISTS:
 ### Tour Manager Dashboard:
 ```
 â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-YOUR ARTIST: REZZ
+YOUR ARTIST: NOVAKIN
 Monthly Revenue: $1,170,000
 
 UPCOMING SHOWS: 35
@@ -176,7 +176,7 @@ Tour: $100,000
 
 [Download Report]
 
-âŒ Cannot see deadmau5
+âŒ Cannot see lumenveil
 âŒ Cannot see label totals
 â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 ```
@@ -193,7 +193,7 @@ Tour: $100,000
 2. Saves to /reports/2024-11/ folder
 3. Auto-prints to your home PC
    OR
-   Emails to admin@mau5trap.com
+   Emails to admin@pulsegrid.fm
 4. You wake up to printed reports â˜•
 ```
 
@@ -212,7 +212,7 @@ POST /v3/reports/generate-all
 Body: {"month": "2024-11"}
 
 # Download single artist report
-GET /v3/reports/monthly/art_rezz/2024-11
+GET /v3/reports/monthly/art_novakin/2024-11
 ```
 
 ---
@@ -223,14 +223,14 @@ GET /v3/reports/monthly/art_rezz/2024-11
 
 ```
 Main Site:
-mau5trap.com
+pulsegrid.fm
 â”œâ”€â”€ Home
 â”œâ”€â”€ Artists
 â”œâ”€â”€ News
 â””â”€â”€ Store
 
 Analytics Platform:
-analytics.mau5trap.com (NEW!)
+analytics.pulsegrid.fm (NEW!)
 â”œâ”€â”€ Login page
 â”œâ”€â”€ User dashboards
 â”œâ”€â”€ Reports
@@ -310,9 +310,9 @@ Before going live:
 **âœ… Passwords**
 ```bash
 # Change ALL default passwords:
-admin@mau5trap.com: admin123 â†’ [NEW]
-tours@rezz.com: rezz123 â†’ [NEW]
-joel@deadmau5.com: mau5123 â†’ [NEW]
+admin@pulsegrid.fm: admin123 â†’ [NEW]
+tours@novakin.band: novakin123 â†’ [NEW]
+demo@novakin.band: demopass123 â†’ [NEW]
 ```
 
 **âœ… JWT Secret**
@@ -330,7 +330,7 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
 **âœ… CORS**
 ```env
-ALLOWED_ORIGINS=https://analytics.mau5trap.com
+ALLOWED_ORIGINS=https://analytics.pulsegrid.fm
 ```
 
 **âœ… Backups**
@@ -366,13 +366,13 @@ JWT_SECRET=your_generated_secret
 GROK_KEY=your_grok_key
 AUTO_PRINT=true
 NODE_ENV=production
-ALLOWED_ORIGINS=https://analytics.mau5trap.com
+ALLOWED_ORIGINS=https://analytics.pulsegrid.fm
 ```
 
 **4. Link Domain:**
 ```
 Railway â†’ Settings â†’ Domains
-Add: analytics.mau5trap.com
+Add: analytics.pulsegrid.fm
 ```
 
 **5. Update DNS:**
@@ -395,14 +395,14 @@ Wait 24-48 hours for DNS, then you're live.
 
 **Send them:**
 ```
-Subject: mau5trap Analytics Access
+Subject: pulsegrid Analytics Access
 
 Hi [Name],
 
 You now have access to our analytics platform!
 
-URL: https://analytics.mau5trap.com
-Email: tours@rezz.com
+URL: https://analytics.pulsegrid.fm
+Email: tours@novakin.band
 Temp Password: [provided separately]
 
 You can see:
@@ -419,12 +419,12 @@ Please change your password on first login.
 
 Questions? Reply to this email.
 
-- mau5trap Team
+- pulsegrid Team
 ```
 
 ---
 
-## ðŸŽ¯ YOUR PITCH TO mau5trap
+## ðŸŽ¯ YOUR PITCH TO pulsegrid
 
 **"I built our complete label operations platform:**
 
@@ -483,7 +483,7 @@ Questions? Reply to this email.
 
 ### "Can't connect to server"
 - Check server is running: `railway status`
-- Check DNS propagation: `nslookup analytics.mau5trap.com`
+- Check DNS propagation: `nslookup analytics.pulsegrid.fm`
 - Check firewall settings
 
 ### "Login not working"
@@ -511,17 +511,17 @@ Questions? Reply to this email.
 ### For Development/Testing:
 ```
 Files to use:
-- mau5trap-api-server.js (backend)
+- pulsegrid-api-server.js (backend)
 - package.json (dependencies)
 - .env.example (configuration)
 - test-api.js (testing)
-- mau5trap-intelligence-platform.html (demo)
+- pulsegrid-intelligence-platform.html (demo)
 ```
 
 ### For Production Deployment:
 ```
 Files to use:
-- mau5trap-production-api.js (backend)
+- production-api.js (backend)
 - package-production.json (dependencies)
 - .env.production (configuration)
 - login.html (login page)
@@ -541,7 +541,7 @@ Files to read:
 
 ## âœ… FINAL CHECKLIST
 
-Before showing mau5trap:
+Before showing pulsegrid:
 
 **Preparation:**
 - [ ] Read PRODUCTION_FEATURES.md
@@ -567,7 +567,7 @@ Before showing mau5trap:
 ## ðŸŽ‰ WHAT YOU'VE ACCOMPLISHED
 
 You asked for a way to:
-1. Link with mau5trap.com âœ…
+1. Link with pulsegrid.fm âœ…
 2. Give users logins âœ…
 3. Isolate their data âœ…
 4. Track monthly sales âœ…

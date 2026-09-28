@@ -6,7 +6,7 @@
 
 ## 🎯 The Big Picture
 
-You asked: *"Can I make it link with mau5trap.com and give users logins for their own data?"*
+You asked: *"Can I make it link with pulsegrid.fm and give users logins for their own data?"*
 
 **Answer: YES. It's done.**
 
@@ -28,7 +28,7 @@ You now have a **complete production system** with:
 **3 User Roles:**
 
 **1. Admin (You)**
-- Email: `admin@mau5trap.com`
+- Email: `admin@pulsegrid.fm`
 - Access: **Everything**
   - All 36 artists
   - All revenue data
@@ -38,16 +38,16 @@ You now have a **complete production system** with:
   - Can create/delete users
 
 **2. Artist Manager (Tour Managers, etc.)**
-- Email: `tours@rezz.com`
+- Email: `tours@novakin.band`
 - Access: **Only Assigned Artists**
-  - Can see REZZ's data only
-  - Cannot see deadmau5, BlackGummy, etc.
+  - Can see NOVAKIN's data only
+  - Cannot see lumenveil, GLASSWOLFE, etc.
   - Can view/download reports for their artist
   - Cannot create users
   - Cannot see label-wide totals
 
 **3. Artist (The Artists Themselves)**
-- Email: `joel@deadmau5.com`
+- Email: `demo@novakin.band`
 - Access: **Only Their Own Data**
   - Read-only access
   - Can see their stats
@@ -56,10 +56,10 @@ You now have a **complete production system** with:
 
 ### How Data Isolation Works
 
-**Example: REZZ Tour Manager logs in**
+**Example: NOVAKIN Tour Manager logs in**
 ```javascript
-// They try to access deadmau5's data
-GET /v3/artists/art_deadmau5
+// They try to access lumenveil's data
+GET /v3/artists/art_lumenveil
 
 // Server response:
 {
@@ -67,17 +67,17 @@ GET /v3/artists/art_deadmau5
 }
 
 // They can only see:
-GET /v3/artists/art_rezz ✅
-GET /v3/artists/art_deadmau5 ❌
-GET /v3/artists/art_blackgummy ❌
+GET /v3/artists/art_novakin ✅
+GET /v3/artists/art_lumenveil ❌
+GET /v3/artists/art_glasswolfe ❌
 ```
 
 **Example: Admin (You) logs in**
 ```javascript
 // You can access everything
-GET /v3/artists/art_deadmau5 ✅
-GET /v3/artists/art_rezz ✅
-GET /v3/artists/art_blackgummy ✅
+GET /v3/artists/art_lumenveil ✅
+GET /v3/artists/art_novakin ✅
+GET /v3/artists/art_glasswolfe ✅
 GET /v3/label/overview ✅ (sees full label totals)
 ```
 
@@ -108,8 +108,8 @@ OR emails to you (easier option)
 
 **Report Example:**
 ```
-mau5trap Records
-Monthly Report: REZZ
+pulsegrid Records
+Monthly Report: NOVAKIN
 Period: 2024-11
 
 Revenue Summary
@@ -138,17 +138,17 @@ Merch Per Head: $25
 
 **Generate All Reports:**
 ```bash
-curl -X POST https://analytics.mau5trap.com/v3/reports/generate-all \
+curl -X POST https://analytics.pulsegrid.fm/v3/reports/generate-all \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{"month": "2024-11"}'
 ```
 
 **Download Single Report:**
 ```bash
-curl -O https://analytics.mau5trap.com/v3/reports/monthly/art_rezz/2024-11
+curl -O https://analytics.pulsegrid.fm/v3/reports/monthly/art_novakin/2024-11
 ```
 
-Gets you: `REZZ_2024-11_report.pdf`
+Gets you: `NOVAKIN_2024-11_report.pdf`
 
 ---
 
@@ -180,7 +180,7 @@ PRINT_SERVER_URL=http://YOUR_HOME_IP:9100/print
 **Option 2: Email Reports (Easier - Recommended)**
 ```
 Server generates PDF →
-Emails to admin@mau5trap.com →
+Emails to admin@pulsegrid.fm →
 You manually print from email
 ```
 
@@ -189,7 +189,7 @@ You manually print from email
 AUTO_PRINT=false
 EMAIL_REPORTS=true
 SMTP_HOST=smtp.gmail.com
-SMTP_USER=reports@mau5trap.com
+SMTP_USER=reports@pulsegrid.fm
 SMTP_PASS=your_app_password
 ```
 
@@ -208,21 +208,21 @@ SMTP_PASS=your_app_password
 
 **Best Option:**
 ```
-analytics.mau5trap.com
+analytics.pulsegrid.fm
 ```
 
 **or:**
 ```
-dashboard.mau5trap.com
+dashboard.pulsegrid.fm
 ```
 
 **Why:**
 - ✅ Professional
-- ✅ Keeps mau5trap branding
+- ✅ Keeps pulsegrid branding
 - ✅ Easy SSL setup
 - ✅ No extra domain cost
 - ✅ Completely separate from main site
-- ✅ No risk to mau5trap.com
+- ✅ No risk to pulsegrid.fm
 
 **How to Set Up:**
 1. Log into your domain registrar (GoDaddy, etc.)
@@ -237,13 +237,13 @@ dashboard.mau5trap.com
 **Option 1: Private Link (Staff Only)**
 ```html
 <!-- In admin/staff section -->
-<a href="https://analytics.mau5trap.com">Analytics</a>
+<a href="https://analytics.pulsegrid.fm">Analytics</a>
 ```
 
 **Option 2: Public with Auth**
 ```html
 <!-- Public but requires login -->
-<a href="https://analytics.mau5trap.com">Label Dashboard</a>
+<a href="https://analytics.pulsegrid.fm">Label Dashboard</a>
 ```
 
 **Option 3: No Link (Most Secure)**
@@ -259,50 +259,50 @@ dashboard.mau5trap.com
 
 **Example Users:**
 
-**Tour Manager for REZZ:**
+**Tour Manager for NOVAKIN:**
 ```javascript
 {
-  email: "tours@rezz.com",
+  email: "tours@novakin.band",
   password: "temporary_password", // They change on first login
   role: "artist_manager",
-  artistAccess: ["art_rezz"]
+  artistAccess: ["art_novakin"]
 }
 ```
 
-**Tour Manager for BlackGummy:**
+**Tour Manager for GLASSWOLFE:**
 ```javascript
 {
-  email: "management@blackgummy.com",
+  email: "management@glasswolfe.com",
   password: "temp123",
   role: "artist_manager",
-  artistAccess: ["art_blackgummy"]
+  artistAccess: ["art_glasswolfe"]
 }
 ```
 
 **Multi-Artist Manager:**
 ```javascript
 {
-  email: "mega.manager@mau5trap.com",
+  email: "mega.manager@pulsegrid.fm",
   password: "temp123",
   role: "artist_manager",
-  artistAccess: ["art_rezz", "art_blackgummy", "art_attlas"]
+  artistAccess: ["art_novakin", "art_glasswolfe", "art_echoharbor"]
 }
 ```
 
-**deadmau5 (Joel) Himself:**
+**LUMEN VEIL Himself:**
 ```javascript
 {
-  email: "joel@deadmau5.com",
+  email: "demo@novakin.band",
   password: "temp123",
   role: "artist",
-  artistAccess: ["art_deadmau5"]
+  artistAccess: ["art_lumenveil"]
 }
 ```
 
 ### Creating Users via API
 
 ```bash
-curl -X POST https://analytics.mau5trap.com/v3/users \
+curl -X POST https://analytics.pulsegrid.fm/v3/users \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -310,7 +310,7 @@ curl -X POST https://analytics.mau5trap.com/v3/users \
     "password": "temporary123",
     "name": "User Name",
     "role": "artist_manager",
-    "artistAccess": ["art_rezz"]
+    "artistAccess": ["art_novakin"]
   }'
 ```
 
@@ -327,10 +327,10 @@ curl -X POST https://analytics.mau5trap.com/v3/users \
 ║  Active Artists: 36                      ║
 ║                                          ║
 ║  ALL ARTISTS:                            ║
-║  ► deadmau5         $3.4M   5.0x ROI    ║
-║  ► REZZ             $1.2M   6.5x ROI    ║
-║  ► BlackGummy       $185K   8.7x ROI    ║
-║  ► ATTLAS           $369K   5.9x ROI    ║
+║  ► lumenveil         $3.4M   5.0x ROI    ║
+║  ► NOVAKIN             $1.2M   6.5x ROI    ║
+║  ► GLASSWOLFE       $185K   8.7x ROI    ║
+║  ► ECHO HARBOR           $369K   5.9x ROI    ║
 ║  ► [+ 32 more artists]                   ║
 ║                                          ║
 ║  [User Management]                       ║
@@ -339,10 +339,10 @@ curl -X POST https://analytics.mau5trap.com/v3/users \
 ╚══════════════════════════════════════════╝
 ```
 
-### Tour Manager (REZZ) Dashboard:
+### Tour Manager (NOVAKIN) Dashboard:
 ```
 ╔══════════════════════════════════════════╗
-║  YOUR ARTIST: REZZ                       ║
+║  YOUR ARTIST: NOVAKIN                       ║
 ║  Monthly Revenue: $1,170,000             ║
 ║                                          ║
 ║  UPCOMING SHOWS: 35                      ║
@@ -357,13 +357,13 @@ curl -X POST https://analytics.mau5trap.com/v3/users \
 ║                                          ║
 ║  [Download Monthly Report]               ║
 ║                                          ║
-║  ❌ Cannot see deadmau5                  ║
-║  ❌ Cannot see BlackGummy                ║
+║  ❌ Cannot see lumenveil                  ║
+║  ❌ Cannot see GLASSWOLFE                ║
 ║  ❌ Cannot see label totals              ║
 ╚══════════════════════════════════════════╝
 ```
 
-### Artist (deadmau5) Dashboard:
+### Artist (lumenveil) Dashboard:
 ```
 ╔══════════════════════════════════════════╗
 ║  YOUR STATS                              ║
@@ -393,9 +393,9 @@ curl -X POST https://analytics.mau5trap.com/v3/users \
 
 **✅ Change All Default Passwords**
 ```
-admin@mau5trap.com: Change "admin123"
-tours@rezz.com: Change "rezz123"
-joel@deadmau5.com: Change "mau5123"
+admin@pulsegrid.fm: Change "admin123"
+tours@novakin.band: Change "novakin123"
+demo@novakin.band: Change "demopass123"
 ```
 
 **✅ Generate Strong JWT Secret**
@@ -411,7 +411,7 @@ Put this in `.env` as `JWT_SECRET`
 
 **✅ Set CORS Properly**
 ```env
-ALLOWED_ORIGINS=https://analytics.mau5trap.com
+ALLOWED_ORIGINS=https://analytics.pulsegrid.fm
 ```
 
 **✅ Regular Backups**
@@ -453,7 +453,7 @@ ALLOWED_ORIGINS=https://analytics.mau5trap.com
 
 3. **Point DNS to Railway:**
    ```
-   analytics.mau5trap.com → Railway URL
+   analytics.pulsegrid.fm → Railway URL
    ```
 
 4. **Create user accounts for team**
@@ -469,7 +469,7 @@ ALLOWED_ORIGINS=https://analytics.mau5trap.com
 ## 📁 New Files You Have
 
 **Backend:**
-- `mau5trap-production-api.js` - Complete production server with auth
+- `production-api.js` - Complete production server with auth
 - `package-production.json` - Dependencies including bcrypt, JWT, PDF generation
 - `.env.production` - Environment configuration template
 
@@ -515,7 +515,7 @@ Not just "different views" - actual database-level data isolation
 Set it and forget it - reports generate every month automatically
 
 **3. Subdomain Ready**
-Professional `analytics.mau5trap.com` setup
+Professional `analytics.pulsegrid.fm` setup
 
 **4. Production-Grade Security**
 JWT tokens, bcrypt passwords, role-based access control
@@ -579,7 +579,7 @@ Add 100 users? 1000? No problem.
 ## 🆘 Common Questions
 
 **Q: Can tour managers see each other's data?**
-A: No. Perfect isolation. REZZ's manager cannot see BlackGummy's data.
+A: No. Perfect isolation. NOVAKIN's manager cannot see GLASSWOLFE's data.
 
 **Q: Can artists modify their own data?**
 A: No. They have read-only access. Only you (admin) can modify.
@@ -601,7 +601,7 @@ A: Yes! See deployment guide. Requires static IP and port forwarding.
 ## 🎉 What You've Built
 
 You asked for:
-- ✅ Link with mau5trap.com (subdomain setup)
+- ✅ Link with pulsegrid.fm (subdomain setup)
 - ✅ User logins (JWT authentication)
 - ✅ Private data per user (role-based access control)
 - ✅ Monthly reports (automated PDF generation)
@@ -609,4 +609,4 @@ You asked for:
 
 **You got all of it. This is production-ready.**
 
-Now go deploy it and show mau5trap what you built. 🎧🔥
+Now go deploy it and show pulsegrid what you built. 🎧🔥

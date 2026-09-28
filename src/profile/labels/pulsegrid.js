@@ -1,12 +1,12 @@
 /**
- * mau5trap — default / reference Label Intelligence Profile.
+ * Pulsegrid — default Label Intelligence Profile (fictional white-label brand).
  *
  * PHASE 4CF (Commercial Foundation): every value in this file was moved
  * VERBATIM out of generic backend code (routes, services, config, jobs).
- * Nothing mau5trap-specific was removed or diluted — the boundary exists so
+ * Nothing label-specific was removed or diluted — the boundary exists so
  * that generic code reads `activeProfile.<field>` instead of a module-level
  * literal. A second label adds a new profile module and selects it via
- * LABEL_SLUG / ACTIVE_LABEL; generic source is never edited.
+ * LABEL_PROFILE / LABEL_SLUG / ACTIVE_LABEL; generic source is never edited.
  *
  * Rule: this module is DATA ONLY. It may require datasets and dotenv, but
  * must never require config, logger, models, services, routes, or jobs
@@ -24,28 +24,28 @@ const roster = require('../../../mock/artistData');
 
 module.exports = {
     // ------------------------------------------------------------------ meta
-    slug: 'mau5trap',
-    labelName: 'mau5trap',                     // human label identity (banner uses identity.bannerTitle)
-    osName: 'mau5trap OS',
+    slug: 'pulsegrid',
+    labelName: 'Pulsegrid',                     // human label identity (banner uses identity.bannerTitle)
+    osName: 'Pulsegrid OS',
     osVersion: 'v5.0',
-    serviceName: 'mau5trap-api',               // logger defaultMeta (was literal)
+    serviceName: 'pulsegrid-api',               // logger defaultMeta (was literal)
 
     // -------------------------------------------------------------------- db
     db: {
         // Preferred SQLite filename for this label. Operative default lives
-        // in src/config (process.env.DB_STORAGE || 'mau5trap_v5.sqlite').
-        sqliteFile: 'mau5trap_v5.sqlite'
+        // in src/config (process.env.DB_STORAGE || 'pulsegrid_v5.sqlite').
+        sqliteFile: 'pulsegrid_v5.sqlite'
     },
 
     // ---------------------------------------------- identity / authorization
     // Was a hardcoded authorization rule in src/routes/auth.js:173.
-    rootAdminEmail: 'admin@mau5trap.com',
+    rootAdminEmail: 'admin@pulsegrid.fm',
 
     identity: {
         // Startup banner (server.js). Verbatim, including the "Multi-Tenant
         // Access Control Enabled" line — see PHASE_4CF doc (marketing-claim
         // debt, preserved until a product decision changes the copy).
-        bannerTitle: 'mau5trap Production API',
+        bannerTitle: 'Pulsegrid Production API',
         bannerSubtitle: 'Multi-Tenant Access Control Enabled',
         bannerFeatures: [
             'User Authentication (JWT)',
@@ -61,7 +61,7 @@ module.exports = {
     // before-pilot item).
     seedUsers: [
         {
-            email: 'admin@mau5trap.com',
+            email: 'admin@pulsegrid.fm',
             password: 'admin123',
             name: 'Admin User',
             role: 'admin',
@@ -71,21 +71,21 @@ module.exports = {
             bannerLabel: 'Full access'
         },
         {
-            email: 'tours@rezz.com',
-            password: 'rezz123',
-            name: 'Isabelle Rezazadeh',
+            email: 'tours@novakin.band',
+            password: 'novakin123',
+            name: 'Vera Kessler',
             role: 'artist',
-            artistAccess: 'art_rezz',
+            artistAccess: 'art_novakin',
             pageAccess: ['overview', 'roster'],
             integrationCount: 5,
-            bannerLabel: 'REZZ only'
+            bannerLabel: 'NOVAKIN only'
         }
     ],
 
     // ----------------------------------------------------------------- email
     email: {
-        from: '"mau5trap OS" <notify@mau5trap.com>',
-        resetSubject: 'mau5trap OS - Password Reset Request',
+        from: '"Pulsegrid OS" <notify@pulsegrid.fm>',
+        resetSubject: 'Pulsegrid OS - Password Reset Request',
         resetHeadingColor: '#00ff00',
         resetLinkColor: '#00ff00'
     },
@@ -93,12 +93,12 @@ module.exports = {
     // -------------------------------------------------------------------- ai
     ai: {
         // src/ai/prompts.js system prompt (pinned byte-for-byte).
-        systemContext: 'AI analyst for mau5trap. Concise, data-driven insights.',
+        systemContext: 'AI analyst for Pulsegrid. Concise, data-driven insights.',
         // src/ai/aiService.js + src/routes/ai.js dev fallback (single source now).
         devFallback: '[Dev Fallback] Growth is stable at 2.5%. Recommend increasing tour frequency in EU.',
         keywordInsights: {
             // Composed as `${bestRoi.name} has the highest ROI at ${bestRoi.roi}x. ${roiSecondPlace}`
-            roiSecondPlace: 'Rezz is second at 6.5x.',
+            roiSecondPlace: 'NOVAKIN is second at 8.7x.',
             // {artist} is the roster-order-dependent artists[1] read — semantics preserved.
             touringAdvice: 'Suggest increasing ticket prices for {artist} to match demand.',
             growthContext: 'This aligns with the viral TikTok trend observed last week.',
@@ -115,20 +115,20 @@ module.exports = {
 
     // --------------------------------------------------------- search context
     searchContext: {
-        // Google-KG contextual fallback prefix (was `mau5trap ${query}`).
-        artistQueryPrefix: 'mau5trap ',
+        // Google-KG contextual fallback prefix.
+        artistQueryPrefix: 'pulsegrid ',
         // KG tertiary fallback in modules/entityAudit.js.
-        tertiaryQueryPrefix: 'mau5trap artist '
+        tertiaryQueryPrefix: 'pulsegrid artist '
     },
 
     // ----------------------------------------------------- knowledge sources
     knowledgeSources: {
         fandom: {
-            host: 'https://deadmau5.fandom.com',
-            rosterPage: 'Mau5trap',
-            labelWikiPath: '/wiki/Mau5trap',
-            labelWikiTitle: 'Mau5trap (Wiki)',
-            // Section-detection keywords of the mau5trap Fandom roster parser.
+            host: 'https://pulsegrid.fandom.com',
+            rosterPage: 'Pulsegrid',
+            labelWikiPath: '/wiki/Pulsegrid',
+            labelWikiTitle: 'Pulsegrid (Wiki)',
+            // Section-detection keywords of the Pulsegrid Fandom roster parser.
             sectionKeywords: {
                 current: 'Current',
                 former: ['Former', 'Previous'],
@@ -136,48 +136,48 @@ module.exports = {
             }
         },
         wikipedia: {
-            labelPage: 'Mau5trap',
-            fallbackSummary: 'Mau5trap (stylized as mau5trap) is a Canadian independent record label founded by electronic music producer Deadmau5 in 2007. The label was formerly distributed by Ultra Records and is now a division of the Seven20 management group.',
-            fallbackThumbnail: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Mau5trap_logo.png/220px-Mau5trap_logo.png',
+            labelPage: 'Pulsegrid',
+            fallbackSummary: 'Pulsegrid is a fictional independent electronic music label used as a demo dataset for label operations software. All artists, releases and figures are invented.',
+            fallbackThumbnail: 'https://example.com/pulsegrid-logo.png',
             categoryKeywords: ['musician', 'DJ', 'electronic music', 'music producer']
         },
         discogs: {
-            labelUrl: 'https://www.discogs.com/label/86878-Mau5trap-Recordings'
+            labelUrl: 'https://www.discogs.com/label/000000-Pulsegrid-Records'
         },
         http: {
-            wikiUserAgent: 'Mau5trapIntelligence/1.0 (admin@mau5trap.com)',
-            discogsUserAgent: 'mau5trap-api/1.0',
-            labelBotUserAgent: 'Mau5trapBot/1.0 (bot@mau5trap.com)'
+            wikiUserAgent: 'PulsegridIntelligence/1.0 (admin@pulsegrid.fm)',
+            discogsUserAgent: 'pulsegrid-api/1.0',
+            labelBotUserAgent: 'PulsegridBot/1.0 (bot@pulsegrid.fm)'
         },
         defaultGenre: 'Electronic Music'
     },
 
     // --------------------------------------------------------- social mappings
-    // Was ARTIST_MAPPINGS in integrations/index.js (2 of 29 artists covered;
+    // Was ARTIST_MAPPINGS in integrations/index.js (2 of 8 artists covered;
     // the rest fall back to mock — documented residual).
     socialMappings: {
-        art_deadmau5: {
-            spotifyId: '2CIMQHirSU0MQqyYHq0eOx',
-            instagramName: 'deadmau5',
-            ticketmasterName: 'deadmau5',
-            youtubeChannelId: 'UCJ6td3C9QlPO9O_J5dF4ZzA',
-            twitterHandle: 'deadmau5',
-            tiktokUsername: '@deadmau5'
+        art_lumenveil: {
+            spotifyId: '0000000000000000000001',
+            instagramName: 'lumenveil',
+            ticketmasterName: 'LUMEN VEIL',
+            youtubeChannelId: 'UC0000000000000000000001',
+            twitterHandle: 'lumenveil',
+            tiktokUsername: '@lumenveil'
         },
-        art_rezz: {
-            spotifyId: '6kBDZFXuGQQL0PnZF6P2R4',
-            instagramName: 'officialrezz',
-            ticketmasterName: 'REZZ',
-            youtubeChannelId: 'UCq01irgbP5i1y7GI1S6GdTQ',
-            twitterHandle: 'OfficialRezz',
-            tiktokUsername: '@officialrezz'
+        art_novakin: {
+            spotifyId: '0000000000000000000002',
+            instagramName: 'novakinmusic',
+            ticketmasterName: 'NOVAKIN',
+            youtubeChannelId: 'UC0000000000000000000002',
+            twitterHandle: 'novakinmusic',
+            tiktokUsername: '@novakinmusic'
         }
     },
 
     // -------------------------------------------------------------------- anr
     anr: {
         defaultGenre: 'Electronic',
-        benchmarkArtist: 'deadmau5',
+        benchmarkArtist: 'LUMEN VEIL',
         evaluate: {
             prospectNames: { p1: 'Neon Horizon' },
             unknownProspectName: 'Unknown Artist',
@@ -190,12 +190,12 @@ module.exports = {
 
     // --------------------------------------------------------------- reports
     reports: {
-        pdfTitle: 'mau5trap Intelligence Report',             // src/routes/reports.js
-        generatedBy: 'Generated by mau5trap OS v5.0',         // src/routes/reports.js
-        monthlyHeader: 'mau5trap',                            // src/reports/monthlyReport.js
+        pdfTitle: 'Pulsegrid Intelligence Report',             // src/routes/reports.js
+        generatedBy: 'Generated by Pulsegrid OS v5.0',         // src/routes/reports.js
+        monthlyHeader: 'Pulsegrid',                            // src/reports/monthlyReport.js
         monthlySubheader: 'INTELLIGENCE REPORT',
         accentColor: '#00FF00',
-        confidentialLine: 'MAU5TRAP INTELLIGENCE • CONFIDENTIAL'
+        confidentialLine: 'PULSEGRID INTELLIGENCE • CONFIDENTIAL'
     },
 
     // ---------------------------------------------------------------- charts
@@ -260,7 +260,7 @@ module.exports = {
                 },
                 {
                     id: 'sub_2',
-                    artist: 'Testpilot',
+                    artist: 'Neon Relay',
                     track: 'Sunspot',
                     genre: 'Techno',
                     url: 'https://open.spotify.com/track/0abcdef123456',
@@ -272,13 +272,13 @@ module.exports = {
             anrState: {
                 whiteboard: 'Currently Reviewing: Q1 2026 Compilation Submissions.\nFocus: Tech House / Minimal.',
                 nowListening: {
-                    url: 'https://soundcloud.com/mau5trap/example-demo',
-                    updatedBy: 'deadmau5',
+                    url: 'https://soundcloud.com/pulsegrid/example-demo',
+                    updatedBy: 'novakin',
                     timestamp: new Date().toISOString()
                 },
                 demos: [
                     { id: 'demo1', title: 'Analog Dreams', artist: 'Unknown Producer', ratings: [], submittedBy: 'admin', status: 'reviewing' },
-                    { id: 'demo2', title: 'Cyberpunk Bass', artist: 'Neon Glitch', ratings: [], submittedBy: 'rezz', status: 'high-priority' },
+                    { id: 'demo2', title: 'Cyberpunk Bass', artist: 'Neon Glitch', ratings: [], submittedBy: 'novakin', status: 'high-priority' },
                     { id: 'demo3', title: 'Deep Space', artist: 'Void Walker', ratings: [], submittedBy: 'admin', status: 'new' }
                 ]
             }
@@ -293,19 +293,19 @@ module.exports = {
         // Operations fixtures (was inline in src/repositories/operationsRepository.js).
         operations: {
             logistics: [
-                { id: 1, item: 'Mau5head Replica (Gen 4)', quantity: 150, status: 'In Transit', vendor: 'Fourthwall', tracking: 'FW123456789', eta: '2025-12-18', location: 'Los Angeles Warehouse' },
-                { id: 2, item: 'Tour Tee (BlackGummy)', quantity: 800, status: 'Stocked', vendor: 'Printful', tracking: 'PF987654321', eta: null, location: 'EU Fulfillment Center' },
-                { id: 3, item: 'REZZ Goggles Replica', quantity: 45, status: 'Low Stock', vendor: 'Merchbar', tracking: 'MB456789123', eta: null, location: 'Toronto Warehouse' }
+                { id: 1, item: 'Pulsegrid Helmet Replica (Gen 4)', quantity: 150, status: 'In Transit', vendor: 'Fourthwall', tracking: 'FW123456789', eta: '2025-12-18', location: 'Los Angeles Warehouse' },
+                { id: 2, item: 'Tour Tee (GLASSWOLFE)', quantity: 800, status: 'Stocked', vendor: 'Printful', tracking: 'PF987654321', eta: null, location: 'EU Fulfillment Center' },
+                { id: 3, item: 'NOVAKIN Visor Replica', quantity: 45, status: 'Low Stock', vendor: 'Merchbar', tracking: 'MB456789123', eta: null, location: 'Toronto Warehouse' }
             ],
             assets: [
-                { id: 1, title: 'deadmau5 - Strobe (Master WAV)', type: 'Audio Master', artist: 'deadmau5', uploaded: '2024-03-15', size: '248 MB', status: 'Approved' },
-                { id: 2, title: 'REZZ - Edge (Official Video)', type: 'Video', artist: 'REZZ', uploaded: '2025-01-10', size: '1.8 GB', status: 'Processing' },
-                { id: 3, title: 'BlackGummy - Album Artwork Pack', type: 'Artwork', artist: 'BlackGummy', uploaded: '2025-02-20', size: '89 MB', status: 'Approved' }
+                { id: 1, title: 'LUMEN VEIL - Halide (Master WAV)', type: 'Audio Master', artist: 'LUMEN VEIL', uploaded: '2024-03-15', size: '248 MB', status: 'Approved' },
+                { id: 2, title: 'NOVAKIN - Surge (Official Video)', type: 'Video', artist: 'NOVAKIN', uploaded: '2025-01-10', size: '1.8 GB', status: 'Processing' },
+                { id: 3, title: 'GLASSWOLFE - Album Artwork Pack', type: 'Artwork', artist: 'GLASSWOLFE', uploaded: '2025-02-20', size: '89 MB', status: 'Approved' }
             ],
             contracts: [
-                { id: 1, artist: 'deadmau5', type: 'Master Recording', signedDate: '2018-06-01', term: 'Perpetuity', advance: '$0', recoupable: null, royaltyRate: '50%', status: 'Active', nextMilestone: null },
-                { id: 2, artist: 'REZZ', type: 'Exclusive Recording', signedDate: '2022-11-15', term: '3 Albums', advance: '$150k', recoupable: '$120k remaining', royaltyRate: 'Standard', status: 'Active', nextMilestone: 'Album 3 Q2 2026' },
-                { id: 3, artist: 'BlackGummy', type: 'Single Deal + Option', signedDate: '2024-08-20', term: '2+2', advance: '$40k', recoupable: 'Fully Recouped', royaltyRate: '18%', status: 'Active', nextMilestone: 'Option Mar 2026' }
+                { id: 1, artist: 'LUMEN VEIL', type: 'Master Recording', signedDate: '2018-06-01', term: 'Perpetuity', advance: '$0', recoupable: null, royaltyRate: '50%', status: 'Active', nextMilestone: null },
+                { id: 2, artist: 'NOVAKIN', type: 'Exclusive Recording', signedDate: '2022-11-15', term: '3 Albums', advance: '$150k', recoupable: '$120k remaining', royaltyRate: 'Standard', status: 'Active', nextMilestone: 'Album 3 Q2 2026' },
+                { id: 3, artist: 'GLASSWOLFE', type: 'Single Deal + Option', signedDate: '2024-08-20', term: '2+2', advance: '$40k', recoupable: 'Fully Recouped', royaltyRate: '18%', status: 'Active', nextMilestone: 'Option Mar 2026' }
             ]
         }
     }

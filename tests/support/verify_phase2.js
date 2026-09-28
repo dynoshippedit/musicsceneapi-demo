@@ -65,14 +65,14 @@ async function req(method, path, { token, body } = {}) {
     // ---- 3. authentication ----
     console.log('\n[3] Authentication');
     const adminLogin = await req('POST', '/v3/auth/login',
-        { body: { email: 'admin@mau5trap.com', password: 'admin123' } });
+        { body: { email: 'admin@pulsegrid.fm', password: 'admin123' } });
     check('seeded admin login -> 200', adminLogin.status === 200, `got ${adminLogin.status}`);
     const adminToken = adminLogin.body.token;
     check('admin token issued', !!adminToken);
     check('admin role in payload', adminLogin.body.user && adminLogin.body.user.role === 'admin');
 
     const artistLogin = await req('POST', '/v3/auth/login',
-        { body: { email: 'tours@rezz.com', password: 'rezz123' } });
+        { body: { email: 'tours@novakin.band', password: 'novakin123' } });
     check('seeded artist login -> 200', artistLogin.status === 200);
     const artistToken = artistLogin.body.token;
 
@@ -95,10 +95,10 @@ async function req(method, path, { token, body } = {}) {
     const artistExport = await req('GET', '/v3/exports?format=csv', { token: artistToken });
     check('artist label-wide export -> 403', artistExport.status === 403);
     // FIXED HIGH-4 (Phase 3): artist can now read their own record.
-    const artistOwn = await req('GET', '/v3/artists/art_rezz', { token: artistToken });
+    const artistOwn = await req('GET', '/v3/artists/art_novakin', { token: artistToken });
     check('FIXED HIGH-4: artist can read own record -> 200', artistOwn.status === 200,
         `status ${artistOwn.status}`);
-    const artistOther = await req('GET', '/v3/artists/art_deadmau5', { token: artistToken });
+    const artistOther = await req('GET', '/v3/artists/art_lumenveil', { token: artistToken });
     check('artist still denied OTHER artist -> 403', artistOther.status === 403,
         `status ${artistOther.status}`);
 
@@ -109,7 +109,7 @@ async function req(method, path, { token, body } = {}) {
     check('29 artists resolved (DB + mock union)', list.body.total === 29, `total=${list.body.total}`);
     check('limit honoured', list.body.artists.length === 5);
 
-    const detail = await req('GET', '/v3/artists/art_deadmau5', { token: adminToken });
+    const detail = await req('GET', '/v3/artists/art_lumenveil', { token: adminToken });
     check('single artist read -> 200', detail.status === 200);
 
     const missing = await req('GET', '/v3/artists/art_does_not_exist', { token: adminToken });
@@ -190,7 +190,7 @@ async function req(method, path, { token, body } = {}) {
 
     // ---- 8. reports / exports ----
     console.log('\n[8] Reports and exports');
-    const csvArtist = await req('GET', '/v3/exports?format=csv&artistId=art_deadmau5', { token: adminToken });
+    const csvArtist = await req('GET', '/v3/exports?format=csv&artistId=art_lumenveil', { token: adminToken });
     check('CSV export (artist) -> 200', csvArtist.status === 200);
     check('CSV content-type', /text\/csv/.test(csvArtist.ctype), csvArtist.ctype);
     check('CSV payload non-trivial', String(csvArtist.body).length > 200,
@@ -207,7 +207,7 @@ async function req(method, path, { token, body } = {}) {
     check('projections -> 200', proj.status === 200);
     check('projections return chartData', proj.body && 'chartData' in proj.body);
     const sales = await req('POST', '/v3/analytics/sales',
-        { token: adminToken, body: { artistId: 'art_deadmau5', month: '2026-01', revenue: 4321 } });
+        { token: adminToken, body: { artistId: 'art_lumenveil', month: '2026-01', revenue: 4321 } });
     check('sales write -> 200', sales.status === 200);
 
     // ---- 10. A&R split-brain still intact ----

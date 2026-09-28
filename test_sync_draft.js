@@ -6,8 +6,8 @@ const SafeStatsSchema = require('./modules/SafeStatsSchema');
 const mockDb = {
     Artist: {
         findAll: async () => [
-            { id: 'art_deadmau5', name: 'deadmau5', data: { meta: { spotifyId: '2CIMQHirSU0MQqyYHq0eOx' } } },
-            { id: 'art_rezz', name: 'Rezz', data: { meta: { spotifyId: '4aKdmOXdUKX07HVd3sGgzw' } } },
+            { id: 'art_lumenveil', name: 'lumenveil', data: { meta: { spotifyId: '2CIMQHirSU0MQqyYHq0eOx' } } },
+            { id: 'art_novakin', name: 'Novakin', data: { meta: { spotifyId: '4aKdmOXdUKX07HVd3sGgzw' } } },
             { id: 'art_unknown', name: 'NoSpotify', data: {} } // Should be skipped
         ]
     },

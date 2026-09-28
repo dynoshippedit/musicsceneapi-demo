@@ -1,6 +1,6 @@
 # COMMERCIAL_PRODUCT_READINESS_AUDIT.md
 
-**Audit date:** 2026-09-17 · **Repo:** `/home/dino/mau5trap-repo` (branch `master`, HEAD `7efb44b` + uncommitted Phase 4C tree)
+**Audit date:** 2026-09-17 · **Repo:** `/home/dino/pulsegrid-repo` (branch `master`, HEAD `7efb44b` + uncommitted Phase 4C tree)
 **Nature:** evaluation/research only. No fixes implemented, no Phase 4D started, nothing committed.
 
 ## How this audit was performed (evidence basis)
@@ -8,7 +8,7 @@
 - Read all 16 named repository documents in full, plus `INTEGRATION_INVENTORY.md`, `GAP_ANALYSIS.md`, and `ARCHITECTURE_AUDIT.md`.
 - Read the actual source: every `src/routes/*.js`, `src/models`, `src/auth`, `src/config`, `src/middleware`, `src/ai/*`, `src/repositories/inMemoryStores.js`, `src/validation`, `server.js`, `ecosystem.config.js`, `src/jobs/monthlyReportJob.js`, and the frontend `web/src` tree (endpoints, auth, brand, AI seam, AdminPage).
 - **Re-ran the backend suite:** `npm test` → **127 pass / 0 fail / 27 suites** (matches PHASE_4C_HANDOFF exactly).
-- **Exercised the API live** (~60 probes) against a throwaway database on port 3100: full CREATE→READ→UPDATE→READ→DELETE→VERIFY cycles for users, artists, A&R submissions, sales, campaigns, integrations; RBAC probes as admin/artist/viewer/arbitrary roles; a **server-restart durability pass**; AI, exports (CSV+PDF), auth edge cases. The operator's `mau5trap_v5.sqlite` was moved aside untouched and **restored byte-identical (sha256 `83abc474…` before and after)**.
+- **Exercised the API live** (~60 probes) against a throwaway database on port 3100: full CREATE→READ→UPDATE→READ→DELETE→VERIFY cycles for users, artists, A&R submissions, sales, campaigns, integrations; RBAC probes as admin/artist/viewer/arbitrary roles; a **server-restart durability pass**; AI, exports (CSV+PDF), auth edge cases. The operator's `pulsegrid_v5.sqlite` was moved aside untouched and **restored byte-identical (sha256 `83abc474…` before and after)**.
 - The Playwright frontend gate was deliberately **not** re-run: it overwrites committed `web/validation/phase4b-*.png` evidence files, and its claims were already independently re-observed by two prior sessions (PHASE_4B_VALIDATION, PHASE_4C_HANDOFF). Backend and API claims were re-verified directly instead.
 
 Where documentation and runtime behavior disagreed, runtime behavior is reported. Nothing in this file is inferred from route existence alone.
@@ -24,7 +24,7 @@ What is real and strong: a decomposed, tested backend (127 tests, snapshot parit
 What blocks commercial use is concentrated and identifiable:
 
 1. **There is no customer/label ownership concept anywhere in the domain model.** Grep for `tenant|organization|label_id|customer` across `src/` returns zero. One hardcoded SQLite file (`src/config/index.js:82`), one global roster import, global in-memory stores, global caches, one global cron. This is the cheapest it will ever be to fix and the most expensive it will ever be to retrofit.
-2. **Backend label intelligence is not externalized.** AI prompts, search prefixes, knowledge sources, report/email identity, chart colors, seeds, and the root-admin rule are mau5trap literals in generic code (BRAND_PORTABILITY_AUDIT R01–R33, all confirmed against source). The frontend is portable; the backend is not. "Phase 4-LABEL" is the correct, already-scoped remedy.
+2. **Backend label intelligence is not externalized.** AI prompts, search prefixes, knowledge sources, report/email identity, chart colors, seeds, and the root-admin rule are pulsegrid literals in generic code (BRAND_PORTABILITY_AUDIT R01–R33, all confirmed against source). The frontend is portable; the backend is not. "Phase 4-LABEL" is the correct, already-scoped remedy.
 3. **CRUD is partially trustworthy.** This audit reproduced three live integrity defects the docs understate or omit (§5): `PUT /v3/users/:id` returns success while silently dropping `artistAccess` (and the Admin UI sends it, so the failure is user-visible); `DELETE /v3/users/:id` lets an admin delete the root admin and themselves (guards exist only in shadowed duplicate handlers); and artists created via the API **404 on their own detail/archive routes after any restart** (list reads DB∪memory, detail reads memory only).
 4. **Most "product" state is process memory.** A&R, sales, campaigns, integration connections are lost on every restart — verified. Campaigns have no read-back at all. The banner's "Multi-Tenant Access Control Enabled" is aspirational; there is no tenancy.
 5. **The API is internal-grade:** no keys/service accounts, no scopes, no usage metering, no per-user cost controls on paid-provider endpoints, no versioning/deprecation policy, no OpenAPI, fabricated values served without provenance flags in several places.
@@ -65,7 +65,7 @@ The trajectory is right. The correct commercial path is **dedicated single-custo
 
 ## 3. Commercial product boundary
 
-Today the product is: **a single-tenant label dashboard with a portable frontend skin, a mau5trap-flavored backend, and a tested API shell.** It is not yet: multi-customer anything, an integration-ready API product, or a system whose demo surfaces could be shown to a paying label as-is (several serve fabricated numbers without a `source` flag — fan demographics, campaign history, integration quotas, development insights, dev-AI fallback).
+Today the product is: **a single-tenant label dashboard with a portable frontend skin, a pulsegrid-flavored backend, and a tested API shell.** It is not yet: multi-customer anything, an integration-ready API product, or a system whose demo surfaces could be shown to a paying label as-is (several serve fabricated numbers without a `source` flag — fan demographics, campaign history, integration quotas, development insights, dev-AI fallback).
 
 The boundary that exists and is worth keeping: **mock/fixture/demo content is clearly identified in code and the new frontend badges it** (`SOURCE: MOCK`, `SOURCE: FIXTURE`, `PROTOTYPE`). That discipline is the seed of the commercial boundary: demo data must become *label-profile-owned reference data*, and live data must carry provenance.
 
@@ -103,12 +103,12 @@ All reproduced live on a throwaway DB unless noted. Severity per the audit rubri
 ### F-1 — `PUT /v3/users/:id` drops `artistAccess` and reports success — **MAJOR**
 - **Files:** `src/routes/users.js:131-161` (live handler destructures `email, role, pageAccess, name, password` — no `artistAccess`); the shadowed duplicate at `src/routes/users.js:196-213` *does* update it. **Frontend:** `web/src/pages/AdminPage/AdminPage.jsx:58` sends `artistAccess` in the edit payload.
 - **Runtime path:** Admin › Team › edit user › change Artist Access › save → green success.
-- **Observed:** `PUT {artistAccess:'art_deadmau5'}` → `200 {success:true}`; stored value remains `'art_rezz'` (read back via `GET /v3/users`).
+- **Observed:** `PUT {artistAccess:'art_lumenveil'}` → `200 {success:true}`; stored value remains `'art_novakin'` (read back via `GET /v3/users`).
 - **Commercial consequence:** the one permission that scopes a staff user to specific artists cannot be changed through the product, and the failure is silent. Same defect class as the pageAccess API-killer Phase 4C fixed — that fix covered pageAccess only.
 - **Smallest response:** one-line destructure + assignment in the live handler (parity with the shadowed one); add a round-trip test like the pageAccess ones. **Cost now: LOW. Cost later: MEDIUM** (grows as more roles/fields accrete; the audit trail question compounds it).
 
 ### F-2 — `DELETE /v3/users/:id` has no root-admin guard, no self-delete guard, no revocation — **MAJOR**
-- **File:** `src/routes/users.js:164-168` (live). The self-delete guard exists only in the shadowed duplicate (`:216-229`); the root-admin guard exists only on `DELETE /v3/auth/me` (`src/routes/auth.js:173`, and it hardcodes `admin@mau5trap.com` — label coupling in an authorization rule).
+- **File:** `src/routes/users.js:164-168` (live). The self-delete guard exists only in the shadowed duplicate (`:216-229`); the root-admin guard exists only on `DELETE /v3/auth/me` (`src/routes/auth.js:173`, and it hardcodes `admin@pulsegrid.fm` — label coupling in an authorization rule).
 - **Observed:** `DELETE /v3/users/1` (the root admin) → `200 {success:true}`; subsequent login as root admin → 401. Self-delete via this route → 200. Deleted users' existing JWTs continue to authorize admin routes (verified: requests with the deleted admin's token still succeed), because role checks trust token claims and no DB lookup/revocation exists.
 - **Commercial consequence:** any admin can irreversibly delete the only root account or lock themselves out; offboarding a staff user does not actually cut access for up to 24h (JWT expiry).
 - **Smallest response:** guards on the live handler (root email from label profile, self-delete, consider last-admin protection); document token-revocation as a before-paid-production item. **Cost now: LOW. Cost later: MEDIUM-HIGH** (revocation after customers exist forces an auth-model change under pressure).
@@ -131,7 +131,7 @@ All reproduced live on a throwaway DB unless noted. Severity per the audit rubri
 - **Smallest response:** decide which of these is product data vs demo; persist the product ones (Sequelize models are cheap here), badge the demo ones. **Cost now: MEDIUM. Cost later: VERY HIGH** (retrofitting persistence + migration after customers have data, while semantics are frozen by usage).
 
 ### F-6 — Fabricated values served without provenance — **MAJOR (commercial trust)**
-- **Observed/confirmed in code:** `GET /v3/integrations/status` returns `quotaUsed: Math.floor(Math.random()*80)` per call (`src/routes/integrations.js:126` — observed values 20, then 6); `/v3/fans/demographics` fixed fixture (`label.js:77-103`); `/v3/campaigns/stats` fixed history (`marketing.js:69-76`); `/v3/artists/:id/development` fixed insights (`artists.js:276-285`); `/v3/anr/evaluate` random score + canned report (`anr.js:165-180`); AI dev fallback fabricates `200 success:true` with `[Dev Fallback]…` (distinguishable only by `source:'fallback'`); `/v3/ai/analyze` is keyword matching with `confidence: 0.98` and hardcoded "Rezz is second at 6.5x".
+- **Observed/confirmed in code:** `GET /v3/integrations/status` returns `quotaUsed: Math.floor(Math.random()*80)` per call (`src/routes/integrations.js:126` — observed values 20, then 6); `/v3/fans/demographics` fixed fixture (`label.js:77-103`); `/v3/campaigns/stats` fixed history (`marketing.js:69-76`); `/v3/artists/:id/development` fixed insights (`artists.js:276-285`); `/v3/anr/evaluate` random score + canned report (`anr.js:165-180`); AI dev fallback fabricates `200 success:true` with `[Dev Fallback]…` (distinguishable only by `source:'fallback'`); `/v3/ai/analyze` is keyword matching with `confidence: 0.98` and hardcoded "Novakin is second at 6.5x".
 - **Consequence:** a paying label cannot tell measured data from invented data at the API level. The new frontend badges some of this; the API itself does not.
 - **Response:** a `source: live|mock|fixture|fallback` convention on every intelligence endpoint; entity integrations already compute `meta.realDataSources` — expose it. **Cost now: LOW-MEDIUM. Cost later: HIGH** (retroactive provenance is archaeology).
 
@@ -145,8 +145,8 @@ All reproduced live on a throwaway DB unless noted. Severity per the audit rubri
 - **Response:** one validation pass over write endpoints (the zod layer exists and is wired to exactly two routes). **Cost now: LOW. Cost later: MEDIUM.**
 
 ### F-8 — Operational: documented PM2 deployment is broken; cluster mode is incoherent — **MAJOR**
-- **Files:** `ecosystem.config.js:4` (`script: './mau5trap-production-api.js'`), `PRODUCTION_DEPLOYMENT.md`.
-- **Verified:** `node mau5trap-production-api.js` exits 0 immediately (Phase 2 made it a pure module; only `server.js` listens). `pm2 start ecosystem.config.js` therefore starts a process that exits instantly and restart-loops; `instances:'max'` would also shard the in-memory stores across workers.
+- **Files:** `ecosystem.config.js:4` (`script: './production-api.js'`), `PRODUCTION_DEPLOYMENT.md`.
+- **Verified:** `node production-api.js` exits 0 immediately (Phase 2 made it a pure module; only `server.js` listens). `pm2 start ecosystem.config.js` therefore starts a process that exits instantly and restart-loops; `instances:'max'` would also shard the in-memory stores across workers.
 - **Response:** point the ecosystem script at `server.js`, `instances: 1` until state is externalized. **Cost now: LOW. Cost later: MEDIUM.**
 
 ### F-9 — Unbounded paid-provider spend per user — **MAJOR (commercial)**
@@ -189,12 +189,12 @@ All reproduced live on a throwaway DB unless noted. Severity per the audit rubri
 
 **There is no customer, organization, label, deployment, membership, or ownership concept anywhere in the backend.** Verified by grep and by reading every model and route. The architecture assumes exactly one label, globally:
 
-- One hardcoded database file: `src/config/index.js:82` `storage: 'mau5trap_v5.sqlite'` (no `DB_STORAGE` env read — brand audit R15 confirmed in code).
+- One hardcoded database file: `src/config/index.js:82` `storage: 'pulsegrid_v5.sqlite'` (no `DB_STORAGE` env read — brand audit R15 confirmed in code).
 - One globally imported roster: `artistRepository` requires `mock/artistData.js` directly.
 - Global process stores, one global `NodeCache`, one global cron, one root admin email literal (`auth.js:173`).
-- Seeds unconditionally create mau5trap accounts with documented weak passwords (`models/index.js:94-105`) on any empty database — including a customer's first boot.
+- Seeds unconditionally create pulsegrid accounts with documented weak passwords (`models/index.js:94-105`) on any empty database — including a customer's first boot.
 
-**"If this product gains five paying labels, what has to change?"** Today: five separate checkouts with ~20 source edits each (the brand audit's §12 edit list is accurate and verified), five hand-edited config files, five manual DB swaps, and five processes whose memory stores, caches, crons, and AI context are all mau5trap-shaped. Provisioning is a source-code operation, not an operation.
+**"If this product gains five paying labels, what has to change?"** Today: five separate checkouts with ~20 source edits each (the brand audit's §12 edit list is accurate and verified), five hand-edited config files, five manual DB swaps, and five processes whose memory stores, caches, crons, and AI context are all pulsegrid-shaped. Provisioning is a source-code operation, not an operation.
 
 The unit of ownership that matters and is missing: **an active label profile that owns (a) its datasets** (roster, seeds, operations, scouting, demographics), **(b) its intelligence configuration** (search prefixes, knowledge sources, social mappings, benchmarks, AI context), **(c) its identity outputs** (reports, emails, charts, logger/banner), **(d) its root admin**, and **(e) its database**. Artists, users, reports, integration credentials, and API credentials are all naturally label-owned; nothing in the current data legitimately spans labels.
 
@@ -282,14 +282,14 @@ The current JWT/user system cannot support machine access well: 24h user-bound t
 
 - **Credentials today are global environment variables**, read by `src/config` and provider modules — operator-owned, deployment-global. There is no per-customer credential concept.
 - **Connection state is per-user mock memory** (`userIntegrations`), not real OAuth: `/v3/integrations/auth/:service` fabricates a connected state (verified); YouTube's OAuth callback URL is hardcoded localhost with no implementing route.
-- **Configuration is label-specific nowhere**: `ARTIST_MAPPINGS` (Spotify/IG/YouTube/etc. IDs) covers exactly `art_deadmau5` and `art_rezz` (verified in `integrations/index.js:12-30`); the other 27 artists fall back to mock with only a console.warn. The Fandom host is `deadmau5.fandom.com` for every artist (`modules/entityAudit.js:684-732`). The Google-KG route prefixes `mau5trap ${query}` (`src/routes/integrations.js:69`).
+- **Configuration is label-specific nowhere**: `ARTIST_MAPPINGS` (Spotify/IG/YouTube/etc. IDs) covers exactly `art_lumenveil` and `art_novakin` (verified in `integrations/index.js:12-30`); the other 27 artists fall back to mock with only a console.warn. The Fandom host is `lumenveil.fandom.com` for every artist (`modules/entityAudit.js:684-732`). The Google-KG route prefixes `pulsegrid ${query}` (`src/routes/integrations.js:69`).
 - **Secret storage assumptions:** env vars + `.gitignore` discipline are fine for operator-owned keys; **BYOK (customer-owned keys) would require encrypted-at-rest per-label credential storage, which does not exist and should not be built now.** The decision that must happen *before customers connect credentials*: credentials are label-owned records, referenced by label profile, never per-process globals. BYOK later is then a storage/UX problem, not an architecture change.
 - **One real data-quality defect:** Instagram merges one label-level account's metrics into *every* artist (`integrations/index.js:68`) — if real integrations are ever enabled, cross-artist contamination. Keep `USE_REAL_DATA` off until mappings are label/artist-resolved.
 
 ## 15. AI architecture findings
 
 - **Provider neutrality:** the seam is good — `groqClient` is a lazy, timeout-bounded, injectable adapter; `aiService` imports it directly (the one coupling). A provider registry is *not* needed now; a `createAiService({client})` injection point already exists. The frontend provider contract is genuinely well-designed (404-degrades to `selectable:false`, flips with no rewrite when `/v3/ai/providers` ships — verified in `web/src/ai/aiClient.js`).
-- **Label neutrality: NO (verified).** System prompt is "AI analyst for mau5trap" (`prompts.js:37`); keyword path emits "Rezz is second at 6.5x", `artists[1]` comparisons, fixed TikTok/15% claims (`aiService.js:127-143`); dev fallback fabricates EU-tour advice (`aiService.js:36-37`).
+- **Label neutrality: NO (verified).** System prompt is "AI analyst for pulsegrid" (`prompts.js:37`); keyword path emits "Novakin is second at 6.5x", `artists[1]` comparisons, fixed TikTok/15% claims (`aiService.js:127-143`); dev fallback fabricates EU-tour advice (`aiService.js:36-37`).
 - **Cost visibility:** usage is console-logged only (§11/§12). **Timeout:** 20s, correct. **Retry:** none (fine at this stage). **Rate limits:** none per user (F-9).
 - **Response parsing:** tolerant-parse + zod + fallback is solid engineering; the entity-audit prompt still begs for JSON in prose (documented).
 - **Refactor NOW vs later:** *now* — move label context into the label profile (prompt identity, canned insights, fallback behavior) as part of 4-LABEL; *later* — provider router, per-request model selection, streaming.
@@ -298,9 +298,9 @@ The current JWT/user system cannot support machine access well: 24h user-bound t
 
 Branding is not enough, and the repository already knows this: the frontend `BrandProfile` (`web/src/brand/schema.js`) covers identity/locale/search/assets/map; the brand audit's proposed backend `§15.3` profile adds datasets, knowledge, AI context, reports/email identity, root admin, DB selection. **The backend profile does not exist at all** — that is the single structural gap from which most portability failures follow.
 
-A commercial Label Intelligence Profile needs, beyond the frontend schema: known-artists/aliases, search context + query prefixes, knowledge sources (+ per-source parser selection — the current Fandom parser assumes one wiki's English section layout, verified `entityAudit.js:573-590`), comparison/benchmark artists, A&R assumptions, AI system context + fallback copy, social mappings, venue/location intelligence (already externalized correctly to `profiles/mau5trap/locations.js`), integration metadata, report identity, email identity, locale, currency, timezone, scouting fixtures, fan-demographic fixtures, operations fixtures, root admin, DB selection.
+A commercial Label Intelligence Profile needs, beyond the frontend schema: known-artists/aliases, search context + query prefixes, knowledge sources (+ per-source parser selection — the current Fandom parser assumes one wiki's English section layout, verified `entityAudit.js:573-590`), comparison/benchmark artists, A&R assumptions, AI system context + fallback copy, social mappings, venue/location intelligence (already externalized correctly to `profiles/pulsegrid/locations.js`), integration metadata, report identity, email identity, locale, currency, timezone, scouting fixtures, fan-demographic fixtures, operations fixtures, root admin, DB selection.
 
-**Principle compliance check:** the mau5trap intelligence is intact and must remain the default profile's data — externalize, never remove. Every audit-named hardcoding (R01–R33) was re-confirmed present in source.
+**Principle compliance check:** the pulsegrid intelligence is intact and must remain the default profile's data — externalize, never remove. Every audit-named hardcoding (R01–R33) was re-confirmed present in source.
 
 ## 17. External-data dependency findings
 
@@ -319,7 +319,7 @@ A commercial Label Intelligence Profile needs, beyond the frontend schema: known
 ## 18. Reports / export findings
 
 - **Generation is real** (CSV 200, label PDF 200 `1635B`, artist monthly PDF 200 `78KB`, all verified; export RBAC enforced: artist label-wide 403, own-artist 200).
-- **Not label-aware:** "mau5trap Intelligence Report", "Generated by mau5trap OS v5.0", `#00FF00`, "MAU5TRAP INTELLIGENCE • CONFIDENTIAL" (verified `reports.js:149,175`, `monthlyReport.js:45,54,446`, `charts.js` greens). Filenames embed artist names (safe after HIGH-6's execFile fix).
+- **Not label-aware:** "pulsegrid Intelligence Report", "Generated by pulsegrid OS v5.0", `#00FF00`, "PULSEGRID INTELLIGENCE • CONFIDENTIAL" (verified `reports.js:149,175`, `monthlyReport.js:45,54,446`, `charts.js` greens). Filenames embed artist names (safe after HIGH-6's execFile fix).
 - **No persistence:** no report records, no history, no regeneration guarantees; cron writes `reports/<YYYY-MM>/` lazily, nothing catalogs it. Temp-file/stored-file isolation for multi-customer does not exist (single filesystem root).
 - **Reproducibility:** projections regress synthetic random data, so two runs of the same report can disagree — fine for demo, disqualifying for customer-facing "reports of record".
 - **Response:** label-aware identity via profile (with 4-LABEL); provenance flags; deterministic data sources before paid reports. Storage/report registry can wait.
@@ -349,7 +349,7 @@ Phase 3 fixed the criticals (verified in code and tests). What remains for *prod
 - **Secret boundaries:** operator env vars OK; no customer secrets exist yet — keep it that way until the label-credential decision (§14).
 - **Sensitive logging:** token redaction present (verified); err.message no longer leaks; AI prompt logging of token counts only.
 - **Exported data:** PDFs/CSVs contain full roster financials; export guard is the only control — adequate for dedicated pilot; needs audit events before paid.
-- **Admin capabilities:** root-admin rule hardcodes a mau5trap email (label coupling in an authz rule); override-admin token has no `id` (documented debt).
+- **Admin capabilities:** root-admin rule hardcodes a pulsegrid email (label coupling in an authz rule); override-admin token has no `id` (documented debt).
 - **Destructive actions:** F-2 guards; no soft-delete/undo anywhere; frontend has two-step confirms (good).
 - **Dependency advisories:** 2 moderate React Router 6, honestly reported, deferred with a trigger (correct handling).
 
@@ -375,9 +375,9 @@ The pattern from the pageAccess bug generalizes: **every Admin/roster write shou
 ## 23. Commercial deployment thought experiment
 
 ### Scenario A — small independent label, dedicated deployment, 5 staff, 50 artists
-- **Works today:** app boots; auth, roster viewing, dashboards, reports, exports, AI console all function on the mau5trap dataset; frontend re-skins with zero generic edits (verified Example Records gate).
-- **Breaks:** their roster requires swapping `mock/artistData.js` + DB (source operation); mau5trap intelligence leaks everywhere backend-side (§16); created artists 404 after restart (F-3); A&R/sales work vanishes on restart (F-5); PM2 path broken (F-8).
-- **Leaks:** mau5trap names in PDFs, emails, AI answers, search prefixes, benchmarks, banner.
+- **Works today:** app boots; auth, roster viewing, dashboards, reports, exports, AI console all function on the pulsegrid dataset; frontend re-skins with zero generic edits (verified Example Records gate).
+- **Breaks:** their roster requires swapping `mock/artistData.js` + DB (source operation); pulsegrid intelligence leaks everywhere backend-side (§16); created artists 404 after restart (F-3); A&R/sales work vanishes on restart (F-5); PM2 path broken (F-8).
+- **Leaks:** pulsegrid names in PDFs, emails, AI answers, search prefixes, benchmarks, banner.
 - **Requires source edits:** ~20 files (brand audit §12 list — accurate).
 - **Requires schema changes:** none for the demo path.
 - **Requires operational changes:** file-based DB swap, single-instance pm2/systemd, password rotation for seeded accounts.
@@ -424,7 +424,7 @@ The pattern from the pageAccess bug generalizes: **every Admin/roster write shou
 
 ## 25. MUST DESIGN / FIX NOW (cheap now, expensive later)
 
-1. **Label profile seam decision + skeleton (4-LABEL, backend):** one active-label resolution (env-selected), owning datasets, intelligence config, identity outputs, root admin email, DB file — mau5trap values moved in verbatim as the default profile. This is the single highest-value item; it converts Scenario A from "source edits" to "configuration".
+1. **Label profile seam decision + skeleton (4-LABEL, backend):** one active-label resolution (env-selected), owning datasets, intelligence config, identity outputs, root admin email, DB file — pulsegrid values moved in verbatim as the default profile. This is the single highest-value item; it converts Scenario A from "source edits" to "configuration".
 2. **Ownership convention for new code:** no new label literals outside profile/data; any new owned table gets an owner column. Add a grep rule to the existing static-gate family.
 3. **Fix the four CRUD lies:** F-1 (artistAccess one-liner), F-2 (delete guards), F-4 (409 on duplicate artist), F-7 batch (vote-direction enum, ghost-sales 400, password min length, malformed-JSON 400).
 4. **Unify artist reads through the repository** (F-3) so DB-persisted artists survive restarts on every route.
@@ -441,7 +441,7 @@ The pattern from the pageAccess bug generalizes: **every Admin/roster write shou
 4. Error-envelope normalization (one shape; malformed JSON → 400).
 5. API_INVENTORY → minimal OpenAPI/reference; one-paragraph versioning/compatibility policy.
 6. Health readiness (DB-aware) + backup/restore runbook for the SQLite file.
-7. Root admin + seeds sourced from the label profile (no mau5trap email in authz rules; no documented weak default passwords on customer boots).
+7. Root admin + seeds sourced from the label profile (no pulsegrid email in authz rules; no documented weak default passwords on customer boots).
 8. Read-back round-trip tests for every admin/roster write (extend the 4C pageAccess pattern).
 
 ## 27. BEFORE ACCEPTING PAYMENT / PRODUCTION DATA
@@ -481,7 +481,7 @@ The pattern from the pageAccess bug generalizes: **every Admin/roster write shou
 ```
 Dedicated instance per label (process + SQLite/Postgres file + port)
   └─ env LABEL_SLUG → ActiveLabelProfile (NEW backend seam)
-        ├─ datasets:      roster, seeds, operations, scouting, demographics (mau5trap values = default)
+        ├─ datasets:      roster, seeds, operations, scouting, demographics (pulsegrid values = default)
         ├─ intelligence:  search prefixes, knowledge sources+parsers, social mappings,
         │                 benchmarks, AI system context + fallback copy
         ├─ identity:      report titles/accent, email sender/templates, chart colors, logger/banner
@@ -515,7 +515,7 @@ Everything in this diagram except `ActiveLabelProfile`, `audit_events`, the thre
 
 ## Final questions — explicit answers
 
-1. **mau5trap application or reusable label platform?** Still fundamentally a mau5trap application on the backend; genuinely a reusable platform on the frontend. Transition is real but half-done.
+1. **pulsegrid application or reusable label platform?** Still fundamentally a pulsegrid application on the backend; genuinely a reusable platform on the frontend. Transition is real but half-done.
 2. **Can another label be provisioned without rewriting generic frontend code?** **YES** (verified: Example Records runs with zero edits outside `web/src/brand/`; static gate enforces it).
 3. **Can another label be provisioned without rewriting generic backend code?** **NO.** ~20 files of label literals in generic code; no active-label resolution exists.
 4. **Is dedicated-instance commercial deployment realistic with the current trajectory?** **YES**, after the 4-LABEL externalization plus the §25 fixes. The trajectory is correct and the distance is short.

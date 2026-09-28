@@ -12,7 +12,7 @@ class TicketmasterIntegration {
     /**
      * Fetch upcoming events for an artist
      * @param {string} artistName - Artist name to search
-     * @returns {Object} Touring data mapped to mau5trap schema
+     * @returns {Object} Touring data mapped to pulsegrid schema
      */
     async getArtistEvents(artistName) {
         try {
@@ -32,7 +32,7 @@ class TicketmasterIntegration {
 
             const events = response.data._embedded?.events || [];
 
-            // Map events to mau5trap schema
+            // Map events to pulsegrid schema
             const shows = events.map(event => ({
                 date: event.dates.start.localDate,
                 venue: event._embedded?.venues?.[0]?.name || 'TBA',

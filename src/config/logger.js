@@ -1,7 +1,7 @@
 /**
  * src/config/logger.js
  *
- * Winston logger extracted from mau5trap-production-api.js L221-235.
+ * Winston logger extracted from production-api.js L221-235.
  *
  * Behavior preserved exactly, with ONE robustness fix that cannot change any
  * API response: the logs/ directory is created if missing. The original relied

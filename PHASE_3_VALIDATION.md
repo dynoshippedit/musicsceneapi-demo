@@ -29,8 +29,8 @@ endpoint is now verified end-to-end:
 
 ```
 GET /v3/exports?format=pdf                       -> 200  application/pdf  1636 B  %PDF-1.3
-GET /v3/exports?format=pdf&artistId=art_deadmau5 -> 200  application/pdf  6592 B  %PDF-1.3
-GET /v3/reports/monthly/art_deadmau5/2026-01     -> 200  application/pdf  100635 B %PDF-1.3
+GET /v3/exports?format=pdf&artistId=art_lumenveil -> 200  application/pdf  6592 B  %PDF-1.3
+GET /v3/reports/monthly/art_lumenveil/2026-01     -> 200  application/pdf  100635 B %PDF-1.3
 ```
 
 The monthly report is a full multi-page PDF (revenue table, sustainability,
@@ -137,7 +137,7 @@ would turn a malformed-but-non-empty email into a 400, changing the 401
 
 - `verify_phase2.js` is **not idempotent**: it creates and restores a
   "Verify Artist …" row, so a second run on the same DB reports `total=30`
-  instead of 29. Run it against a fresh DB (delete `mau5trap_v5.sqlite` first).
+  instead of 29. Run it against a fresh DB (delete `pulsegrid_v5.sqlite` first).
 - The snapshot baseline (`tests/snapshots/phase2_baseline.json`) was re-captured
   AFTER the Phase 3 fixes, so the snapshot suite now guards against *future*
   drift, not against Phase 3 drift. The Phase 3 drift was verified separately

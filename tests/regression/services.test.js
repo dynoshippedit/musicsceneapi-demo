@@ -29,7 +29,7 @@ describe('src/ai/prompts', () => {
         const msgs = prompts.buildQueryMessages({ userPrompt: 'hi', contextData: {} });
         assert.strictEqual(msgs.length, 2);
         assert.strictEqual(msgs[0].role, 'system');
-        assert.strictEqual(msgs[0].content, 'AI analyst for mau5trap. Concise, data-driven insights.');
+        assert.strictEqual(msgs[0].content, 'AI analyst for Pulsegrid. Concise, data-driven insights.');
     });
 
     test('user prompt is truncated to 500 characters', () => {
@@ -170,7 +170,7 @@ describe('src/ai/aiService', () => {
 
     test('PINS: analyzeByKeyword is NOT AI and keeps its hardcoded strings', () => {
         const svc = createAiService({ client: fakeClient('unused'), cacheService: createCacheService() });
-        assert.match(svc.analyzeByKeyword('what about roi').response, /highest ROI at .*Rezz is second at 6\.5x\./);
+        assert.match(svc.analyzeByKeyword('what about roi').response, /highest ROI at .*NOVAKIN is second at 8\.7x\./);
         assert.match(svc.analyzeByKeyword('growth please').response, /fastest growing artist/);
         assert.match(svc.analyzeByKeyword('nothing relevant').response, /Overall revenue is up 15% YoY/);
     });
@@ -210,13 +210,13 @@ describe('src/ai/groqClient', () => {
 describe('src/repositories/artistRepository', () => {
     const repo = require('../../src/repositories/artistRepository');
 
-    test('exposes the 29-artist mock roster and label totals', () => {
-        assert.strictEqual(repo.getMockArtists().length, 29);
+    test('exposes the 8-artist fictional mock roster and label totals', () => {
+        assert.strictEqual(repo.getMockArtists().length, 8);
         assert.ok(repo.getLabelTotals(), 'labelTotals present');
     });
 
     test('findMockById resolves a known artist and misses cleanly', () => {
-        assert.strictEqual(repo.findMockById('art_deadmau5').name, 'deadmau5');
+        assert.strictEqual(repo.findMockById('art_lumenveil').name, 'LUMEN VEIL');
         assert.strictEqual(repo.findMockById('art_nope'), undefined);
     });
 
@@ -225,8 +225,8 @@ describe('src/repositories/artistRepository', () => {
     });
 
     test('getArtistData returns the mock object when USE_REAL_DATA is off', async () => {
-        const a = await repo.getArtistData('art_rezz');
-        assert.strictEqual(a.id, 'art_rezz');
+        const a = await repo.getArtistData('art_novakin');
+        assert.strictEqual(a.id, 'art_novakin');
     });
 
     test('ranking helpers select the correct top artist', () => {
@@ -452,7 +452,7 @@ describe('src/integrations (facade)', () => {
 
     test('PINS: only two artists have external id mappings', () => {
         const facade = require('../../src/integrations');
-        assert.deepStrictEqual(Object.keys(facade.artistMappings).sort(), ['art_deadmau5', 'art_rezz']);
+        assert.deepStrictEqual(Object.keys(facade.artistMappings).sort(), ['art_lumenveil', 'art_novakin']);
     });
 });
 
@@ -564,7 +564,7 @@ describe('src/services/emailService', () => {
         });
         await svc.sendPasswordReset({ to: 'a@b.c', resetToken: 'TOK123' });
         assert.match(captured.html, /reset-password\?token=TOK123/);
-        assert.strictEqual(captured.subject, 'mau5trap OS - Password Reset Request');
+        assert.strictEqual(captured.subject, 'Pulsegrid OS - Password Reset Request');
     });
 });
 
@@ -587,7 +587,7 @@ describe('src/reports/monthlyReport', () => {
         //      "switchToPage(0) out of bounds"
         // Both threw inside pdfkit-table's async loop and killed the process.
         // Now generateMonthlyReport resolves to a real PDF buffer.
-        const artist = artistRepo.findMockById('art_deadmau5');
+        const artist = artistRepo.findMockById('art_lumenveil');
         const buf = await generateMonthlyReport(artist, '2026-01');
 
         assert.ok(Buffer.isBuffer(buf), 'returns a Buffer');
@@ -597,7 +597,7 @@ describe('src/reports/monthlyReport', () => {
     });
 
     test('generated PDF embeds the confidential footer', async () => {
-        const artist = artistRepo.findMockById('art_deadmau5');
+        const artist = artistRepo.findMockById('art_lumenveil');
         const buf = await generateMonthlyReport(artist, '2026-01');
 
         // Extract text via pdftotext when available (most reliable); skip the

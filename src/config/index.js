@@ -5,7 +5,7 @@
  *
  * PHASE 1 CONSTRAINT: this module preserves EXISTING behavior exactly, including
  * behavior the audit flagged as insecure. Defaults below are reproduced verbatim
- * from mau5trap-production-api.js so that no endpoint response changes.
+ * from production-api.js so that no endpoint response changes.
  *
  * Audit findings intentionally NOT fixed here (deferred to Phase 2, pinned by
  * tests/regression/*.test.js so a future fix cannot land silently):
@@ -86,7 +86,7 @@ const config = {
         dialect: process.env.DB_DIALECT || 'sqlite',
         // PHASE 4CF: storage was a hardcoded literal. DB_STORAGE env now
         // selects the file, defaulting to the active Label Intelligence
-        // Profile's sqliteFile ('mau5trap_v5.sqlite') — the
+        // Profile's sqliteFile ('pulsegrid_v5.sqlite') — the
         // dedicated-instance deployment seam: each label instance points
         // at its own database without a source edit.
         storage: process.env.DB_STORAGE || profile.db.sqliteFile,
@@ -122,7 +122,7 @@ const config = {
         port: process.env.SMTP_PORT || 587,
         user: process.env.SMTP_USER || 'apikey',
         pass: process.env.SMTP_PASS || process.env.SENDGRID_API_KEY,
-        // PHASE 4CF: the brand default ('"mau5trap OS" <notify@mau5trap.com>')
+        // PHASE 4CF: the brand default ('"pulsegrid OS" <notify@pulsegrid.fm>')
         // moved to the Label Intelligence Profile (profile.email.from);
         // the operative default is resolved by the email service.
         from: process.env.EMAIL_FROM || '',

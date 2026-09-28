@@ -17,7 +17,7 @@ Reference commit for all "original"/"pre-refactor" claims: `c0281d8`.
 | 1 | Canonical entrypoint, config, middleware, auth, models, shared utils | COMPLETE |
 | 2 | repositories, services, integrations facade, AI, analytics, reports, jobs, controllers/routes | COMPLETE |
 | 3 | Defect remediation, security fixes, validation, logging redaction | COMPLETE — see PHASE_3_VALIDATION.md |
-| 4A | Frontend architecture, visual design contract, independent design audit + reconciliation, brand-portability audit | COMPLETE — `FRONTEND_ARCHITECTURE.md`, `MAU5TRAP_VISUAL_DESIGN_CONTRACT.md`, `PHASE_4A_DESIGN_AUDIT.md`, `PHASE_4A_HANDOFF.md` (§22 reconciles the audit), `BRAND_PORTABILITY_AUDIT*.md` |
+| 4A | Frontend architecture, visual design contract, independent design audit + reconciliation, brand-portability audit | COMPLETE — `FRONTEND_ARCHITECTURE.md`, `PULSEGRID_VISUAL_DESIGN_CONTRACT.md`, `PHASE_4A_DESIGN_AUDIT.md`, `PHASE_4A_HANDOFF.md` (§22 reconciles the audit), `BRAND_PORTABILITY_AUDIT*.md` |
 | 4B | `web/` Vite+React reference slice: brand layer, API client, auth, shell, Login + Dashboard against live `/v3/label/overview`; two-profile portability gate | COMPLETE — `PHASE_4B_HANDOFF.md`; independently re-verified in `PHASE_4B_VALIDATION.md` (live gate, `cd web && npm run gate`) and `PHASE_4B_STATIC_AUDIT.md` |
 | 4C-pre | Contract alignment: pageAccess in login+/me, /me 404 session handling, scope-aware portability gate, baseline investigation, RR6 retained | COMPLETE — in D0 `7336323` — see PHASE_4C_PREREQUISITE_VALIDATION.md |
 | 4C | Remaining page migration: Artists, Artist detail (9 tabs), A&R Room + Scouting, Intelligence, Marketing, Fans, Operations, Settings (Integrations + AI), Admin, 404, and dashboard completion (forecast chart, heatmap, command console, exports) | COMPLETE — in D0 `7336323` — see PHASE_4C_HANDOFF.md |
@@ -76,7 +76,7 @@ the shadowed duplicates are untouched and no response contract changed (no re-ba
 `tests/snapshots/phase2_baseline.json` still shows only the pre-4C +14/−0).
 See `PHASE_4C_HANDOFF.md` §3.
 
-Monolith size: **3207 → 82 lines** (`mau5trap-production-api.js` is now an app
+Monolith size: **3207 → 82 lines** (`production-api.js` is now an app
 assembler). 39 modules under `src/`, 5249 lines total.
 
 ---
@@ -139,7 +139,7 @@ assembler). 39 modules under `src/`, 5249 lines total.
 
 | File | Change |
 |---|---|
-| `mau5trap-production-api.js` | 1974 → 82 lines. Now only: middleware → routes → error handlers, plus `initializeDatabase()` and exports. No business logic, data access, prompts, PDF layout, cron or handlers remain. |
+| `production-api.js` | 1974 → 82 lines. Now only: middleware → routes → error handlers, plus `initializeDatabase()` and exports. No business logic, data access, prompts, PDF layout, cron or handlers remain. |
 | `server.js` | Added explicit `registerJobs()` after DB init; honours `SCHEDULE_JOBS=false`. |
 | `tests/support/probe.js` | Rewritten to consume the shared catalogue; 50 → 91 cases; volatile-key scrubbing widened (ids, timestamps, download URLs). |
 | `tests/regression/routes.test.js` | Added duplicate-ordering, cross-domain shadowing, middleware-chain and no-cron-on-require assertions. |
@@ -303,7 +303,7 @@ Impact: `GET /v3/reports/monthly/:artistId/:month` and
 `GET /v3/exports?format=pdf` are a denial of service. CSV export is unaffected.
 
 Verified pre-existing: unmodified git HEAD crashes identically at
-`mau5trap-production-api.js:2212` with the same stack. **Not introduced by the
+`production-api.js:2212` with the same stack. **Not introduced by the
 refactor.** Not fixed in Phase 2 because the fix changes PDF output (row
 striping would begin rendering). Pinned statically by
 `tests/regression/services.test.js` — asserted by source inspection rather than
@@ -434,7 +434,7 @@ Full detail in `PHASE_3_VALIDATION.md`.
 - **`tests/support/verify_phase2.js` is not idempotent**: it creates a
   `Verify Artist <timestamp>` row per run (L123) and never removes it, so its
   `total === 29` assertion (L109) fails on any second run against a persistent DB.
-  A clean single run passes 54/54. Its artifacts were removed from `mau5trap_v5.sqlite`.
+  A clean single run passes 54/54. Its artifacts were removed from `pulsegrid_v5.sqlite`.
 - **Frontend bundle is ~617 kB (~200 kB gzipped)** after the chart/map additions; Vite
   warns above 500 kB. No code splitting was introduced in 4C.
 - **`useApiQuery(query)` requires a memoized `query`** or it re-fetches forever. All ~25

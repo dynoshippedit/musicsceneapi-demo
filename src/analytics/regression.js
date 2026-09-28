@@ -2,7 +2,7 @@
  * src/analytics/regression.js
  *
  * Pure predictive-analytics maths extracted verbatim from
- * mau5trap-production-api.js (Phase 1 L2663-2730).
+ * production-api.js (Phase 1 L2663-2730).
  *
  * Kept free of HTTP, cache and data access so it is unit-testable.
  */

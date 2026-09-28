@@ -2,7 +2,7 @@
  * src/integrations/rateLimiter.js
  *
  * Token-bucket limiter and the external-service registry, extracted verbatim
- * from mau5trap-production-api.js (Phase 1 L~140-200).
+ * from production-api.js (Phase 1 L~140-200).
  *
  * ============================================================================
  * PRESERVED DEFECT (audit INTEGRATION §5): THESE LIMITERS ARE NOT USED

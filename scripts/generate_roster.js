@@ -2,35 +2,14 @@ const fs = require('fs');
 const path = require('path');
 
 const artistNames = [
-    "ATTLAS",
-    "BlackGummy",
-    "Blue Mora",
-    "BUDD",
-    "Colleen D'Agostino",
-    "deadmau5",
-    "Dom Kane",
-    "Draft",
-    "EDDIE",
-    "Enzo Bennet",
-    "Electrocado",
-    "Feed Me",
-    "Fehrplay",
-    "Frost",
-    "HEYZ",
-    "HolyU",
-    "Kayve",
-    "Matt Lange",
-    "Michael Woods",
-    "Monstergetdown",
-    "Neus",
-    "No Mana",
-    "Oliver Winters",
-    "REZZ",
-    "Rinzen",
-    "SevenDoors",
-    "Shotty Horroh",
-    "Tinlicker", // Corrected from Tinylicker
-    "Tommy Lee"
+    'NOVAKIN',
+    'LUMEN VEIL',
+    'GLASSWOLFE',
+    'AURORA DRIFT',
+    'STATIC BLOOM',
+    'MIDNIGHT CIRCUIT',
+    'ECHO HARBOR',
+    'VIOLETPULSE'
 ];
 
 // Helper to sanitize ID
@@ -42,8 +21,8 @@ const randFloat = (min, max) => parseFloat((Math.random() * (max - min) + min).t
 
 // Tier determination
 const getTier = (name) => {
-    if (['deadmau5', 'REZZ', 'Feed Me'].includes(name)) return 'flagship';
-    if (['No Mana', 'ATTLAS', 'BlackGummy', 'Tinlicker', 'Fehrplay'].includes(name)) return 'core';
+    if (['NOVAKIN', 'LUMEN VEIL', 'STATIC BLOOM'].includes(name)) return 'flagship';
+    if (['GLASSWOLFE', 'AURORA DRIFT', 'MIDNIGHT CIRCUIT', 'ECHO HARBOR'].includes(name)) return 'core';
     return 'developing'; // broader category for mid/emerging
 };
 
@@ -119,7 +98,7 @@ const generateArtist = (name) => {
         },
         brandDeals: [],
         collaborations: [],
-        influences: ["Mau5trap Sound", "Techno", "Prog House"],
+        influences: ["Pulsegrid Sound", "Techno", "Prog House"],
         genreHybrids: isFlagship ? "Electro House" : "Techno/Progressive",
         sustainability: {
             longevityScore: randFloat(5, 10),

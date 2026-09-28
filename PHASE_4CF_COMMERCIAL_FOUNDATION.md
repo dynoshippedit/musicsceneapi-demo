@@ -1,7 +1,7 @@
 # PHASE_4CF_COMMERCIAL_FOUNDATION.md
 
 **Phase:** 4CF — Commercial Foundation / CRUD Truth · **Date:** 2026-09-17
-**Repo:** `/home/dino/mau5trap-repo` (HEAD `7efb44b` + inherited uncommitted Phase 4C tree + this phase's changes)
+**Repo:** `/home/dino/pulsegrid-repo` (HEAD `7efb44b` + inherited uncommitted Phase 4C tree + this phase's changes)
 **Scope:** the seven bounded objectives from the commercial audits (CRUD truth, user lifecycle/session safety, artist canonical source of truth, persist-or-demo contract, minimal ownership seam, minimal audit + usage seams, backend Label Intelligence Profile). Nothing committed; Phase 4D NOT started.
 
 ---
@@ -33,7 +33,7 @@
 
 ## 4. Artist source-of-truth correction
 
-- One authoritative durable store: the `Artist` table. The profile roster (`mock/artistData.js`, required once via `src/profile/labels/mau5trap.js`) is reference/seed data + an in-process mirror kept consistent by `syncMemoryMirror()`.
+- One authoritative durable store: the `Artist` table. The profile roster (`mock/artistData.js`, required once via `src/profile/labels/pulsegrid.js`) is reference/seed data + an in-process mirror kept consistent by `syncMemoryMirror()`.
 - Acceptance verified by `tests/regression/durability.test.js`: create → list → detail → archive → **restart against the same disposable DB** → detail shows archived AND list agrees → restore persists.
 - Aggregates (label overview, demographics, projections label-wide, royalties, contracts, geography-except-below) now resolve through the canonical hybrid list, so created artists count everywhere **except the label-overview admin `monthlyRevenue`, which remains the frozen `labelTotals` fixture**.
 - **Documented residuals (unchanged on purpose):** `analytics/geography` reads the roster array (byte-parity: the baseline captures it after the AI keyword sorts reorder the shared array, and `regions` is built in first-encounter order — a DB-order read would return a different region sequence; verified the integer sums themselves are order-invariant); AI keyword path + monthly cron + campaign CRM stats + label-wide export overview remain roster-memory (pinned semantics).
@@ -62,7 +62,7 @@
 
 ## 7. Customer/label ownership seam
 
-- **`src/profile/`** — the Active Label Intelligence Profile is the ownership root for the dedicated-instance model. `LABEL_SLUG`/`ACTIVE_LABEL` env selects a profile module; default/fallback `mau5trap`. Data-only modules (no config/logger/model requires → no load cycles).
+- **`src/profile/`** — the Active Label Intelligence Profile is the ownership root for the dedicated-instance model. `LABEL_SLUG`/`ACTIVE_LABEL` env selects a profile module; default/fallback `pulsegrid`. Data-only modules (no config/logger/model requires → no load cycles).
 - `DB_STORAGE` env (new) selects the SQLite file → per-label databases without a source edit.
 - Convention established and applied: **the first new owned table (`AuditEvents`) carries `labelSlug` from day one**; future owned tables must carry an owner column. No `tenant_id` anywhere; no Customer/Organization table; full multi-tenancy explicitly NOT built.
 
@@ -79,29 +79,29 @@
 
 ## 10. Label Intelligence Profile architecture
 
-- **Frontend `BrandProfile`** (visual brand: identity, locale, theme, map — unchanged, gate-enforced) is now complemented by the **backend Label Intelligence Profile** (`src/profile/labels/mau5trap.js` + resolver `src/profile/index.js`).
-- Generic code reads profile fields; the mau5trap profile carries every previous literal **verbatim**. No mau5trap intelligence was removed or diluted.
+- **Frontend `BrandProfile`** (visual brand: identity, locale, theme, map — unchanged, gate-enforced) is now complemented by the **backend Label Intelligence Profile** (`src/profile/labels/pulsegrid.js` + resolver `src/profile/index.js`).
+- Generic code reads profile fields; the pulsegrid profile carries every previous literal **verbatim**. No pulsegrid intelligence was removed or diluted.
 
-## 11. Mau5trap-specific values moved behind configuration
+## 11. Pulsegrid-specific values moved behind configuration
 
 | Area | Field(s) | Consumers |
 |---|---|---|
 | AI | `ai.systemContext`, `ai.devFallback` (deduped: aiService + routes/ai.js), `ai.keywordInsights` (roiSecondPlace, touringAdvice `{artist}`, growthContext, defaultInsight), `ai.developmentInsights`/`developmentFocusAreas` | prompts.js, aiService.js, routes/ai.js, routes/artists.js |
-| Search context | `searchContext.artistQueryPrefix` ('mau5trap '), `.tertiaryQueryPrefix` | routes/integrations.js, modules/entityAudit.js |
+| Search context | `searchContext.artistQueryPrefix` ('pulsegrid '), `.tertiaryQueryPrefix` | routes/integrations.js, modules/entityAudit.js |
 | Knowledge sources | `fandom {host, rosterPage, labelWikiPath, labelWikiTitle, sectionKeywords}`, `wikipedia {labelPage, fallbackSummary, fallbackThumbnail, categoryKeywords}`, `discogs.labelUrl`, `http {wikiUserAgent, discogsUserAgent, labelBotUserAgent}`, `defaultGenre` | modules/entityAudit.js (all provider params) |
-| Social mappings | `socialMappings` (ARTIST_MAPPINGS verbatim: art_deadmau5 + art_rezz) | integrations/index.js, src/integrations facade |
+| Social mappings | `socialMappings` (ARTIST_MAPPINGS verbatim: art_lumenveil + art_novakin) | integrations/index.js, src/integrations facade |
 | A&R | `anr.defaultGenre`, `benchmarkArtist`, `evaluate` copy | routes/anr.js |
 | Reports | `reports {pdfTitle, generatedBy, monthlyHeader, monthlySubheader, accentColor, confidentialLine}` | routes/reports.js, reports/monthlyReport.js |
 | Charts | `charts {accent, accentSoft, piePalette, donutPalette, projectionAccent}` | utils/charts.js, routes/analytics.js |
 | Email | `email {from, resetSubject, resetHeadingColor, resetLinkColor}` | emailService.js, routes/auth.js (the route keeps its byte-identical inline PASSWORD-RESET copy — pre-existing duplication, documented not deduped) |
-| Identity | `identity.bannerTitle/Subtitle/Features`, `serviceName` | server.js banner (values verbatim; padding rendered programmatically so the box is rectangular — the original byte-counted padding was ragged; stale joel@deadmau5.com line removed — that account was never seeded), config/logger.js |
+| Identity | `identity.bannerTitle/Subtitle/Features`, `serviceName` | server.js banner (values verbatim; padding rendered programmatically so the box is rectangular — the original byte-counted padding was ragged; stale legacy artist email line removed — that account was never seeded), config/logger.js |
 | Authz | `rootAdminEmail` | routes/users.js (new guard), routes/auth.js (GDPR guard) |
-| Seeds | `seedUsers` (2 mau5trap accounts verbatim) | models/index.js seeding |
+| Seeds | `seedUsers` (2 pulsegrid accounts verbatim) | models/index.js seeding |
 | Datasets | `datasets {roster (mock/artistData), demographics, anr (prospects/submissions/anrState), scouts, operations}` | artistRepository, inMemoryStores, scoutService, operationsRepository, routes/label.js |
 
 ## 12. Backend files changed
 
-New: `src/profile/index.js`, `src/profile/labels/mau5trap.js`, `src/services/auditService.js`, `src/services/usageService.js`, `tests/regression/durability.test.js`.
+New: `src/profile/index.js`, `src/profile/labels/pulsegrid.js`, `src/services/auditService.js`, `src/services/usageService.js`, `tests/regression/durability.test.js`.
 Modified: `src/config/index.js` (DB_STORAGE env with `profile.db.sqliteFile` fallback; email.from env-only), `src/config/logger.js`, `src/models/index.js` (AuditEvent/AnrSubmission/SalesEntry; profile seeds; A&R seeding), `src/middleware/index.js` (requestId + completion log), `src/routes/context.js` (composite auth; profile/usage/audit/AnrSubmission/SalesEntry in ctx), `src/routes/users.js` (F-1/F-2 + audit), `src/routes/auth.js` (profile email/root), `src/routes/artists.js` (repository + audit + profile insights), `src/routes/label.js`, `src/routes/analytics.js`, `src/routes/finance.js`, `src/routes/reports.js`, `src/routes/integrations.js` (KG prefix; quotaUsed null), `src/routes/anr.js` (store #1 → DB; profile copy), `src/routes/ai.js` (profile fallback), `src/repositories/artistRepository.js` (canonical layer), `src/repositories/inMemoryStores.js`, `src/repositories/operationsRepository.js`, `src/integrations/scoutService.js`, `src/integrations/index.js`, `src/services/emailService.js`, `src/services/entityAuditService.js` (actor + usage), `src/ai/aiService.js`, `src/ai/prompts.js`, `src/utils/charts.js`, `src/reports/monthlyReport.js`, `modules/entityAudit.js`, `integrations/index.js`, `server.js` (profile banner), `web/src/pages/SettingsPage/IntegrationsView.jsx` (null quota rendering), `tests/regression/snapshot.test.js`, `tests/regression/units.test.js`, `tests/snapshots/phase2_baseline.json`, plus docs `FRONTEND_ARCHITECTURE.md` and `REFACTOR_PROGRESS.md`.
 
 ## 13. API contracts changed (deliberate, documented)
@@ -123,7 +123,7 @@ No other response bodies changed (141-test suite + 91-case snapshot + verify 54 
 
 - New tables: `AuditEvents`, `AnrSubmissions`, `SalesEntries` (Sequelize `sync({alter:true})` creates them on next boot of an existing DB).
 - No changes to `Users`/`Artists`/`Stats` schemas.
-- Seeds unchanged for the mau5trap profile (same two users, same 29 artists, plus A&R sub_1/sub_2 when the table is empty).
+- Seeds unchanged for the pulsegrid profile (same two users, same 29 artists, plus A&R sub_1/sub_2 when the table is empty).
 
 ## 15. Tests added
 
@@ -141,7 +141,7 @@ No other response bodies changed (141-test suite + 91-case snapshot + verify 54 
 - Production build: PASS (2.9s; pre-existing >500 kB chunk warning, unchanged).
 - Static portability gate: **9/9** + self-test **23/23**.
 - Full live gate (Playwright, vite + new backend): **70/70** — including Example Records two-profile run, F21/F22 authz boxes, and the updated IntegrationsView.
-- Legacy HTML `mau5trap-frontend-connected.html` / `mau5trap-terminal-dashboard.html`: md5-identical to HEAD.
+- Legacy HTML `pulsegrid-frontend-connected.html` / `pulsegrid-terminal-dashboard.html`: md5-identical to HEAD.
 - Gate screenshots restored via `git checkout -- web/validation/phase4b-*.png` after the run (documented 4C workflow).
 
 ## 18. Backend regression results
@@ -195,6 +195,6 @@ Five read-only defect-hunt agents (taxonomy: correctness/parity/hardening/hygien
 - **Session/type safety**: composite auth now re-sources `req.user.id` from the DB row (self-delete guard correct for string-id tokens; audit actorIds normalized). `req.body || {}` at login/change-password/PUT-user (pre-existing public unauth DoS: JSON-less body used to crash the whole API). `X-Request-Id` upstream values validated (`[A-Za-z0-9_.-]{8,64}`) else regenerated.
 - **Artist SoT**: archive/restore now also write the `status` COLUMN; zero-row updates warn (no more silent memory-only writes in partial-seed mode); memory-only roster collision → 409; concurrent same-name create → 409 (unique-constraint catch); `findAllHybrid` fails soft; POST validates string names; monthly-sales/reports tolerate sparse rows and sanitize filenames.
 - **A&R/sales**: non-finite sales revenue → 400 (was unhandled-crash via NOT NULL); vote direction whitelisted; same-ms submission PK collision retried; vote/delete/rating DB errors → clean 500; shortlist dedupe restored for `''` names; `SalesEntry(artistId, month)` unique index on fresh DBs.
-- **Profile/env**: `LABEL_SLUG` lowercased (MAU5TRAP resolves); banner clamps to box width; `config.db.storage` defaults from `profile.db.sqliteFile`; `.env.example` documents `DB_STORAGE`/`LABEL_SLUG`/`ACTIVE_LABEL`; stale load-order comment removed.
+- **Profile/env**: `LABEL_SLUG` lowercased (PULSEGRID resolves); banner clamps to box width; `config.db.storage` defaults from `profile.db.sqliteFile`; `.env.example` documents `DB_STORAGE`/`LABEL_SLUG`/`ACTIVE_LABEL`; stale load-order comment removed.
 - **Test truthfulness**: the obsolete "login tokens omit id" pin rewritten to the two real token shapes; durability test made hermetic (`ADMIN_EMAIL/ADMIN_PASS=''`), fails fast on orphan-port servers, and cleans `-wal`/`-shm`.
 - **Docs**: §12-§18 corrected (suite count, +8 units tests, file list, ANR list-order divergence, geography residual reason, monthlyRevenue fixture residual).

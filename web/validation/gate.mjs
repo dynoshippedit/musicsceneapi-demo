@@ -29,8 +29,8 @@ const STATIC_ONLY = process.argv.includes('--static-only');
 
 const BASE = (process.env.BASE_URL || 'http://127.0.0.1:5173').replace(/\/$/, '');
 const API = (process.env.API_URL || 'http://localhost:3000').replace(/\/$/, '');
-const ADMIN = { email: process.env.ADMIN_EMAIL || 'admin@mau5trap.com', password: process.env.ADMIN_PASSWORD || 'admin123' };
-const ARTIST = { email: process.env.ARTIST_EMAIL || 'tours@rezz.com', password: process.env.ARTIST_PASSWORD || 'rezz123' };
+const ADMIN = { email: process.env.ADMIN_EMAIL || 'admin@pulsegrid.fm', password: process.env.ADMIN_PASSWORD || 'admin123' };
+const ARTIST = { email: process.env.ARTIST_EMAIL || 'tours@novakin.band', password: process.env.ARTIST_PASSWORD || 'novakin123' };
 const HEADLESS = process.env.HEADLESS !== 'false';
 const SHOTS = process.env.SCREENSHOT_DIR || path.dirname(fileURLToPath(import.meta.url));
 const VIEWPORT = { width: 1440, height: 900 };
@@ -38,9 +38,9 @@ const T = 15000;
 
 // Spec constants (PHASE_4A_HANDOFF.md §15 / FRONTEND_ARCHITECTURE.md §13-§14). Not read from src.
 const SPEC = {
-  mau5trap: {
-    title: 'mau5trap Intelligence Platform', favicon: '/brands/mau5trap/favicon.svg', theme: 'mau5trap-console',
-    wordmark: 'mau5trap', tagline: 'INTELLIGENCE PLATFORM', placeholder: 'user@mau5trap.com',
+  pulsegrid: {
+    title: 'The Music Scene — Pulsegrid', favicon: '/brands/pulsegrid/favicon.svg', theme: 'pulsegrid-console',
+    wordmark: 'Pulsegrid', tagline: 'INTELLIGENCE PLATFORM', placeholder: 'user@pulsegrid.fm',
     accent: 'rgb(0, 255, 95)', accent35: 'rgba(0, 255, 95, 0.35)', accent10: 'rgba(0, 255, 95, 0.1)',
     locale: 'en-US', currency: 'USD', footerLines: 2,
   },
@@ -58,7 +58,7 @@ const SPEC = {
   navByPerm: [['overview', 'Dashboard'], ['roster', 'Artists'], ['anr_room', 'A&R Room'], ['ai_lab', 'Intelligence'], ['marketing', 'Marketing'], ['fans', 'Fans'], ['operations', 'Operations'], ['admin', 'Admin']],
   text: 'rgb(245, 245, 245)', muted: 'rgb(181, 181, 181)', bg: 'rgb(10, 10, 10)', onAccent: 'rgb(0, 0, 0)',
   danger: 'rgb(255, 68, 68)', dangerDim: 'rgba(255, 50, 50, 0.1)', dangerBorder: 'rgba(255, 50, 50, 0.3)', hairline: 'rgba(255, 255, 255, 0.1)',
-  mau5HeadPath: 'M 30 70 Q 50 90 70 70 Q 50 82 30 70',
+  brandMarkPath: 'M 30 70 Q 50 90 70 70 Q 50 82 30 70',
 };
 
 // ---------- reporting ----------
@@ -184,16 +184,16 @@ await step('G04', 'live API overview (artist)', async () => {
   check('G04', 'live API overview (artist)', artistApi.status === 200 && artistOverview.status === 200,
     `login ${artistApi.status} role=${artistApi.body.user?.role} pageAccess-in-payload=${'pageAccess' in (artistApi.body.user || {})}; overview ${artistOverview.status} monthlyRevenue=${o.monthlyRevenue} quarterlyProjection=${o.quarterlyProjection} annualProjection=${o.annualProjection} activeArtists=${o.activeArtists}`);
 });
-const expAdminUsd = expectedKpis(adminOverview.body, SPEC.mau5trap.locale, SPEC.mau5trap.currency);
+const expAdminUsd = expectedKpis(adminOverview.body, SPEC.pulsegrid.locale, SPEC.pulsegrid.currency);
 const expAdminGbp = expectedKpis(adminOverview.body, SPEC.example.locale, SPEC.example.currency);
-const expArtistUsd = expectedKpis(artistOverview.body, SPEC.mau5trap.locale, SPEC.mau5trap.currency);
+const expArtistUsd = expectedKpis(artistOverview.body, SPEC.pulsegrid.locale, SPEC.pulsegrid.currency);
 const expArtistNav = expectedNav(artistApi.body.user);
 check('G05', 'login payloads carry pageAccess arrays (pre-4C Decision 1 contract: admin ⊇ all, artist non-empty)',
   Array.isArray(adminApi.body.user?.pageAccess) && adminApi.body.user.pageAccess.includes('all') && Array.isArray(artistApi.body.user?.pageAccess) && artistApi.body.user.pageAccess.length > 0,
   `admin.pageAccess=${JSON.stringify(adminApi.body.user?.pageAccess)} artist.pageAccess=${JSON.stringify(artistApi.body.user?.pageAccess)} → expected artist nav [${expArtistNav.join(', ')}]`);
 console.log(`INFO | expected (Node Intl) admin en-US/USD: ${expAdminUsd.join(' · ')} | admin en-GB/GBP: ${expAdminGbp.join(' · ')} | artist en-US/USD: ${expArtistUsd.join(' · ')} (values as served by the API — not a contractual constant)`);
 
-// ---------- F: functional — mau5trap profile ----------
+// ---------- F: functional — pulsegrid profile ----------
 setPhase('unauth');
 await page.goto(`${BASE}/login`);
 await page.evaluate(() => localStorage.clear());
@@ -208,14 +208,14 @@ await step('F02', 'unauthenticated /dashboard -> /login', async () => {
 
 setPhase('login-page');
 await gotoLogin();
-await shot('phase4b-mau5trap-login.png');
-let loginMau5;
-await step('V01', 'mau5trap identity (title/favicon/theme) on /login', async () => {
+await shot('phase4b-pulsegrid-login.png');
+let loginBrand;
+await step('V01', 'pulsegrid identity (title/favicon/theme) on /login', async () => {
   const b = await brandState();
-  check('V01', 'mau5trap identity (title/favicon/theme) on /login', b.title === SPEC.mau5trap.title && b.favicon?.endsWith(SPEC.mau5trap.favicon) && b.bodyTheme === SPEC.mau5trap.theme && b.htmlTheme === SPEC.mau5trap.theme, JSON.stringify(b));
+  check('V01', 'pulsegrid identity (title/favicon/theme) on /login', b.title === SPEC.pulsegrid.title && b.favicon?.endsWith(SPEC.pulsegrid.favicon) && b.bodyTheme === SPEC.pulsegrid.theme && b.htmlTheme === SPEC.pulsegrid.theme, JSON.stringify(b));
 });
 await step('V02', 'login card geometry (420/48/1px accent .35/4px/no shadow/centered)', async () => {
-  loginMau5 = await page.evaluate(() => {
+  loginBrand = await page.evaluate(() => {
     const card = document.querySelector('form'); const cs = getComputedStyle(card); const r = card.getBoundingClientRect();
     const h1 = card.querySelector('h1'); const tag = card.querySelector('p'); const input = document.getElementById('access-id');
     const buttons = [...card.querySelectorAll('button')].map((b) => ({ text: b.textContent, disabled: b.disabled, color: getComputedStyle(b).color, bg: getComputedStyle(b).backgroundColor, h: b.getBoundingClientRect().height, w: b.getBoundingClientRect().width, fontSize: getComputedStyle(b).fontSize, fontWeight: getComputedStyle(b).fontWeight, fontFamily: getComputedStyle(b).fontFamily, transform: getComputedStyle(b).textTransform }));
@@ -232,25 +232,25 @@ await step('V02', 'login card geometry (420/48/1px accent .35/4px/no shadow/cent
       hasAsideOrHeader: !!document.querySelector('aside, header'), images: card.querySelectorAll('img, svg').length,
     };
   });
-  const l = loginMau5;
+  const l = loginBrand;
   check('V02', 'login card geometry (420/48/1px accent .35/4px/no shadow/centered)',
-    l.width === 420 && l.padding === '48px' && l.borderWidth === '1px' && l.borderStyle === 'solid' && sameColor(l.borderColor, SPEC.mau5trap.accent35) && l.radius === '4px' && l.shadow === 'none' && Math.abs(l.centerDx) < 1 && Math.abs(l.centerDy) < 1 && !l.hasAsideOrHeader && l.images === 0,
+    l.width === 420 && l.padding === '48px' && l.borderWidth === '1px' && l.borderStyle === 'solid' && sameColor(l.borderColor, SPEC.pulsegrid.accent35) && l.radius === '4px' && l.shadow === 'none' && Math.abs(l.centerDx) < 1 && Math.abs(l.centerDy) < 1 && !l.hasAsideOrHeader && l.images === 0,
     `width=${l.width} padding=${l.padding} border=${l.borderWidth} ${l.borderStyle} ${l.borderColor} radius=${l.radius} shadow=${l.shadow} centerOffset=(${l.centerDx.toFixed(2)},${l.centerDy.toFixed(2)}) sidebar/header=${l.hasAsideOrHeader} logo/img=${l.images}`);
   check('V03', 'login wordmark lowercase 32px/700 -1px Inter; tagline 12px mono muted (not green)',
-    l.wordmark === SPEC.mau5trap.wordmark && l.wordmarkSize === '32px' && l.wordmarkWeight === '700' && l.wordmarkLs === '-1px' && /Inter/.test(l.wordmarkFamily) && l.tagline === SPEC.mau5trap.tagline && l.taglineSize === '12px' && sameColor(l.taglineColor, SPEC.muted) && /JetBrains Mono/.test(l.taglineFamily),
+    l.wordmark === SPEC.pulsegrid.wordmark && l.wordmarkSize === '32px' && l.wordmarkWeight === '700' && l.wordmarkLs === '-1px' && /Inter/.test(l.wordmarkFamily) && l.tagline === SPEC.pulsegrid.tagline && l.taglineSize === '12px' && sameColor(l.taglineColor, SPEC.muted) && /JetBrains Mono/.test(l.taglineFamily),
     `wordmark="${l.wordmark}" ${l.wordmarkSize}/${l.wordmarkWeight} ls=${l.wordmarkLs} ${l.wordmarkFamily.split(',')[0]}; tagline="${l.tagline}" ${l.taglineSize} ${l.taglineColor} ${l.taglineFamily.split(',')[0]}`);
   const submit = l.buttons.find((b) => b.text === 'INITIALIZE SESSION'); const forgot = l.buttons.find((b) => b.text === 'Forgot Password?');
   check('V04', 'login button full-width 48px accent fill, black 14px/700 mono uppercase',
-    submit && Math.abs(submit.w - l.innerWidth) < 1 && submit.h === 48 && sameColor(submit.bg, SPEC.mau5trap.accent) && sameColor(submit.color, SPEC.onAccent) && submit.fontSize === '14px' && submit.fontWeight === '700' && /JetBrains Mono/.test(submit.fontFamily) && submit.transform === 'uppercase',
+    submit && Math.abs(submit.w - l.innerWidth) < 1 && submit.h === 48 && sameColor(submit.bg, SPEC.pulsegrid.accent) && sameColor(submit.color, SPEC.onAccent) && submit.fontSize === '14px' && submit.fontWeight === '700' && /JetBrains Mono/.test(submit.fontFamily) && submit.transform === 'uppercase',
     submit ? `w=${submit.w} (card inner ${l.innerWidth}) h=${submit.h} bg=${submit.bg} color=${submit.color} ${submit.fontSize}/${submit.fontWeight} ${submit.fontFamily.split(',')[0]} ${submit.transform}` : 'submit button not found');
   check('F16', 'Forgot Password? present, disabled, 11px accent',
-    forgot && forgot.disabled && forgot.fontSize === '11px' && sameColor(forgot.color, SPEC.mau5trap.accent),
+    forgot && forgot.disabled && forgot.fontSize === '11px' && sameColor(forgot.color, SPEC.pulsegrid.accent),
     forgot ? `text="${forgot.text}" disabled=${forgot.disabled} ${forgot.fontSize} ${forgot.color}` : 'not found');
   check('V05', 'login labels 11px/700 mono muted; inputs 14px mono radius 2px bg rgba(0,0,0,.3); placeholder from profile',
-    l.labels.length === 2 && l.labels.every((x) => x.size === '11px' && x.weight === '700' && sameColor(x.color, SPEC.muted) && /JetBrains Mono/.test(x.family)) && l.labels.map((x) => x.text).join('|') === 'ACCESS ID|PASSPHRASE' && l.inputSize === '14px' && /JetBrains Mono/.test(l.inputFamily) && l.inputRadius === '2px' && sameColor(l.inputBg, 'rgba(0, 0, 0, 0.3)') && l.placeholder === SPEC.mau5trap.placeholder,
+    l.labels.length === 2 && l.labels.every((x) => x.size === '11px' && x.weight === '700' && sameColor(x.color, SPEC.muted) && /JetBrains Mono/.test(x.family)) && l.labels.map((x) => x.text).join('|') === 'ACCESS ID|PASSPHRASE' && l.inputSize === '14px' && /JetBrains Mono/.test(l.inputFamily) && l.inputRadius === '2px' && sameColor(l.inputBg, 'rgba(0, 0, 0, 0.3)') && l.placeholder === SPEC.pulsegrid.placeholder,
     `labels=${l.labels.map((x) => `${x.text} ${x.size}/${x.weight} ${x.color}`).join('; ')} input=${l.inputSize} ${l.inputFamily.split(',')[0]} r=${l.inputRadius} bg=${l.inputBg} placeholder=${l.placeholder}`);
-  check('V06', 'login footer: hairline top, two 11px mono muted lines (mau5trap has no legal line); body bg #0A0A0A + decoration gradient; login radial gradient',
-    l.footer.length === SPEC.mau5trap.footerLines && l.footer[0] === SPEC.voice[3] && l.footer[1] === SPEC.voice[4] && l.footerBorderTop === '1px' && l.footerSize === '11px' && sameColor(l.footerColor, SPEC.muted) && sameColor(l.bodyBg, SPEC.bg) && /linear-gradient/.test(l.bodyBgImage) && /radial-gradient/.test(l.loginBg),
+  check('V06', 'login footer: hairline top, two 11px mono muted lines (pulsegrid has no legal line); body bg #0A0A0A + decoration gradient; login radial gradient',
+    l.footer.length === SPEC.pulsegrid.footerLines && l.footer[0] === SPEC.voice[3] && l.footer[1] === SPEC.voice[4] && l.footerBorderTop === '1px' && l.footerSize === '11px' && sameColor(l.footerColor, SPEC.muted) && sameColor(l.bodyBg, SPEC.bg) && /linear-gradient/.test(l.bodyBgImage) && /radial-gradient/.test(l.loginBg),
     `footer=${JSON.stringify(l.footer)} borderTop=${l.footerBorderTop} ${l.footerSize} ${l.footerColor}; bodyBg=${l.bodyBg} bodyImg=${l.bodyBgImage.slice(0, 40)}… loginImg=${l.loginBg.slice(0, 40)}…`);
 });
 await step('V15', 'keyboard focus ring (2px accent outline) on login controls', async () => {
@@ -261,7 +261,7 @@ await step('V15', 'keyboard focus ring (2px accent outline) on login controls', 
     seen.push(await page.evaluate(() => { const a = document.activeElement; const cs = getComputedStyle(a); return { el: a.id || a.textContent?.trim().slice(0, 20), outline: `${cs.outlineWidth} ${cs.outlineStyle} ${cs.outlineColor}`, shadow: cs.boxShadow }; }));
   }
   const focusable = seen.filter((s) => s.outline.startsWith('2px solid'));
-  check('V15', 'keyboard focus ring (2px accent outline) on login controls', focusable.length >= 3 && focusable.every((s) => sameColor(s.outline.replace(/^2px solid /, ''), SPEC.mau5trap.accent) && s.shadow !== 'none'), seen.map((s) => `${s.el}: ${s.outline}${s.shadow !== 'none' ? ' +glow' : ''}`).join('; '));
+  check('V15', 'keyboard focus ring (2px accent outline) on login controls', focusable.length >= 3 && focusable.every((s) => sameColor(s.outline.replace(/^2px solid /, ''), SPEC.pulsegrid.accent) && s.shadow !== 'none'), seen.map((s) => `${s.el}: ${s.outline}${s.shadow !== 'none' ? ' +glow' : ''}`).join('; '));
 });
 
 setPhase('wrong-password', true);
@@ -323,20 +323,20 @@ await step('V08', 'shell geometry: sidebar 224 / 24px 16px / hairline / blur(20p
     d.h1 === 'Dashboard' && d.h1Size === '28px' && d.h1Weight === '700' && d.subtitle === 'Real-time label performance metrics' && d.subtitleSize === '14px' && d.headerInputs === 0 && d.chip.length === 2,
     `h1="${d.h1}" ${d.h1Size}/${d.h1Weight}; subtitle="${d.subtitle}" ${d.subtitleSize}; chip=${JSON.stringify(d.chip)}; input/select/a=${d.headerInputs}`);
   check('V10', 'nav items 40px, 2px radius, 18px icon, 14px label; inactive muted; active text 600 on accent .1',
-    d.active.h === 40 && d.active.radius === '2px' && d.active.iconSize === '18px' && d.active.labelSize === '14px' && sameColor(d.active.bg, SPEC.mau5trap.accent10) && sameColor(d.active.color, SPEC.text) && d.active.weight === '600' && sameColor(d.inactive.color, SPEC.muted) && d.inactive.weight === '400' && sameColor(d.inactive.bg, 'rgba(0, 0, 0, 0)'),
+    d.active.h === 40 && d.active.radius === '2px' && d.active.iconSize === '18px' && d.active.labelSize === '14px' && sameColor(d.active.bg, SPEC.pulsegrid.accent10) && sameColor(d.active.color, SPEC.text) && d.active.weight === '600' && sameColor(d.inactive.color, SPEC.muted) && d.inactive.weight === '400' && sameColor(d.inactive.bg, 'rgba(0, 0, 0, 0)'),
     `active "${d.active.text}" h=${d.active.h} r=${d.active.radius} icon=${d.active.iconSize} label=${d.active.labelSize} bg=${d.active.bg} color=${d.active.color} w=${d.active.weight}; inactive "${d.inactive.text}" color=${d.inactive.color} w=${d.inactive.weight} bg=${d.inactive.bg}`);
   check('V11', 'bottom group: Settings -> hairline -> Terminate Session (ri-logout-box-line, 14px muted, no fill) pinned bottom',
     d.logout.text === 'Terminate Session' && /ri-logout-box-line/.test(d.logout.icon) && d.logout.size === '14px' && sameColor(d.logout.color, SPEC.muted) && sameColor(d.logout.bg, 'rgba(0, 0, 0, 0)') && d.dividerTop === '1px' && d.logout.bottomGap >= 0 && d.logout.bottomGap <= 40,
     `"${d.logout.text}" icon=${d.logout.icon.split(' ')[0]} ${d.logout.size} ${d.logout.color} bg=${d.logout.bg} divider=${d.dividerTop} gap-to-viewport-bottom=${d.logout.bottomGap}px`);
-  check('V12', 'brand block: Mau5Head SVG 40x40 (3 circle/2 ellipse/1 path, accent+text fills), wordmark 20px/800 lowercase, sublabel 11px mono accent uppercase; nothing else',
-    d.mark && d.mark.w === 40 && d.mark.h === 40 && d.mark.circles === 3 && d.mark.ellipses === 2 && d.mark.paths === 1 && d.mark.pathD === SPEC.mau5HeadPath && sameColor(d.mark.fill, SPEC.mau5trap.accent) && sameColor(d.mark.eyeFill, SPEC.text) && d.wordmark === SPEC.mau5trap.wordmark && d.wordmarkSize === '20px' && d.wordmarkWeight === '800' && d.sub === SPEC.mau5trap.tagline && d.subSize === '11px' && sameColor(d.subColor, SPEC.mau5trap.accent) && /JetBrains Mono/.test(d.subFamily) && d.subTransform === 'uppercase' && d.brandText.join('|') === `${SPEC.mau5trap.wordmark}|${SPEC.mau5trap.tagline}`,
+  check('V12', 'brand block: PulseMark SVG 40x40 (3 circle/2 ellipse/1 path, accent+text fills), wordmark 20px/800 lowercase, sublabel 11px mono accent uppercase; nothing else',
+    d.mark && d.mark.w === 40 && d.mark.h === 40 && d.mark.circles === 3 && d.mark.ellipses === 2 && d.mark.paths === 1 && d.mark.pathD === SPEC.brandMarkPath && sameColor(d.mark.fill, SPEC.pulsegrid.accent) && sameColor(d.mark.eyeFill, SPEC.text) && d.wordmark === SPEC.pulsegrid.wordmark && d.wordmarkSize === '20px' && d.wordmarkWeight === '800' && d.sub === SPEC.pulsegrid.tagline && d.subSize === '11px' && sameColor(d.subColor, SPEC.pulsegrid.accent) && /JetBrains Mono/.test(d.subFamily) && d.subTransform === 'uppercase' && d.brandText.join('|') === `${SPEC.pulsegrid.wordmark}|${SPEC.pulsegrid.tagline}`,
     d.mark ? `svg ${d.mark.w}x${d.mark.h} circles=${d.mark.circles} ellipses=${d.mark.ellipses} paths=${d.mark.paths} d="${d.mark.pathD}" fill=${d.mark.fill} eyes=${d.mark.eyeFill} (rail copy width=${d.mark.visible[1]}); wordmark="${d.wordmark}" ${d.wordmarkSize}/${d.wordmarkWeight}; sub="${d.sub}" ${d.subSize} ${d.subColor} ${d.subTransform}; block text=${JSON.stringify(d.brandText)}` : 'no svg in sidebar');
   const c0 = d.cards[0];
   check('V13', 'KPI row: 4 cards, 4 columns, gap 16, align start, 88-112px, pad 16, 4px, hairline, no shadow, no icons',
     d.cardCount === 4 && d.gridCols === 4 && d.gridGap === '16px' && d.gridAlign === 'start' && d.cards.every((c) => c.h >= 88 && c.h <= 112 && c.pad === '16px' && c.radius === '4px' && c.border === `1px solid ${SPEC.hairline}` && c.shadow === 'none' && c.children === 2 && c.icons === 0),
     `cards=${d.cardCount} cols=${d.gridCols} gap=${d.gridGap} align=${d.gridAlign}; heights=[${d.cards.map((c) => c.h.toFixed(1)).join(',')}] pad=${c0.pad} r=${c0.radius} border=${c0.border} shadow=${c0.shadow}`);
   check('V14', 'KPI anatomy: 2px accent left rule @.5 full height; .label 11px mono muted uppercase; .kpi 32px/700 mono text tabular-nums',
-    d.cards.every((c) => c.ruleW === '2px' && sameColor(c.ruleBg, SPEC.mau5trap.accent) && c.ruleOp === '0.5' && Math.abs(parseFloat(c.ruleH) - c.clientH) < 1 && c.labelSize === '11px' && sameColor(c.labelColor, SPEC.muted) && c.labelTransform === 'uppercase' && c.kpiSize === '32px' && c.kpiWeight === '700' && /JetBrains Mono/.test(c.kpiFamily) && sameColor(c.kpiColor, SPEC.text) && c.kpiNum === 'tabular-nums'),
+    d.cards.every((c) => c.ruleW === '2px' && sameColor(c.ruleBg, SPEC.pulsegrid.accent) && c.ruleOp === '0.5' && Math.abs(parseFloat(c.ruleH) - c.clientH) < 1 && c.labelSize === '11px' && sameColor(c.labelColor, SPEC.muted) && c.labelTransform === 'uppercase' && c.kpiSize === '32px' && c.kpiWeight === '700' && /JetBrains Mono/.test(c.kpiFamily) && sameColor(c.kpiColor, SPEC.text) && c.kpiNum === 'tabular-nums'),
     `rule=${c0.ruleW} ${c0.ruleBg} op=${c0.ruleOp} h=${c0.ruleH} (card inner ${c0.clientH}px); label ${c0.labelSize} ${c0.labelColor} ${c0.labelTransform}; kpi ${c0.kpiSize}/${c0.kpiWeight} ${c0.kpiFamily.split(',')[0]} ${c0.kpiColor} ${c0.kpiNum}`);
   // AMENDED FOR PHASE 4C. In 4B the dashboard was deliberately a KPI row over an empty canvas,
   // and V16 enforced that nothing was invented to fill it. 4C SPECIFIES what goes there —
@@ -345,7 +345,7 @@ await step('V08', 'shell geometry: sidebar 224 / 24px 16px / hairline / blur(20p
   // below it is one of those specified surfaces, rather than asserting emptiness.
   check('V16', 'KPI row is first under the header; everything below it is a specified 4C surface (no filler)', d.mainChildren[0] === 'HEADER' && d.mainChildren[1] === 'DIV' && d.mainChildren.slice(2).every((tag) => tag === 'DIV' || tag === 'SECTION') && d.mainChildren.length <= 4 && !d.overlay, `main children=[${d.mainChildren.join(', ')}] (expected HEADER, KPI DIV, then the 4C forecast/console row and the map section) overlay=${d.overlay}`);
 });
-await shot('phase4b-mau5trap-dashboard.png');
+await shot('phase4b-pulsegrid-dashboard.png');
 
 await step('F08', 'persisted session survives reload; userData reconciled with /v3/auth/me', async () => {
   const before = await readSession();
@@ -447,18 +447,18 @@ await step('F22', 'Admin: pageAccess round-trips through create + edit, and the 
 });
 await step('F17', 'localStorage keys ⊆ {authToken,userData,platform.brandProfile}', async () => {
   const s = await readSession(); const allowed = ['authToken', 'userData', 'platform.brandProfile'];
-  check('F17', 'localStorage keys ⊆ {authToken,userData,platform.brandProfile}', s.keys.every((k) => allowed.includes(k)) && !s.keys.some((k) => k.startsWith('mau5trap.')), `keys=[${s.keys.join(', ')}]`);
+  check('F17', 'localStorage keys ⊆ {authToken,userData,platform.brandProfile}', s.keys.every((k) => allowed.includes(k)) && !s.keys.some((k) => k.startsWith('pulsegrid.')), `keys=[${s.keys.join(', ')}]`);
 });
 
 setPhase('loader');
-await step('V17', 'full-page loader is the mau5-head (80px ring + 2 ears, pulse) on #0A0A0A, no spinner text', async () => {
+await step('V17', 'full-page loader is the neutral ring (80px accent ring, pulse) on #0A0A0A, no ears, no spinner text', async () => {
   await context.route('**/v3/label/overview', (route) => setTimeout(() => route.continue().catch(() => {}), 1500));
   await page.goto(`${BASE}/dashboard`);
   await page.waitForSelector('[role=status]', { timeout: T });
-  const l = await page.evaluate(() => { const s = document.querySelector('[role=status]'); const cs = getComputedStyle(s); const head = s.firstElementChild; const hcs = getComputedStyle(head); const b = getComputedStyle(head, '::before'); const a = getComputedStyle(head, '::after'); return { pos: cs.position, inset: `${cs.top} ${cs.right} ${cs.bottom} ${cs.left}`, bg: cs.backgroundColor, text: s.innerText.trim(), w: head.getBoundingClientRect().width, h: head.getBoundingClientRect().height, border: `${hcs.borderTopWidth} ${hcs.borderTopStyle} ${hcs.borderTopColor}`, radius: hcs.borderRadius, anim: hcs.animationName, running: head.getAnimations().length, earW: b.width, earH: b.height, earBorder: `${b.borderTopWidth} ${b.borderTopColor}`, earBefore: `${b.width}x${b.height} ${b.borderTopWidth} ${b.borderTopColor} top=${b.top} left=${b.left}`, earAfter: `${a.width}x${a.height} right=${a.right}`, earCount: (b.content !== 'none' ? 1 : 0) + (a.content !== 'none' ? 1 : 0), svgOrImg: s.querySelectorAll('svg, img').length }; });
+  const l = await page.evaluate(() => { const s = document.querySelector('[role=status]'); const cs = getComputedStyle(s); const head = s.firstElementChild; const hcs = getComputedStyle(head); const b = getComputedStyle(head, '::before'); const a = getComputedStyle(head, '::after'); return { pos: cs.position, bg: cs.backgroundColor, text: s.innerText.trim(), w: head.getBoundingClientRect().width, h: head.getBoundingClientRect().height, border: `${hcs.borderTopWidth} ${hcs.borderTopStyle} ${hcs.borderTopColor}`, anim: hcs.animationName, running: head.getAnimations().length, earCount: (b.content !== 'none' ? 1 : 0) + (a.content !== 'none' ? 1 : 0), svgOrImg: s.querySelectorAll('svg, img').length }; });
   await context.unroute('**/v3/label/overview');
   await page.waitForSelector('.kpi', { timeout: T });
-  check('V17', 'full-page loader is the mau5-head (80px ring + 2 ears, pulse) on #0A0A0A, no spinner text', l.pos === 'fixed' && sameColor(l.bg, SPEC.bg) && l.w === 80 && l.h === 80 && l.border === `4px solid ${SPEC.mau5trap.accent}` && l.anim === 'pulse' && l.running >= 1 && l.earCount === 2 && l.earW === '50px' && l.earH === '50px' && l.earBorder === `4px ${SPEC.mau5trap.accent}` && l.text === '', `fixed=${l.pos === 'fixed'} bg=${l.bg} ring=${l.w}x${l.h} border=${l.border} anim=${l.anim} running=${l.running} ears=${l.earCount} (${l.earBefore}; ${l.earAfter}) text="${l.text}" svg/img=${l.svgOrImg}`);
+  check('V17', 'full-page loader is the neutral ring (80px accent ring, pulse) on #0A0A0A, no ears, no spinner text', l.pos === 'fixed' && sameColor(l.bg, SPEC.bg) && l.w === 80 && l.h === 80 && l.border === `4px solid ${SPEC.pulsegrid.accent}` && l.anim === 'pulse' && l.running >= 1 && l.earCount === 0 && l.text === '' && l.svgOrImg === 0, `fixed=${l.pos === 'fixed'} bg=${l.bg} ring=${l.w}x${l.h} border=${l.border} anim=${l.anim} running=${l.running} ears=${l.earCount} text="${l.text}" svg/img=${l.svgOrImg}`);
 });
 
 setPhase('logout');
@@ -598,17 +598,17 @@ await step('P05', 'example shell: MonogramMark "E" 40x40 magenta mono (no svg), 
   const s = await page.evaluate(() => { const aside = document.querySelector('aside'); const block = aside.firstElementChild; const mono = [...block.querySelectorAll('span')].find((x) => x.children.length === 0 && x.getBoundingClientRect().width === 40 && x.getBoundingClientRect().height === 40 && x.textContent.trim().length === 1); const sub = aside.querySelector('.label--accent'); return { glyph: mono?.textContent, monoBg: mono ? getComputedStyle(mono).backgroundColor : null, monoColor: mono ? getComputedStyle(mono).color : null, monoFamily: mono ? getComputedStyle(mono).fontFamily : null, monoRadius: mono ? getComputedStyle(mono).borderRadius : null, svgs: block.querySelectorAll('svg').length, wordmark: aside.querySelector('strong').textContent, sub: sub.textContent, subColor: getComputedStyle(sub).color, blockText: block.innerText.split('\n').filter(Boolean) }; });
   check('P05', 'example shell: MonogramMark "E" 40x40 magenta mono (no svg), wordmark/sublabel from profile, sublabel magenta', s.glyph === 'E' && sameColor(s.monoBg, SPEC.example.accent) && sameColor(s.monoColor, SPEC.onAccent) && /JetBrains Mono/.test(s.monoFamily) && s.svgs === 0 && s.wordmark === SPEC.example.wordmark && s.sub === SPEC.example.tagline && sameColor(s.subColor, SPEC.example.accent), `glyph="${s.glyph}" bg=${s.monoBg} color=${s.monoColor} ${s.monoFamily?.split(',')[0]} r=${s.monoRadius} svgs=${s.svgs}; wordmark="${s.wordmark}" sub="${s.sub}" ${s.subColor}; block=${JSON.stringify(s.blockText)}`);
 });
-await step('P06', 'example shell: nav/header/Terminate Session identical to mau5trap run; active tint + StatCard rules magenta', async () => {
+await step('P06', 'example shell: nav/header/Terminate Session identical to pulsegrid run; active tint + StatCard rules magenta', async () => {
   exampleNav = await navState();
   const c = await page.evaluate(() => { const links = [...document.querySelectorAll('nav[aria-label=Primary] a')]; const active = links.find((a) => a.getAttribute('aria-current') === 'page'); const cards = [...document.querySelectorAll('.kpi')].map((k) => k.closest('section')); return { activeBg: getComputedStyle(active).backgroundColor, rules: cards.map((x) => getComputedStyle(x, '::before').backgroundColor) }; });
-  check('P06', 'example shell: nav/header/Terminate Session identical to mau5trap run; active tint + StatCard rules magenta', JSON.stringify([exampleNav.primary, exampleNav.secondary, exampleNav.logout, exampleNav.header]) === JSON.stringify([adminNav.primary, adminNav.secondary, adminNav.logout, adminNav.header]) && sameColor(c.activeBg, SPEC.example.accent10) && c.rules.every((r) => sameColor(r, SPEC.example.accent)), `nav-identical=${JSON.stringify(exampleNav.primary) === JSON.stringify(adminNav.primary)} header="${exampleNav.header}" activeBg=${c.activeBg} rules=[${[...new Set(c.rules)].join(', ')}]`);
+  check('P06', 'example shell: nav/header/Terminate Session identical to pulsegrid run; active tint + StatCard rules magenta', JSON.stringify([exampleNav.primary, exampleNav.secondary, exampleNav.logout, exampleNav.header]) === JSON.stringify([adminNav.primary, adminNav.secondary, adminNav.logout, adminNav.header]) && sameColor(c.activeBg, SPEC.example.accent10) && c.rules.every((r) => sameColor(r, SPEC.example.accent)), `nav-identical=${JSON.stringify(exampleNav.primary) === JSON.stringify(adminNav.primary)} header="${exampleNav.header}" activeBg=${c.activeBg} rules=[${[...new Set(c.rules)].join(', ')}]`);
 });
-await step('P07', 'example: no "mau5trap" in body text (/login + /dashboard), no class containing "mau5", no green element colour', async () => {
-  const scan = () => page.evaluate(() => { const els = [...document.querySelectorAll('body *')]; const green = []; for (const el of els) { const cs = getComputedStyle(el); for (const prop of ['color', 'backgroundColor', 'borderTopColor', 'outlineColor', 'fill']) { const v = cs[prop]; if (/rgb\(0, 255, 95\)|srgb 0 1 0\.37/.test(v)) green.push(`${el.tagName}.${prop}`); } } return { text: document.body.innerText, mau5Class: els.filter((e) => /mau5/i.test(e.className?.baseVal ?? e.className ?? '')).length, green: [...new Set(green)] }; });
+await step('P07', 'example: no "pulsegrid" in body text (/login + /dashboard), no legacy brand classes, no green element colour', async () => {
+  const scan = () => page.evaluate(() => { const els = [...document.querySelectorAll('body *')]; const green = []; for (const el of els) { const cs = getComputedStyle(el); for (const prop of ['color', 'backgroundColor', 'borderTopColor', 'outlineColor', 'fill']) { const v = cs[prop]; if (/rgb\(0, 255, 95\)|srgb 0 1 0\.37/.test(v)) green.push(`${el.tagName}.${prop}`); } } return { text: document.body.innerText, green: [...new Set(green)] }; });
   const d = await scan();
   await page.click('aside button:has-text("Terminate Session")'); await page.waitForURL('**/login', { timeout: T });
   const l = await scan();
-  check('P07', 'example: no "mau5trap" in body text (/login + /dashboard), no class containing "mau5", no green element colour', !/mau5trap/i.test(d.text) && !/mau5trap/i.test(l.text) && d.mau5Class === 0 && l.mau5Class === 0 && d.green.length === 0 && l.green.length === 0, `dashboard: mau5trap-in-text=${/mau5trap/i.test(d.text)} mau5-classes=${d.mau5Class} green-elements=${d.green.length}; login: mau5trap-in-text=${/mau5trap/i.test(l.text)} mau5-classes=${l.mau5Class} green-elements=${l.green.length}`);
+  check('P07', 'example: no "pulsegrid" in body text (/login + /dashboard), no green element colour', !/pulsegrid/i.test(d.text) && !/pulsegrid/i.test(l.text) && d.green.length === 0 && l.green.length === 0, `dashboard: pulsegrid-in-text=${/pulsegrid/i.test(d.text)} green-elements=${d.green.length}; login: pulsegrid-in-text=${/pulsegrid/i.test(l.text)} green-elements=${l.green.length}`);
 });
 await step('P08', 'example: full-page loader is the RingLoader (80px ring, pulse, no ears)', async () => {
   await uiLogin(ADMIN);
@@ -628,8 +628,8 @@ await step('P09', 'example: fullscreen ErrorState unchanged except hue (kicker/b
   check('P09', 'example: fullscreen ErrorState unchanged except hue (kicker/button copy identical, button magenta-free danger)', e.kicker === 'CONNECTION FAILURE' && e.button === 'RETRY CONNECTION' && sameColor(e.btnBg, SPEC.dangerDim) && sameColor(e.btnColor, SPEC.danger) && sameColor(e.bg, SPEC.bg), `kicker="${e.kicker}" button="${e.button}" btn=${e.btnBg}/${e.btnColor} bg=${e.bg}`);
 });
 
-// ---------- back to mau5trap: remove the override, no edits ----------
-setPhase('restore-mau5trap');
+// ---------- back to pulsegrid: remove the override, no edits ----------
+setPhase('restore-pulsegrid');
 // 4C MAP PORTABILITY (PHASE_4A_HANDOFF.md §17, closes BRAND_PORTABILITY_AUDIT W04).
 // Under the test profile the dashboard map must plot a location supplied ONLY by that profile,
 // and must NOT resolve the reference label's venue names — which is only possible if the
@@ -647,12 +647,12 @@ await step('P11', 'example: map plots the profile-only location and cannot resol
     m.mapped >= 1 && m.unmapped > 0 && markers > 0,
     `mapped=${m.mapped} (profile homeMarkers) unmapped=${m.unmapped} (API regions this profile has no centres for) svgMarkers=${markers}`);
 });
-await step('P10', 'remove override -> mau5trap identity, accent, mark, wordmark and $ KPIs return with no edits', async () => {
+await step('P10', 'remove override -> pulsegrid identity, accent, mark, wordmark and $ KPIs return with no edits', async () => {
   await page.evaluate(() => localStorage.removeItem('platform.brandProfile'));
   await page.reload(); await page.waitForSelector('.kpi', { timeout: T });
   const b = await brandState(); const values = await kpiTexts();
   const s = await page.evaluate(() => { const aside = document.querySelector('aside'); const sub = aside.querySelector('.label--accent'); const svg = aside.querySelector('svg'); return { wordmark: aside.querySelector('strong').textContent, sub: sub.textContent, subColor: getComputedStyle(sub).color, svg: svg ? `${svg.getBoundingClientRect().width}x${svg.getBoundingClientRect().height} circles=${svg.querySelectorAll('circle').length}` : null, keys: Object.keys(localStorage) }; });
-  check('P10', 'remove override -> mau5trap identity, accent, mark, wordmark and $ KPIs return with no edits', b.title === SPEC.mau5trap.title && b.favicon?.endsWith(SPEC.mau5trap.favicon) && b.bodyTheme === SPEC.mau5trap.theme && s.wordmark === SPEC.mau5trap.wordmark && s.sub === SPEC.mau5trap.tagline && sameColor(s.subColor, SPEC.mau5trap.accent) && s.svg === '40x40 circles=3' && values.join('|') === expAdminUsd.join('|') && !s.keys.includes('platform.brandProfile'), `title="${b.title}" theme=${b.bodyTheme} favicon=${b.favicon} wordmark="${s.wordmark}" sub="${s.sub}" ${s.subColor} mark=${s.svg} kpi=${values.join(' · ')} keys=[${s.keys.join(', ')}]`);
+  check('P10', 'remove override -> pulsegrid identity, accent, mark, wordmark and $ KPIs return with no edits', b.title === SPEC.pulsegrid.title && b.favicon?.endsWith(SPEC.pulsegrid.favicon) && b.bodyTheme === SPEC.pulsegrid.theme && s.wordmark === SPEC.pulsegrid.wordmark && s.sub === SPEC.pulsegrid.tagline && sameColor(s.subColor, SPEC.pulsegrid.accent) && s.svg === '40x40 circles=3' && values.join('|') === expAdminUsd.join('|') && !s.keys.includes('platform.brandProfile'), `title="${b.title}" theme=${b.bodyTheme} favicon=${b.favicon} wordmark="${s.wordmark}" sub="${s.sub}" ${s.subColor} mark=${s.svg} kpi=${values.join(' · ')} keys=[${s.keys.join(', ')}]`);
   await page.click('aside button:has-text("Terminate Session")'); await page.waitForURL('**/login', { timeout: T });
 });
 
@@ -661,7 +661,7 @@ setPhase('end');
 check('C01', 'no uncaught page errors during the run', pageErrors.length === 0, pageErrors.length ? pageErrors.join(' || ') : 'none');
 check('C02', 'no unexpected console.error during the run (resource errors during provoked 401/403/network phases are listed separately)', consoleErrors.length === 0, consoleErrors.length ? consoleErrors.join(' || ') : `none; expected resource errors=${expectedResourceErrors.length} [${[...new Set(expectedResourceErrors.map((x) => x.replace(/^\[[^\]]+\] /, '')))].join(' | ')}]`);
 console.log(`INFO | console warnings (${consoleWarnings.length}): ${[...new Set(consoleWarnings.map((x) => x.replace(/^\[[^\]]+\] /, '')))].join(' || ') || 'none'}`);
-console.log(`INFO | screenshots written to ${SHOTS}: phase4b-mau5trap-login.png phase4b-mau5trap-dashboard.png phase4b-example-login.png phase4b-example-dashboard.png phase4b-error.png`);
+console.log(`INFO | screenshots written to ${SHOTS}: phase4b-pulsegrid-login.png phase4b-pulsegrid-dashboard.png phase4b-example-login.png phase4b-example-dashboard.png phase4b-error.png`);
 
 await browser.close();
 summarizeAndExit();

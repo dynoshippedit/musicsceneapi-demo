@@ -9,7 +9,7 @@ const twitterIntegration = require('./twitter');
 const tiktokIntegration = require('./tiktok');
 
 // PHASE 4CF: artist mappings moved VERBATIM to the Label Intelligence Profile
-// (profile.socialMappings). Covers only art_deadmau5 and art_rezz; the other
+// (profile.socialMappings). Covers only art_lumenveil and art_novakin; the other
 // roster artists fall back to mock data (documented residual).
 const profile = require('../src/profile');
 
@@ -18,7 +18,7 @@ const ARTIST_MAPPINGS = profile.socialMappings;
 
 /**
  * Fetch real-time data for an artist from all configured APIs
- * @param {string} artistId - Internal artist ID (e.g., 'art_deadmau5')
+ * @param {string} artistId - Internal artist ID (e.g., 'art_lumenveil')
  * @param {Object} mockData - Fallback mock data
  * @returns {Promise<Object>} Merged artist data
  */

@@ -13,7 +13,7 @@ class InstagramIntegration {
 
     /**
      * Fetch Instagram business account data
-     * @returns {Object} Instagram metrics mapped to mau5trap schema
+     * @returns {Object} Instagram metrics mapped to pulsegrid schema
      */
     async getAccountData() {
         try {

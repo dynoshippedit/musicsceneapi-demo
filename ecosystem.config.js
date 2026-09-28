@@ -1,6 +1,6 @@
 module.exports = {
     apps: [{
-        name: 'mau5trap-api',
+        name: 'pulsegrid-api',
         script: './server.js',
         instances: 1,
         exec_mode: 'fork',

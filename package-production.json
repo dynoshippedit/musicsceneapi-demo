@@ -1,7 +1,7 @@
 {
-  "name": "mau5trap-production-api",
+  "name": "production-api",
   "version": "3.0.0",
-  "description": "Production Label Intelligence Platform API for mau5trap with multi-tenant access",
+  "description": "Production Label Intelligence Platform API for pulsegrid with multi-tenant access",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -13,10 +13,10 @@
     "label",
     "analytics",
     "api",
-    "mau5trap",
+    "pulsegrid",
     "multi-tenant"
   ],
-  "author": "mau5trap",
+  "author": "pulsegrid",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",

@@ -10,13 +10,13 @@
 //   node web/validation/gate.mjs --static-only          the same checks through the gate's reporter
 //
 // Why scope-aware rules instead of the original blanket greps (PHASE_4B_STATIC_AUDIT.md F-11):
-//   (a) tokens.css is mandated byte-for-byte (§15 L481) and its COMMENTS name mau5trap / mau5-head /
-//       Mau5Head / mau5trap-console / "INTELLIGENCE PLATFORM"; identity in a comment there is allowed,
+//   (a) tokens.css is mandated byte-for-byte (§15 L481) and its COMMENTS name pulsegrid / pulse-mark /
+//       PulseMark / pulsegrid-console / "INTELLIGENCE PLATFORM"; identity in a comment there is allowed,
 //       identity in a declaration or selector is not → CSS comments are stripped before matching.
 //   (b) `ri-headphone-line` is the prescribed A&R Room nav icon (architecture §5) in layout/nav.js; the
 //       leak the grep is after is a Remixicon standing in for the brand mark → allowed on that one nav
 //       entry only, forbidden everywhere else.
-//   (c) `@mau5trap.com` is the schema-required contact/email data of the mau5trap profile (architecture
+//   (c) `@pulsegrid.fm` is the schema-required contact/email data of the pulsegrid profile (architecture
 //       §14.2) → label email domains are allowed under brand/profiles/** only.
 
 import fs from 'node:fs';
@@ -44,7 +44,7 @@ export function stripCssComments(text) {
 }
 const tokensCommentStripped = (rel, text) => (isTokens(rel) ? stripCssComments(text) : text);
 
-const LABEL_IDENTITY = /mau5trap|deadmau5|rezz|mau5/i;
+const LABEL_IDENTITY = /pulsegrid|lumenveil|novakin/i;
 
 /**
  * Each rule: id, name, scope(rel) → in scope?, pattern (RegExp, tested per line), optional
@@ -56,7 +56,7 @@ export const RULES = [
     id: 'S01', name: 'label identity in generic runtime code (web/src outside brand/; tokens.css comments stripped)',
     scope: (rel) => !inBrand(rel), pattern: LABEL_IDENTITY, prepare: tokensCommentStripped,
     boundary: 'nowhere in generic code — including comments, class names and storage keys — except inside tokens.css /* */ comments (the byte-for-byte contract blocks)',
-    catches: 'mau5trap / mau5 / deadmau5 / rezz typed into a component, hook, page, copy.js, module.css, or a tokens.css declaration/selector',
+    catches: 'pulsegrid / lumenveil / novakin typed into a component, hook, page, copy.js, module.css, or a tokens.css declaration/selector',
     grep: '§15 L497 (first grep) + L495 slug rule',
   },
   {
@@ -67,15 +67,15 @@ export const RULES = [
     grep: '§15 L497 (second grep)',
   },
   {
-    id: 'S03', name: 'brand strings ("INTELLIGENCE PLATFORM", "mau5trap Intelligence Platform", mau5trap.com) outside brand/profiles/mau5trap/ (tokens.css comments stripped)',
-    scope: (rel) => !under('brand/profiles/mau5trap')(rel), pattern: /INTELLIGENCE PLATFORM|mau5trap Intelligence Platform|mau5trap\.com/i, prepare: tokensCommentStripped,
-    boundary: 'brand/profiles/mau5trap/** and tokens.css /* */ comments',
+    id: 'S03', name: 'brand strings ("INTELLIGENCE PLATFORM", "pulsegrid Intelligence Platform", pulsegrid.fm) outside brand/profiles/pulsegrid/ (tokens.css comments stripped)',
+    scope: (rel) => !under('brand/profiles/pulsegrid')(rel), pattern: /INTELLIGENCE PLATFORM|pulsegrid Intelligence Platform|pulsegrid\.com/i, prepare: tokensCommentStripped,
+    boundary: 'brand/profiles/pulsegrid/** and tokens.css /* */ comments',
     catches: 'the label tagline, document title or domain rendered or declared by platform code',
     grep: '§15 L494',
   },
   {
-    id: 'S04', name: 'label email domains (@mau5trap.com / @rezz.com) outside brand/profiles/',
-    scope: () => true, pattern: /@(?:mau5trap|rezz)\.com/i, allow: (rel) => inProfiles(rel),
+    id: 'S04', name: 'label email domains (@pulsegrid.fm / @novakin.band) outside brand/profiles/',
+    scope: () => true, pattern: /@(?:pulsegrid|novakin)\.com/i, allow: (rel) => inProfiles(rel),
     boundary: 'brand/profiles/** only (profile contact/email data, architecture §14.2)',
     catches: 'seed credentials, a prefilled login, or a label contact address in generic code or brand core',
     grep: '§15 L498 (second grep) / architecture §14.5 seed-credentials row',
@@ -92,7 +92,7 @@ export const RULES = [
     id: 'S06', name: 'profile / theme imports outside brand/registry.js',
     scope: () => true, pattern: /(?:\bimport\b|\bfrom\b|\brequire\b)[^'"]*['"][^'"]*(?:^|\/)(?:profiles|themes)\/[^'"]*['"]/, allow: (rel) => isRegistry(rel),
     boundary: 'brand/registry.js only (architecture §14.6: marks and loaders are looked up in the registry, never imported)',
-    catches: 'Sidebar / LoadingScreen / LoginPage / any component importing Mau5Head, a profile, or a theme file directly',
+    catches: 'Sidebar / LoadingScreen / LoginPage / any component importing PulseMark, a profile, or a theme file directly',
     grep: '§15 L506-L507',
   },
   {
@@ -111,8 +111,8 @@ export const RULES = [
     grep: '§15 L498 (first grep)',
   },
   {
-    id: 'S09', name: 'seed credential passwords (admin123 / rezz123) in frontend source',
-    scope: () => true, pattern: /admin123|rezz123/,
+    id: 'S09', name: 'seed credential passwords (admin123 / novakin123) in frontend source',
+    scope: () => true, pattern: /admin123|novakin123/,
     boundary: 'nowhere in web/src (fixtures live in the §15 gate text and web/README.md only — architecture §14.5)',
     catches: 'a prefilled login or dev shortcut carrying the seeded fixture passwords',
     grep: 'architecture §14.5 seed-credentials row',
@@ -175,19 +175,19 @@ function defaultReport(id, name, pass, observed) {
 // Each leak is placed where the ORIGINAL grep would also have flagged it, but in a location the amended
 // rule must still reject (i.e. outside the allowed boundary), so the test proves the rules did not go soft.
 export const SELF_TEST_LEAKS = [
-  { id: 'S01', file: 'components/primitives/StatCard.jsx', append: "\n// leak: this is the mau5trap console\n", why: 'identity in a comment in a generic component' },
-  { id: 'S01', file: 'styles/tokens.css', append: '\n.mau5trap-console-badge { color: red; }\n', why: 'identity in a tokens.css SELECTOR (not a comment) — the comment-strip must not hide it' },
-  { id: 'S02', file: 'brand/BrandMark.jsx', append: "\nconst fallbackSlug = 'mau5trap';\n", why: 'profile identity in brand core outside registry.js' },
+  { id: 'S01', file: 'components/primitives/StatCard.jsx', append: "\n// leak: this is the pulsegrid console\n", why: 'identity in a comment in a generic component' },
+  { id: 'S01', file: 'styles/tokens.css', append: '\n.pulsegrid-console-badge { color: red; }\n', why: 'identity in a tokens.css SELECTOR (not a comment) — the comment-strip must not hide it' },
+  { id: 'S02', file: 'brand/BrandMark.jsx', append: "\nconst fallbackSlug = 'pulsegrid';\n", why: 'profile identity in brand core outside registry.js' },
   { id: 'S03', file: 'layout/Header.jsx', append: "\nconst subtitle = 'INTELLIGENCE PLATFORM';\n", why: 'brand tagline in a platform component' },
-  { id: 'S04', file: 'pages/LoginPage/LoginPage.jsx', append: "\nconst devLogin = 'admin@mau5trap.com';\n", why: 'label email in generic code (a prefilled login)' },
-  { id: 'S04', file: 'brand/schema.js', append: "\nexport const DEFAULT_SUPPORT = 'admin@mau5trap.com';\n", why: 'label email in brand core (outside profiles/)' },
+  { id: 'S04', file: 'pages/LoginPage/LoginPage.jsx', append: "\nconst devLogin = 'admin@pulsegrid.fm';\n", why: 'label email in generic code (a prefilled login)' },
+  { id: 'S04', file: 'brand/schema.js', append: "\nexport const DEFAULT_SUPPORT = 'admin@pulsegrid.fm';\n", why: 'label email in brand core (outside profiles/)' },
   { id: 'S05', file: 'layout/Sidebar.module.css', append: '\n.leak { color: #00FF5F; }\n', why: 'raw brand hex in a component stylesheet' },
   { id: 'S05', file: 'components/primitives/Panel.jsx', append: "\nconst tint = 'rgba(0, 255, 95, 0.1)';\n", why: 'raw brand rgba in a component' },
-  { id: 'S06', file: 'layout/Sidebar.jsx', append: "\nimport { Mau5Head } from '../brand/profiles/mau5trap/Mau5Head.jsx';\n", why: 'profile component imported outside registry.js' },
-  { id: 'S06', file: 'brand/BrandContext.jsx', append: "\nimport './themes/mau5trap-console.css';\n", why: 'theme imported outside registry.js' },
+  { id: 'S06', file: 'layout/Sidebar.jsx', append: "\nimport { PulseMark } from '../brand/profiles/pulsegrid/PulseMark.jsx';\n", why: 'profile component imported outside registry.js' },
+  { id: 'S06', file: 'brand/BrandContext.jsx', append: "\nimport './themes/pulsegrid-console.css';\n", why: 'theme imported outside registry.js' },
   { id: 'S07', file: 'layout/Sidebar.jsx', append: '\nconst brandGlyph = <i className="ri-headphone-line" />;\n', why: 'headphone glyph in the sidebar (brand block) instead of BrandMark' },
   { id: 'S07', file: 'layout/nav.js', append: "\nexport const NAV_EXTRA = [{ id: 'catalog', label: 'Catalog', icon: 'ri-disc-line', perm: 'roster', to: '/catalog' }];\n", why: 'a disc glyph on a NON-A&R nav entry in nav.js — the allowance is that one entry, not the file' },
-  { id: 'S08', file: 'hooks/useApiQuery.js', append: "\nconst DEFAULT_ARTIST = 'art_rezz';\n", why: 'fixture artist id as a default' },
+  { id: 'S08', file: 'hooks/useApiQuery.js', append: "\nconst DEFAULT_ARTIST = 'art_novakin';\n", why: 'fixture artist id as a default' },
   { id: 'S09', file: 'pages/LoginPage/LoginPage.jsx', append: "\nconst devPassword = 'admin123';\n", why: 'seed password as a dev shortcut' },
 ];
 

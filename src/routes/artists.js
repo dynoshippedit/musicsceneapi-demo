@@ -288,7 +288,7 @@ function register(app, ctx) {
     app.get('/v3/artists/:id/development', authenticateToken, async (req, res) => {
         if (!hasArtistAccess(req.user, req.params.id)) return res.status(403).json({ error: 'Access denied for this artist' });
         // PHASE 4CF: canonical DB-first read + profile-owned canned insights
-        // (mau5trap values byte-identical).
+        // (pulsegrid values byte-identical).
         const artist = await artistRepo.findById(req.params.id);
         if (!artist) return res.status(404).json({ error: 'Artist not found' });
 

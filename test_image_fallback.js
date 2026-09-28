@@ -4,10 +4,10 @@ const entityAudit = require('./modules/entityAudit');
 async function testImageFallback() {
     console.log("=== Testing Image Fallback Logic ===");
 
-    // 1. Test Fandom Image Fetch (e.g., using 'Rezz' who should have an image)
+    // 1. Test Fandom Image Fetch (e.g., using 'Novakin' who should have an image)
     try {
-        console.log("\n[Test 1] Fandom Image Fetch for 'Rezz':");
-        const fandomResult = await entityAudit.auditFandom('Rezz');
+        console.log("\n[Test 1] Fandom Image Fetch for 'Novakin':");
+        const fandomResult = await entityAudit.auditFandom('Novakin');
         if (fandomResult.image) {
             console.log("SUCCESS: Image found:", fandomResult.image);
         } else {
@@ -21,10 +21,10 @@ async function testImageFallback() {
     // 2. Test Google KG Fallback Logic (using a fake name to force all fallbacks)
     // We expect to see logs indicating the fallback search was attempted.
     try {
-        console.log("\n[Test 2] Google KG Fallback Logic for 'NonExistentMau5trapArtist':");
+        console.log("\n[Test 2] Google KG Fallback Logic for 'NonExistentPulsegridArtist':");
         // This will likely fail to find anything, but we want to confirm the code path executes.
         // We look for console logs in the output.
-        const kgResult = await entityAudit.auditGoogleKG('NonExistentMau5trapArtist');
+        const kgResult = await entityAudit.auditGoogleKG('NonExistentPulsegridArtist');
         console.log("Final KG Result Status:", kgResult.status);
     } catch (e) {
         console.error("KG Test Error:", e);

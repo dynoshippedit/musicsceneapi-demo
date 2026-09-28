@@ -2,15 +2,15 @@
 
 Durable architecture reference for the **Label Intelligence Platform**
 frontend (React/Vite). The platform is a generic music-label operations
-console; **mau5trap is the active reference profile** (brand configuration +
+console; **pulsegrid is the active reference profile** (brand configuration +
 reference theme + seed dataset) used to develop and demonstrate it, not the
 identity of the software. §14 defines the platform / brand-configuration /
 label-data / theme separation; §15 audits what the current backend still
 hardcodes. Finalized in Phase 4A (planning only — no code scaffolded).
 Companion docs:
 
-- `MAU5TRAP_VISUAL_DESIGN_CONTRACT.md` — the **reference theme** contract
-  (`mau5trap-console`: tokens, component rules, FAIL conditions). It is the
+- `PULSEGRID_VISUAL_DESIGN_CONTRACT.md` — the **reference theme** contract
+  (`pulsegrid-console`: tokens, component rules, FAIL conditions). It is the
   platform's default design language and the visual bar every profile is
   held to; authoritative for anything visual EXCEPT where §13 of this file
   (Phase 4A remediation addendum, written against the independent audit
@@ -90,7 +90,7 @@ was re-verified and is still accurate. The docs themselves were not edited
    glue, reflects the intended product.
    > Amended pre-4C (Decision 4, 2026-09-17): `tests/snapshots/baseline.json` is the
    > Phase-1 capture of the PRE-REFACTOR monolith (`__meta.entry:
-   > mau5trap-production-api.js`, 50 cases) and is read by NO test. The deterministic
+   > production-api.js`, 50 cases) and is read by NO test. The deterministic
    > baseline `npm test` compares against is `tests/snapshots/phase2_baseline.json`
    > (91 cases, re-captured after the Phase 3 fixes). The served field set cited here
    > is identical in both; only the artist-role VALUES differ — they are "as served"
@@ -110,7 +110,7 @@ was re-verified and is still accurate. The docs themselves were not edited
 | Data fetching | Two dependency-free hooks: `useApiQuery`, `useApiMutation` | The legacy problem is repeated fetch/loading/error boilerplate, not missing cache semantics. ~100 lines solves it. Call-site shape `{data, loading, error, refetch}` is deliberately TanStack-Query-compatible so a later swap is mechanical. |
 | Global state | `AuthContext`, `AiProviderContext`, `BrandContext` (static, from the active profile — §14.3) | Only genuinely cross-page state. No Redux/Zustand/Jotai. |
 | Styling | CSS Modules + `tokens.css` (+ brand layer, §14.4) + `global.css` | Zero deps; directly kills inline-style sprawl; tokens make the design contract enforceable by grep; the brand layer makes a rebrand a one-file theme change. No Tailwind/UI kit (contract §4). |
-| Brand / label config | `web/src/brand/` — one active profile (data) + one theme file + a marks registry (§14) | The platform never contains a label literal; mau5trap is the reference profile |
+| Brand / label config | `web/src/brand/` — one active profile (data) + one theme file + a marks registry (§14) | The platform never contains a label literal; pulsegrid is the reference profile |
 | Charts | `chart.js` + `react-chartjs-2` | Same engine the legacy uses; wrapper fixes manual `destroy()` lifecycle |
 | Maps | `leaflet` + `react-leaflet` | Same engine; wrapper owns the DOM ref |
 | Icons | `remixicon` npm (same `ri-*` classes) | Removes a CDN; not blocking |
@@ -132,7 +132,7 @@ web/
   vite.config.js
   index.html                    <div id="root">, font links, static <title>Label Intelligence Platform</title>
                                 (BrandProvider replaces title + favicon at boot from the active profile)
-  .env.example / .env.development / .env.production     VITE_API_BASE_URL, VITE_BRAND_PROFILE (default mau5trap)
+  .env.example / .env.development / .env.production     VITE_API_BASE_URL, VITE_BRAND_PROFILE (default pulsegrid)
   README.md                     how to run the backend (JWT_SECRET required) + this app + how to switch the brand profile
   public/
     brands/<slug>/favicon.svg   static brand assets, one folder per installed profile
@@ -152,11 +152,11 @@ web/
       BrandLoader.jsx           renders the profile's loader via the registry; fallback defaults/RingLoader
       defaults/                 MonogramMark.jsx, RingLoader.jsx (+ .module.css) — label-neutral fallbacks
       profiles/
-        mau5trap/               REFERENCE PROFILE: profile.js (data), Mau5Head.jsx, Mau5HeadLoader.jsx, mau5head.module.css;
+        pulsegrid/               REFERENCE PROFILE: profile.js (data), PulseMark.jsx, PulseMarkLoader.jsx, pulsemark.module.css;
                                 locations.js (4C: current region/city/venue coordinate data, preserved from legacy)
         example-records/        PORTABILITY TEST PROFILE: profile.js only (uses the defaults)
       themes/
-        mau5trap-console.css    body[data-theme="mau5trap-console"] {}  — empty by design: the platform defaults ARE this theme
+        pulsegrid-console.css    body[data-theme="pulsegrid-console"] {}  — empty by design: the platform defaults ARE this theme
         example-records-magenta.css   body[data-theme="example-records-magenta"] { the 4 brand tokens }
 
     api/
@@ -188,8 +188,8 @@ web/
     styles/
       tokens.css                three blocks, each VERBATIM: contract §1 · §13.9 addendum · §14.4 brand layer. Nothing else.
       global.css                reset, body, identity classes (.panel .label .kpi …), focus ring,
-                                scrollbar, keyframes, reduced-motion (NO brand-specific classes — the mau5-head loader
-                                CSS lives in brand/profiles/mau5trap/)
+                                scrollbar, keyframes, reduced-motion (NO brand-specific classes — the legacy mark loader
+                                CSS lives in brand/profiles/pulsegrid/)
 
     components/
       primitives/               Panel, StatCard, Badge, Button, Table/{Table,SortableHeader},
@@ -384,7 +384,7 @@ The component owns no venue, market, region, artist, or campaign coordinates.
 ### 8.1 Principle
 
 ```
-React component  →  ai/aiClient.js  →  api/endpoints.js  →  mau5trap backend /v3/ai/*  →  backend provider router  →  Groq | OpenAI | Anthropic | Gemini | xAI | OpenRouter | …
+React component  →  ai/aiClient.js  →  api/endpoints.js  →  pulsegrid backend /v3/ai/*  →  backend provider router  →  Groq | OpenAI | Anthropic | Gemini | xAI | OpenRouter | …
 ```
 
 Components depend on **application capabilities** (`query`, `analyze`,
@@ -421,7 +421,7 @@ same `{answer, source, provider, model}` shape regardless of endpoint.
 `{ providers, defaultProvider, defaultModel, selectedProvider, selectedModel,
 setSelection(providerId, modelId), selectable, status:'loading'|'ready'|'unavailable' }`.
 Selection persists to `localStorage['platform.ai.selection']` as IDs only
-(never anything secret; key is label-neutral — never `mau5trap.*`). If the persisted provider is no longer
+(never anything secret; key is label-neutral — never `pulsegrid.*`). If the persisted provider is no longer
 `status:'ready'`, fall back to defaults and surface a one-line notice.
 
 ### 8.4 Capability model — `ai/capabilities.js`
@@ -499,15 +499,15 @@ AI request (prompt, artistId?)            ← frontend: CommandConsole / EntityA
   or search prefix in prompts or bodies. `CommandConsole` and `aiClient` are
   label-blind; their copy (`COMMAND CONSOLE`, `// System ready.`) is platform
   voice, not brand.
-- Label context is the backend's job, and it stays **mau5trap-flavoured by
+- Label context is the backend's job, and it stays **pulsegrid-flavoured by
   default**: today it is hardcoded (`src/ai/prompts.js` L37
-  `'AI analyst for mau5trap.'`; `src/routes/integrations.js` L69 and
-  `modules/entityAudit.js` L64 prefix searches with `mau5trap`). §15
+  `'AI analyst for pulsegrid.'`; `src/routes/integrations.js` L69 and
+  `modules/entityAudit.js` L64 prefix searches with `pulsegrid`). §15
   classifies these as business-logic coupling (class C) to be
-  **externalized** — the same strings move into the mau5trap label profile
+  **externalized** — the same strings move into the pulsegrid label profile
   (`activeLabel.ai.systemContext`, `activeLabel.search.searchContext`,
   `activeLabel.search.artistQueryPrefix`, §15.3) and the services read them.
-  Behavior under the mau5trap profile is unchanged; a future label supplies
+  Behavior under the pulsegrid profile is unchanged; a future label supplies
   its own context instead of editing services. The frontend profile's
   `search.searchContext` (§14.2) mirrors the backend value for parity; the
   frontend does not transmit it.
@@ -541,7 +541,7 @@ show the long-operation mono status (contract §3.17).
 
 ## 11. Loading / error / empty / responsive / a11y
 
-Governed by the contract — §3.17 loading (mau5-head full-page, mono
+Governed by the contract — §3.17 loading (legacy mark full-page, mono
 cursor or flat skeleton inline), §3.18 errors (in-place danger panel, no
 toasts), §3.19 empty (mono `// …` copy), §3.22 responsive (≥1280 primary,
 1024–1279 rail, <1024 best-effort), §3.23 accessibility (labels, focus ring,
@@ -552,7 +552,7 @@ scope rule fixed in §13.6 (audit M5).
 
 ## 12. Legacy coexistence and migration principles
 
-- `mau5trap-frontend-connected.html`, `mau5trap-terminal-dashboard.html`,
+- `pulsegrid-frontend-connected.html`, `pulsegrid-terminal-dashboard.html`,
   and the two static docs HTML files stay byte-identical and servable for the
   whole of Phase 4B/4C. Retirement is a per-view, user-signed-off decision
   after the replacement passes its acceptance criteria — never implied by
@@ -577,9 +577,9 @@ scope rule fixed in §13.6 (audit M5).
 Written against `PHASE_4A_DESIGN_AUDIT.md`. Purpose: remove aesthetic
 discretion from the implementation model. Everything below is a value, a
 verbatim string, a verbatim markup block, or a yes/no check. Where a rule
-here conflicts with `MAU5TRAP_VISUAL_DESIGN_CONTRACT.md`, THIS section
+here conflicts with `PULSEGRID_VISUAL_DESIGN_CONTRACT.md`, THIS section
 wins; §13.0 is the complete list of such conflicts. Source of truth for
-every value: `mau5trap-frontend-connected.html` (line refs given), then the
+every value: `pulsegrid-frontend-connected.html` (line refs given), then the
 reference captures, then the contract's already-signed tightenings.
 
 ### 13.0 Precedence — rules in the contract that §13 supersedes
@@ -596,8 +596,8 @@ reference captures, then the contract's already-signed tightenings.
 | §5 checklist "tokens.css matches §1 verbatim (diff is empty)" | handoff §15: the §1, §13.9 and §14.4 blocks are each byte-identical | same |
 | §1 comment "components use `--color-accent`, never `--green-500` … a future alternate theme swaps ONE line" | §14.4: components use `--color-accent*`; the swap point is the brand layer (`--color-brand-primary` + 3 siblings) set by `brand/themes/<theme>.css` under `body[data-theme]` | brand replaceability |
 | §3.14 button hover `--green-300`, active `--green-700`; §3.11 chart primary `--green-500`; §3.12 map points `--green-500` | `--color-accent-bright`, `--color-accent-deep`, `--color-brand-primary` (§14.4). `--green-*` names never appear in component CSS/JS | palette names are theme-internal |
-| §2 `.mau5-head` loader class in `global.css`; §3.17 "the pulsing mau5-head … is brand" | §14.6: the mau5-head is the **mau5trap profile's** loader (`brand/profiles/mau5trap/Mau5HeadLoader.jsx` + module CSS); `LoadingScreen` renders `<BrandLoader/>`; platform fallback is `RingLoader` (same ring + pulse, no ears). Still never a spinner | brand asset, not platform primitive |
-| §3.7 sidebar "mau5-head SVG logo + wordmark `mau5trap` + sublabel `INTELLIGENCE PLATFORM`" | §14.2/§14.6: `<BrandMark/>` + `profile.displayName` + `profile.tagline`; the mau5trap profile supplies exactly those values | brand data, not literals |
+| §2 `.legacy-mark` loader class in `global.css`; §3.17 "the pulsing legacy mark … is brand" | §14.6: the legacy mark is the **pulsegrid profile's** loader (`brand/profiles/pulsegrid/PulseMarkLoader.jsx` + module CSS); `LoadingScreen` renders `<BrandLoader/>`; platform fallback is `RingLoader` (same ring + pulse, no ears). Still never a spinner | brand asset, not platform primitive |
+| §3.7 sidebar "legacy mark SVG logo + wordmark `pulsegrid` + sublabel `INTELLIGENCE PLATFORM`" | §14.2/§14.6: `<BrandMark/>` + `profile.displayName` + `profile.tagline`; the pulsegrid profile supplies exactly those values | brand data, not literals |
 | §4 grep "color literal outside `tokens.css`, `global.css`, `chartDefaults.js`" | exception list gains `brand/themes/*.css` and `brand/profiles/*/` (theme files and brand marks must hold literal colors) | brand files are the palette source |
 
 Nothing else in the contract is changed. Folding §13 back into the contract
@@ -612,7 +612,7 @@ Identity lives in these strings as much as in the palette. Two owners:
   `ACCESS ID`, `PASSPHRASE`, `INITIALIZE SESSION`, `Terminate Session`,
   `COMMAND CONSOLE`, `// System ready.` … These contain no label name and are
   shared by every profile. A profile MAY override any key via `profile.copy`
-  (e.g. a softer label could set `submit: 'SIGN IN'`) — but the mau5trap
+  (e.g. a softer label could set `submit: 'SIGN IN'`) — but the pulsegrid
   reference profile overrides nothing, so the gate below applies verbatim.
 - **Brand-owned** (`brand/profiles/<slug>/profile.js`, §14.2): wordmark
   (`displayName`), `tagline`, `documentTitle`, `domain` (→ login placeholder),
@@ -625,13 +625,13 @@ inlines either kind, and no component invents siblings ("Sign in",
 "Welcome back"). Case is exact.
 
 ```
-BRAND — from the active profile (mau5trap reference values shown)
-  displayName         mau5trap                       wordmark; rendered VERBATIM (brand owns casing: mau5trap is lowercase, always) (L3042, L3445)
+BRAND — from the active profile (pulsegrid reference values shown)
+  displayName         pulsegrid                       wordmark; rendered VERBATIM (brand owns casing: pulsegrid is lowercase, always) (L3042, L3445)
   tagline             INTELLIGENCE PLATFORM          sublabel (L3043, L3446)
-  documentTitle       mau5trap Intelligence Platform (L7; set on document.title by BrandProvider)
-  domain              mau5trap.com                   → login placeholder `user@${domain}` (L3085)
-  slug                mau5trap                       → download filename `${slug}_report.${ext}` (L3372)
-  legal.footer        null                           optional third footer line on the login card (none for mau5trap)
+  documentTitle       pulsegrid Intelligence Platform (L7; set on document.title by BrandProvider)
+  domain              pulsegrid.fm                   → login placeholder `user@${domain}` (L3085)
+  slug                pulsegrid                       → download filename `${slug}_report.${ext}` (L3372)
+  legal.footer        null                           optional third footer line on the login card (none for pulsegrid)
 
 PLATFORM VOICE — web/src/copy.js
 LOGIN (L3034-3128)
@@ -689,39 +689,39 @@ legacy labels like `NEW PASSWORD` do not trip it:
 
 ```
 grep -rn -E "(>|['\"\`])(Email|Password|Sign [Ii]n|Sign [Oo]ut|Log [Ii]n|Log [Oo]ut|Logout|Continue|Get [Ss]tarted|Welcome[^<'\"]*|Good (morning|afternoon|evening)|Assistant|Chat|Dashboard [Oo]verview|Overview of|Coming [Ss]oon|Switch to (Day|Night))(<|['\"\`]|,)" web/src   → no results
-grep -rniE "mau5trap|mau5|deadmau5|rezz" web/src --exclude-dir=brand                                   → no results (platform code never names the label; §14.5)
-grep -rniE "mau5trap|mau5|deadmau5|rezz" web/src/brand --exclude-dir=profiles --exclude-dir=themes       → only brand/registry.js (the composition root that lists installed profiles)
+grep -rniE "pulsegrid|lumenveil|novakin" web/src --exclude-dir=brand                                   → no results (platform code never names the label; §14.5)
+grep -rniE "pulsegrid|lumenveil|novakin" web/src/brand --exclude-dir=profiles --exclude-dir=themes       → only brand/registry.js (the composition root that lists installed profiles)
 grep -rnP "[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}\x{1F900}-\x{1F9FF}]" web/src                          → no results (audit N2: no emoji, incl. the terminal dashboard's 👥💰⚡ and final.jpeg's 🔥)
 ```
 
-(The earlier `Mau5trap|MAU5TRAP` casing grep is subsumed: the string cannot
-appear outside the mau5trap profile at all, and inside it `displayName` is
+(The earlier `Pulsegrid|PULSEGRID` casing grep is subsumed: the string cannot
+appear outside the pulsegrid profile at all, and inside it `displayName` is
 the single source.)
 
-### 13.2 Brand mark — supplied by the active profile; mau5trap reference = `brand/profiles/mau5trap/Mau5Head.jsx` (audit B2, §14.6)
+### 13.2 Brand mark — supplied by the active profile; pulsegrid reference = `brand/profiles/pulsegrid/PulseMark.jsx` (audit B2, §14.6)
 
 Platform components never import a specific mark. `layout/Sidebar.jsx`
 renders `<BrandMark size={40}/>` and `LoadingScreen` renders
 `<BrandLoader/>`; both resolve through `brand/registry.js` from
-`profile.assets.mark` / `profile.assets.loader`. For the mau5trap profile
-those ids are `mau5head`, which maps to the two marks in the legacy file:
+`profile.assets.mark` / `profile.assets.loader`. For the pulsegrid profile
+those ids are `pulsemark`, which maps to the two marks in the legacy file:
 
-1. **Loader** (`Mau5HeadLoader.jsx` + `mau5head.module.css`; legacy L200-227): CSS-only — 80px ring, 4px
+1. **Loader** (`PulseMarkLoader.jsx` + `pulsemark.module.css`; legacy L200-227): CSS-only — 80px ring, 4px
    `--color-accent` border, two 50px ear circles at `top:-30px`,
    `left:-25px` / `right:-25px`, ear background `--color-bg` (legacy
    `var(--bg-dark)` is undefined — audit N3 — do not port the variable),
    `pulse 2s infinite`. Contract §2/§3.17 transcribe it; the CSS moves out of
    `global.css` into the profile folder (§13.0). Used ONLY via `BrandLoader`.
-2. **Sidebar mark** (`Mau5Head.jsx`; legacy L3429-3443): the SVG below. This is the mark every
-   authenticated screen shows under the mau5trap profile. It is a 15-line component, not an icon font
-   glyph. Remixicon has no mau5-head; `ri-headphone-line`, a green circle,
-   an "M", or a text logo is a FAIL **for the mau5trap profile**. (The
+2. **Sidebar mark** (`PulseMark.jsx`; legacy L3429-3443): the SVG below. This is the mark every
+   authenticated screen shows under the pulsegrid profile. It is a 15-line component, not an icon font
+   glyph. Remixicon has no legacy mark; `ri-headphone-line`, a green circle,
+   an "M", or a text logo is a FAIL **for the pulsegrid profile**. (The
    label-neutral `MonogramMark` fallback exists only for profiles that ship
    no mark — §14.6.)
 
 ```jsx
-// brand/profiles/mau5trap/Mau5Head.jsx — night-mode fills only (day mode retired). No props other than size.
-export function Mau5Head({ size = 40 }) {
+// brand/profiles/pulsegrid/PulseMark.jsx — night-mode fills only (day mode retired). No props other than size.
+export function PulseMark({ size = 40 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
       <g fill="var(--color-accent)">
@@ -756,13 +756,13 @@ viewport 1440×900                    body: --color-bg + --gradient-decoration (
 
                     ┌──────────────────────── 420px ────────────────────────┐
                     │  pad 48                                                │
-                    │                      mau5trap                          │  32px / 700 / --font-ui / letter-spacing -1px / --color-text — text = profile.displayName (L3042)
+                    │                      pulsegrid                          │  32px / 700 / --font-ui / letter-spacing -1px / --color-text — text = profile.displayName (L3042)
                     │                INTELLIGENCE PLATFORM                   │  12px / 400 / --font-mono / --tracking-wide / --color-text-muted — text = profile.tagline (L3043 — muted here, NOT green)
                     │  ↕ 32                                                  │
                     │  [ ErrorState panel variant — only when error ]        │  danger-dim bg, danger border, 4px radius, 12px pad, 13px centered, mb 24 (L3046-3053)
                     │  ACCESS ID                                             │  .label (11px mono 700 uppercase muted), mb 8
                     │  ┌──────────────────────────────────────────────────┐  │
-                    │  │ user@mau5trap.com                                │  │  input: 100% wide, 12px pad, 14px --font-mono, --color-input-bg, --border-panel, --radius-control; placeholder = `user@${profile.domain}` (L3081-3091; 6px → 2px)
+                    │  │ user@pulsegrid.fm                                │  │  input: 100% wide, 12px pad, 14px --font-mono, --color-input-bg, --border-panel, --radius-control; placeholder = `user@${profile.domain}` (L3081-3091; 6px → 2px)
                     │  └──────────────────────────────────────────────────┘  │
                     │  ↕ 20                                                  │
                     │  PASSPHRASE                          Forgot Password?  │  .label left · 11px --font-ui --color-accent link right (L3094-3097), mb 8
@@ -777,7 +777,7 @@ viewport 1440×900                    body: --color-bg + --gradient-decoration (
                     │  ───────────────────── hairline ───────────────────    │  border-top --border-panel, pt 24
                     │  RESTRICTED ACCESS. UNAUTHORIZED CONNECTIONS WILL BE   │  11px --font-mono --color-text-muted, line-height 1.6, centered (L3125-3128)
                     │  TERMINATED.                                           │
-                    │  Authorized personnel only.                            │  (+ optional third line = profile.legal.footer, same style; null for mau5trap)
+                    │  Authorized personnel only.                            │  (+ optional third line = profile.legal.footer, same style; null for pulsegrid)
                     │  pad 48                                                │
                     └────────────────────────────────────────────────────────┘
                      card: .panel geometry (4px radius, --color-panel), border --border-panel-accent (L3040 --primary-dim → accent hairline), NO shadow, NO blur
@@ -834,7 +834,7 @@ the HTML and this table disagree, the table wins.
 x=0            224                                                                                        1440
 ┌──────────────┬───────────────────────────────────────────────────────────────────────────────────────────┐ y=0
 │ pad 24/16    │ pad 24 (--page-gutter)                                                                     │
-│ ◉ mau5trap   │ Dashboard                                                          ┌──────────────────┐  │ 24   header 56px tall
+│ ◉ pulsegrid   │ Dashboard                                                          ┌──────────────────┐  │ 24   header 56px tall
 │   INTELLIG.. │ Real-time label performance metrics                                │ (A) Admin User   │  │      h1 28/700 · subtitle 14 muted · chip
 │ ↕ 32         │                                                                    └──────────────────┘  │ 80
 │ ▣ Dashboard  │ ↕ 24                                                                                       │
@@ -873,7 +873,7 @@ by §13.5.4 — they are the expected render, not illustrations.
 | Element | Spec |
 |---|---|
 | Container | `position: fixed; left:0; top:0; height:100vh; width: var(--sidebar-width)`; `background: var(--color-panel)` + `background-image: var(--gradient-decoration)` (size 100% 100%); `border-right: var(--border-panel)`; `backdrop-filter: blur(20px)`; `padding: var(--space-6) var(--space-4)`; flex column; `z-index: 10` |
-| Brand block | flex row, `gap: 12px`, `align-items: center`, `height: var(--brand-mark-size)` (40px), `margin-bottom: var(--space-7)` (32px). `<BrandMark size={40}/>` (mau5trap profile → `Mau5Head`) then a column: wordmark = `profile.displayName` 20px/800 `--font-ui` `--color-text` letter-spacing -0.5px (L3445); sublabel = `profile.tagline` as `.label--accent` (11px/700 `--font-mono` uppercase `--color-accent`) with `letter-spacing: var(--tracking-wide)` (L3446 is 10px — contract §3.7's 11px `.label` stands; green HERE, muted on login). Nothing else in the block: no version, no environment tag, no collapse chevron |
+| Brand block | flex row, `gap: 12px`, `align-items: center`, `height: var(--brand-mark-size)` (40px), `margin-bottom: var(--space-7)` (32px). `<BrandMark size={40}/>` (pulsegrid profile → `PulseMark`) then a column: wordmark = `profile.displayName` 20px/800 `--font-ui` `--color-text` letter-spacing -0.5px (L3445); sublabel = `profile.tagline` as `.label--accent` (11px/700 `--font-mono` uppercase `--color-accent`) with `letter-spacing: var(--tracking-wide)` (L3446 is 10px — contract §3.7's 11px `.label` stands; green HERE, muted on login). Nothing else in the block: no version, no environment tag, no collapse chevron |
 | Nav list | `<nav aria-label="Primary">`, `<ul>` column, `gap: var(--space-1)` (4px). Items are `<NavLink>`s: `height: var(--nav-item-height)` 40px; `padding: 0 var(--space-4)`; `gap: 12px`; `border-radius: var(--radius-control)`; icon Remixicon `ri-*-line` 18px; label 14px `--font-ui` 400. Inactive: `--color-text-muted`, transparent. Hover: `--color-text`, transparent (legacy has no hover fill — do not add one). Active (`aria-current="page"`): `--color-text` (#F5F5F5), 600, `background: var(--color-accent-dim)`. No left bar, no dot, no chevron, no counter badge, no tooltip at ≥1280. Transition `--dur-base` |
 | Nav content | exactly `NAV_PRIMARY` filtered by `canSee` — nothing grouped under section headers ("MAIN", "WORKSPACE" are a FAIL), no dividers between primary items, no collapsible groups |
 | Bottom group | `margin-top: auto`. Settings item (same item spec, icon `ri-equalizer-line`) → `padding-top: var(--space-4)` above a `border-top: var(--border-panel)` → `Terminate Session` row: 40px, 14px `--font-ui` `--color-text-muted`, icon `ri-logout-box-line` 18px, hover `--color-text`, no background ever, it is a `<button>` (L3504-3516). No user avatar/name in the sidebar (that is the header chip); no theme toggle; no "v3.0" |
@@ -978,7 +978,7 @@ No fixed pixel widths in component CSS other than `--sidebar-width`,
 
 | Situation | Component / variant | Surface | Legacy |
 |---|---|---|---|
-| Initial data load of a routed page (no data yet) | `LoadingScreen` — fixed `inset:0`, `background: var(--color-bg)`, `z-index: 9999`, centered `<BrandLoader/>` (mau5trap profile → the CSS `.mau5-head`; fallback `RingLoader`); optional caption `INITIALIZING NEURAL LINK...` 11px `.label` 24px below the mark. Nothing else — no progress bar, no percentage, no spinner, no "Loading…" | full viewport, covers the shell | L3388-3392 |
+| Initial data load of a routed page (no data yet) | `LoadingScreen` — fixed `inset:0`, `background: var(--color-bg)`, `z-index: 9999`, centered `<BrandLoader/>` (pulsegrid profile → the CSS `.legacy-mark`; fallback `RingLoader`); optional caption `INITIALIZING NEURAL LINK...` 11px `.label` 24px below the mark. Nothing else — no progress bar, no percentage, no spinner, no "Loading…" | full viewport, covers the shell | L3388-3392 |
 | Initial data load FAILS (no data yet) | `ErrorState variant="fullscreen"` — same fixed container; column, centered: `ri-error-warning-line` 48px `--color-danger` → `margin 20px` → kicker `CONNECTION FAILURE` (`.label` at `--text-lg` 16px, `--color-danger`) → message 14px `--color-text-muted` (`error.message`, else `Failed to connect to Neural Link`), `margin-bottom: var(--space-6)` → `danger` variant button `RETRY CONNECTION` (default 32px size, 12px/700 mono uppercase) calling `refetch`. Sidebar/header hidden underneath, as in legacy | full viewport | L3394-3409 |
 | Refetch fails while data is on screen | `ErrorState variant="panel"` (contract §3.18) placed where the failed widget's data would be; existing data elsewhere stays | in place | contract |
 | Widget/secondary fetch (4C: chart, map, console, table) | `InlineLoading` (mono `// loading …█`) then `ErrorState variant="panel"` | inside that `.panel` | contract §3.17-3.18 |
@@ -995,10 +995,10 @@ modal alert, or browser dialog for an error.
 ### 13.7 Anti-generic-SaaS rules — translated into component behavior
 
 Prohibitions alone are not enforceable; each generic pattern below has the
-mau5trap rule that replaces it and how a reviewer checks it. A FAIL on any
+pulsegrid rule that replaces it and how a reviewer checks it. A FAIL on any
 row fails the page.
 
-| Generic pattern | mau5trap rule | Check |
+| Generic pattern | pulsegrid rule | Check |
 |---|---|---|
 | Top navigation bar / horizontal tabs as primary nav | Primary nav is the fixed left sidebar only; `<header>` contains h1 + subtitle + user chip and nothing navigable | `[judge]` header has no links; `[grep]` no `<NavLink` outside `layout/Sidebar.jsx` (Tabs in 4C are sub-navigation inside `<main>`) |
 | Sidebar section headers, group labels, collapsible groups, counters, chevrons | Flat list of `NAV_PRIMARY` items; bottom group is Settings + hairline + Terminate Session | `[grep]` `nav.js` objects have exactly `id,label,icon,perm,to[,adminOnly][,subtitle]`; `[judge]` |
@@ -1009,13 +1009,13 @@ row fails the page.
 | Soft geometry: ≥8px radius, drop shadows, 24px+ padding, 2px borders | tokens `--radius-*`, no shadow at rest, `--panel-pad`, 1px hairlines | `[grep]` contract §5 radius/shadow greps; `[measure]` computed padding ≤20px (login exempt) |
 | Empty regions filled with placeholders, skeleton grids, illustrations, "coming soon" | Empty = body background | `[grep]` `Coming soon`, `placeholder.svg`, `<img` on `/dashboard`; `[judge]` |
 | Blue/indigo/violet accents, multi-hue chart palettes, gradient text or buttons | Green is the only signal hue; gradients are the three tokens | `[grep]` contract §4 hue grep; `[grep]` `linear-gradient\|radial-gradient` in `web/src` outside `tokens.css` → none |
-| Green as decoration only (logo + one button) | Green MUST appear in every one of these roles on the slice: sidebar sublabel text, active nav tint, all four StatCard left rules, `:focus-visible` ring, login primary button, `Forgot Password?` link, Mau5Head fill. Green must NOT appear as: page/panel background fill, KPI value color, body text, panel borders (except login card), heading color | `[judge]` checklist of the 7 roles; `[grep]` `.kpi` color is `--color-text` |
+| Green as decoration only (logo + one button) | Green MUST appear in every one of these roles on the slice: sidebar sublabel text, active nav tint, all four StatCard left rules, `:focus-visible` ring, login primary button, `Forgot Password?` link, PulseMark fill. Green must NOT appear as: page/panel background fill, KPI value color, body text, panel borders (except login card), heading color | `[judge]` checklist of the 7 roles; `[grep]` `.kpi` color is `--color-text` |
 | Pill search inputs, rounded composer bars | All inputs `--radius-control` 2px | `[grep]` radius |
-| Shimmer skeletons, circular spinners, progress bars | mau5-head / mono cursor / flat skeleton | `[grep]` `shimmer`, `spinner`, `<progress`, `animation: *spin` in `web/src` → none |
+| Shimmer skeletons, circular spinners, progress bars | legacy mark / mono cursor / flat skeleton | `[grep]` `shimmer`, `spinner`, `<progress`, `animation: *spin` in `web/src` → none |
 | Toasts / snackbars / alert dialogs | `ErrorState` in place (§13.6) | `[grep]` `toast`, `snackbar`, `alert(`, `confirm(` → none; `package.json` clean |
 | Title-case metric labels ("Total Revenue") | `.label` uppercase mono on every KPI/panel/table header | `[grep]` every `StatCard` label passes through `.label`; `[judge]` |
-| Text-only or icon-font logo | `<BrandMark/>` resolved from the profile (§14.6); mau5trap → `Mau5Head.jsx` SVG per §13.2 | `[grep]` `Sidebar.jsx` imports `BrandMark` (never a profile component directly); no `ri-headphone` in the brand block; under the mau5trap profile the rendered SVG is the §13.2 markup |
-| Label literals baked into platform code ("mau5trap", artist names/ids, `@mau5trap.com`, `mau5trap.*` storage keys) | Platform code is label-blind; brand strings come from the profile, label data from the API (§14.5) | `[grep]` §13.1 label greps → no results outside `brand/`; `[grep]` `art_[a-z0-9]+` in `web/src` → no results |
+| Text-only or icon-font logo | `<BrandMark/>` resolved from the profile (§14.6); pulsegrid → `PulseMark.jsx` SVG per §13.2 | `[grep]` `Sidebar.jsx` imports `BrandMark` (never a profile component directly); no `ri-headphone` in the brand block; under the pulsegrid profile the rendered SVG is the §13.2 markup |
+| Label literals baked into platform code ("pulsegrid", artist names/ids, `@pulsegrid.fm`, `pulsegrid.*` storage keys) | Platform code is label-blind; brand strings come from the profile, label data from the API (§14.5) | `[grep]` §13.1 label greps → no results outside `brand/`; `[grep]` `art_[a-z0-9]+` in `web/src` → no results |
 | Theme toggle / light mode / system-theme switch | none; night is the identity; the only theme mechanism is the boot-time brand profile (§14.3) | `[grep]` `Switch to`, `prefers-color-scheme` → none; `data-theme` appears only in `brand/BrandContext.jsx` and `brand/themes/*.css`, never in a component |
 | Sentence-case chatty microcopy, exclamation marks, "Let's…" | All identity copy from `copy.js`; new strings need review | `[grep]` `!"` and `!'` in JSX string literals → none; `[grep]` §13.1 |
 | Emoji as decoration/status/watermark | text labels only | `[grep]` §13.1 emoji ranges |
@@ -1057,7 +1057,7 @@ look like so 4C cannot drift into a ChatGPT/Claude clone.
 - Defaults row: `provider {id} · model {id}` mono; `SET AS DEFAULT` is a compact (24px) `outline` button, `disabled` with `title="requires backend provider phase"` until `GET /v3/ai/providers` and the default-setting route exist; admin-only.
 - BYOK row: exactly one `.label` key + one `--color-text-dim` mono line. No input, no "Add key" button, no masked-key row until the backend phase in §8.7 ships. Never a key field in the browser before that.
 - `selectable === false` (today's backend): rows 1–3 collapse to a single mono line `// provider catalog unavailable — using system default`; the status row shows `system default ● READY`; BYOK row unchanged.
-- FAIL `[grep]` for `components/ai/*` and `AiSettingsView.jsx`: `<img`, `<svg` (other than `Mau5Head` — never used here), `avatar`, `bubble`, `message-`, `typing`, `role="log"` with per-turn children, `suggest`, `<select` inside `CommandConsole.jsx`, a `.panel` count > 1 in `AiSettingsView.jsx`, any vendor name literal (contract §4).
+- FAIL `[grep]` for `components/ai/*` and `AiSettingsView.jsx`: `<img`, `<svg` (other than `PulseMark` — never used here), `avatar`, `bubble`, `message-`, `typing`, `role="log"` with per-turn children, `suggest`, `<select` inside `CommandConsole.jsx`, a `.panel` count > 1 in `AiSettingsView.jsx`, any vendor name literal (contract §4).
 
 ### 13.9 Token addendum — appended to `web/src/styles/tokens.css` after the contract §1 block, verbatim
 
@@ -1072,7 +1072,7 @@ Only tokens that carry a rule from this addendum. No decorative tokens.
   --login-card-pad:      48px;
 
   /* shell geometry (§13.5) — measurable, not adjectival */
-  --brand-mark-size:     40px;    /* Mau5Head in the sidebar; 24px in the rail */
+  --brand-mark-size:     40px;    /* PulseMark in the sidebar; 24px in the rail */
   --nav-item-height:     40px;
   --kpi-height-min:      88px;    /* StatCard content height without delta; max 112px with delta; never stretched */
 
@@ -1122,32 +1122,32 @@ LABEL DATA (runtime)       the backend API                 artists, KPIs, users,
 ```
 
 - The application means **Label Intelligence Platform**. It has an *active
-  profile*; today that is `mau5trap`. Nothing in `web/src` outside `brand/`
-  may contain the string `mau5trap` (any case), `mau5`, an artist name, an
-  artist id (`art_*`), a label domain, or a `mau5trap.*` storage key
+  profile*; today that is `pulsegrid`. Nothing in `web/src` outside `brand/`
+  may contain the string `pulsegrid` (any case), `legacy`, an artist name, an
+  artist id (`art_*`), a label domain, or a `pulsegrid.*` storage key
   (§13.1 greps). Rebranding = add a profile folder + one theme file + one
   registry entry + static assets, then set `VITE_BRAND_PROFILE`. Zero page or
   component edits (§14.7 proves it).
 - **Externalize, never remove.** Portability is achieved by moving
   label-specific intelligence *into the active profile*, not by deleting or
-  diluting it. The default installation stays a fully featured mau5trap
-  project: the mau5-head, the neon-green console, the mau5trap search
-  context, the deadmau5 knowledge sources, the artist handle mappings, the
+  diluting it. The default installation stays a fully featured pulsegrid
+  project: the legacy mark, the neon-green console, the pulsegrid search
+  context, the lumenveil knowledge sources, the artist handle mappings, the
   A&R benchmark artist and the AI label context all remain **active** — as
-  data owned by the mau5trap profile (frontend §14.2, backend §15.3) that
+  data owned by the pulsegrid profile (frontend §14.2, backend §15.3) that
   the platform's algorithms consume. No generic substitute data is invented;
-  where a mau5trap value is useful it is preserved verbatim under the
-  mau5trap profile.
+  where a pulsegrid value is useful it is preserved verbatim under the
+  pulsegrid profile.
 
   ```
-  BAD       business logic contains        `mau5trap ${query}`
-  ALSO BAD  drop "mau5trap" from the query and degrade search quality
+  BAD       business logic contains        `pulsegrid ${query}`
+  ALSO BAD  drop "pulsegrid" from the query and degrade search quality
   TARGET    business logic consumes        `${activeLabel.search.searchContext} ${query}`
-            mau5trap profile supplies      searchContext: 'mau5trap'
+            pulsegrid profile supplies      searchContext: 'pulsegrid'
   ```
   The same rule covers benchmark artists, knowledge sources, aliases/social
   mappings, AI context, report/email branding and seed datasets.
-- The mau5trap console (contract + §13) is the **reference theme and the
+- The pulsegrid console (contract + §13) is the **reference theme and the
   quality bar**, not the software's identity. Its geometry, density, type
   scale and voice are the *platform's* design language — every profile
   inherits them. A profile changes colors, marks, brand strings and locale.
@@ -1170,36 +1170,36 @@ embedded), versioned. Required keys are marked ●; `validateProfile()` logs a
 /** @typedef {object} BrandProfile */
 export default {
   schemaVersion: 1,                                   // ●
-  slug: 'mau5trap',                                   // ● [a-z0-9-]+ ; asset folder, export-filename prefix, registry key
-  name: 'mau5trap',                                   // ● full name used in prose
-  displayName: 'mau5trap',                            // ● wordmark text, rendered VERBATIM (brand owns casing)
-  shortName: 'mau5trap',                              // ● ≤12 chars: rail tooltip (4B); reserved for compact chrome
+  slug: 'pulsegrid',                                   // ● [a-z0-9-]+ ; asset folder, export-filename prefix, registry key
+  name: 'pulsegrid',                                   // ● full name used in prose
+  displayName: 'pulsegrid',                            // ● wordmark text, rendered VERBATIM (brand owns casing)
+  shortName: 'pulsegrid',                              // ● ≤12 chars: rail tooltip (4B); reserved for compact chrome
   tagline: 'INTELLIGENCE PLATFORM',                   // ● sublabel under the wordmark
-  documentTitle: 'mau5trap Intelligence Platform',    // ● document.title
-  domain: 'mau5trap.com',                             // ● login placeholder `user@${domain}`; link targets
-  website: 'https://mau5trap.com',                    //   null → no link rendered
-  contact: { support: 'admin@mau5trap.com', privacy: null },        // display only; null → row hidden
-  email:   { fromName: 'mau5trap OS', fromAddress: 'notify@mau5trap.com' },  // DISPLAY ONLY (Settings › about, 4C).
+  documentTitle: 'pulsegrid Intelligence Platform',    // ● document.title
+  domain: 'pulsegrid.fm',                             // ● login placeholder `user@${domain}`; link targets
+  website: 'https://pulsegrid.fm',                    //   null → no link rendered
+  contact: { support: 'admin@pulsegrid.fm', privacy: null },        // display only; null → row hidden
+  email:   { fromName: 'pulsegrid OS', fromAddress: 'notify@pulsegrid.fm' },  // DISPLAY ONLY (Settings › about, 4C).
                                                       //   The backend's EMAIL_FROM is what actually sends; the two must match by ops discipline (§15)
   locale:  { language: 'en-US', numberLocale: 'en-US', currency: 'USD', timeZone: 'America/Toronto' },   // ● format.js reads these
-  theme: 'mau5trap-console',                          // ● body[data-theme]; brand/themes/<theme>.css
+  theme: 'pulsegrid-console',                          // ● body[data-theme]; brand/themes/<theme>.css
   assets: {                                           // ●
-    mark:    'mau5head',                              //   registry id → Mark component; unknown/null → MonogramMark
-    loader:  'mau5head',                              //   registry id → Loader component; unknown/null → RingLoader
-    favicon: '/brands/mau5trap/favicon.svg',          //   static path under web/public
+    mark:    'pulsemark',                              //   registry id → Mark component; unknown/null → MonogramMark
+    loader:  'pulsemark',                              //   registry id → Loader component; unknown/null → RingLoader
+    favicon: '/brands/pulsegrid/favicon.svg',          //   static path under web/public
     logo:    null                                     //   optional raster/svg URL for places a component mark cannot go (PDF/email previews, 4C+)
   },
-  search: { searchContext: 'mau5trap', artistQueryPrefix: 'mau5trap artist' },   // same keys as backend activeLabel.search (§15.3); NOT transmitted by the frontend (§8.8)
-  copy: {},                                           //   overrides of platform-voice keys (§13.1); mau5trap overrides none
+  search: { searchContext: 'pulsegrid', artistQueryPrefix: 'pulsegrid artist' },   // same keys as backend activeLabel.search (§15.3); NOT transmitted by the frontend (§8.8)
+  copy: {},                                           //   overrides of platform-voice keys (§13.1); pulsegrid overrides none
   legal: { footer: null, copyright: null },           //   optional login-footer line / about-page line
   features: {}                                        //   reserved for profile-level feature flags (e.g. executiveView); unused in 4B/4C
 };
 ```
 
 In 4C, `BrandProfile` accepts an optional `map: { centers: { [locationKey]:
-[latitude, longitude] } }` value. The mau5trap `profile.js` imports its
+[latitude, longitude] } }` value. The pulsegrid `profile.js` imports its
 unchanged legacy lookup from `./locations.js` and sets
-`map: { centers: mau5trapLocations }`. The key is absent in the 4B slice;
+`map: { centers: pulsegridLocations }`. The key is absent in the 4B slice;
 each future profile can provide its own JSON-serializable lookup.
 
 Every field's consumer:
@@ -1221,16 +1221,16 @@ Every field's consumer:
 ### 14.3 Profile resolution and `BrandProvider` (`brand/index.js`, `brand/BrandContext.jsx`)
 
 1. **Selection:** `VITE_BRAND_PROFILE` (build-time env; when unset,
-   `registry.defaultSlug`, which the registry sets to `mau5trap`).
+   `registry.defaultSlug`, which the registry sets to `pulsegrid`).
    In `import.meta.env.DEV` only, `localStorage['platform.brandProfile']`
    overrides it so the portability test (§14.7) needs no rebuild. Unknown
    slug → fall back to `registry.defaultSlug` and `console.error` once.
    `brand/index.js` itself never names a label. No query-string switch, no
    in-app picker.
 2. **Registry:** `brand/registry.js` is the composition root and the ONLY
-   platform-side file allowed to name a label: `defaultSlug: 'mau5trap'`, a
-   static profile map `{ mau5trap: mau5trapProfile, 'example-records': exampleProfile }`,
-   a marks map `{ mau5head: { Mark: Mau5Head, Loader: Mau5HeadLoader } }`,
+   platform-side file allowed to name a label: `defaultSlug: 'pulsegrid'`, a
+   static profile map `{ pulsegrid: pulsegridProfile, 'example-records': exampleProfile }`,
+   a marks map `{ pulsemark: { Mark: PulseMark, Loader: PulseMarkLoader } }`,
    and the side-effect imports of every `brand/themes/*.css` (scoped by
    `body[data-theme="…"]`, so co-loading is harmless). Static imports (two
    profiles; nothing to tree-shake). Adding a profile = one folder + one
@@ -1262,7 +1262,7 @@ tokens; every derived value follows via `color-mix()`.
   /* ============ BRAND LAYER — FRONTEND_ARCHITECTURE.md §14.4 ============ */
   /* The theme contract. A brand theme file (brand/themes/<id>.css, scoped to body[data-theme="<id>"])
      overrides ONLY the four --color-brand-* tokens below (fonts/surfaces: see §14.4 "theme surface").
-     Reference values = mau5trap-console = the contract §1 palette. */
+     Reference values = pulsegrid-console = the contract §1 palette. */
   --color-brand-primary:        var(--green-500);
   --color-brand-primary-bright: var(--green-300);
   --color-brand-primary-deep:   var(--green-700);
@@ -1292,7 +1292,7 @@ tokens; every derived value follows via `color-mix()`.
 }
 ```
 
-Under the mau5trap profile every rebound value is numerically identical to
+Under the pulsegrid profile every rebound value is numerically identical to
 the contract §1 literal (`color-mix(in srgb, #00FF5F 35%, transparent)` =
 `rgba(0,255,95,.35)`; gradients ending in `transparent` interpolate in
 premultiplied alpha, i.e. identically to `rgba(0,255,95,0)`), so the
@@ -1310,12 +1310,12 @@ stay exactly as written.
 A theme that touches a locked token is a FAIL for that profile (grep the
 theme file for any `--` name outside the allowed list). The brand primary
 must not fall in the blue/indigo/violet hue band the contract forbids
-(200–290°): the anti-generic rule is a platform rule, not a mau5trap rule.
+(200–290°): the anti-generic rule is a platform rule, not a pulsegrid rule.
 
-**Reference theme file** — `brand/themes/mau5trap-console.css`:
+**Reference theme file** — `brand/themes/pulsegrid-console.css`:
 ```css
-/* mau5trap-console: the platform defaults in tokens.css ARE this theme. Intentionally empty. */
-body[data-theme="mau5trap-console"] {}
+/* pulsegrid-console: the platform defaults in tokens.css ARE this theme. Intentionally empty. */
+body[data-theme="pulsegrid-console"] {}
 ```
 
 **Portability test theme** — `brand/themes/example-records-magenta.css`:
@@ -1340,14 +1340,14 @@ literally) if a lower floor is ever required.
 |---|---|---|
 | Artist identities (names, `art_*` ids, social handles, images) | Runtime data from `/v3/artists*`; never a constant, default, fixture, placeholder or test id in `web/src` | `grep -rnE "art_[a-z0-9]+" web/src` → none; §13.1 label greps |
 | Label KPIs, roster, submissions, users | API only (`endpoints.js`) | matrix §6 |
-| Seed credentials (`admin@mau5trap.com`, `tours@rezz.com`) | appear ONLY in the handoff gate and `web/README.md` (fixtures for the test procedure), never in `web/src` — no prefilled login, no dev shortcut button | `grep -rn "@mau5trap.com\|@rezz.com" web/src` → none |
+| Seed credentials (`admin@pulsegrid.fm`, `tours@novakin.band`) | appear ONLY in the handoff gate and `web/README.md` (fixtures for the test procedure), never in `web/src` — no prefilled login, no dev shortcut button | `grep -rn "@pulsegrid.fm\|@novakin.band" web/src` → none |
 | Label name in headings, titles, placeholders, filenames | `profile.*` via `useBrand()` | §13.1 greps |
 | Label-specific search/entity context | backend concern; the profile mirrors it for parity, the frontend never sends it (§8.8) | `grep -rn "searchContext\|artistQueryPrefix" web/src --exclude-dir=brand` → none |
-| Venue, market, region, artist, and campaign coordinates | Prefer coordinates in the supplied map dataset/API record; otherwise resolve its location key through active `profile.map?.centers`. In 4C copy the current legacy table intact to `brand/profiles/mau5trap/locations.js` and reference it from that profile. A second label supplies its own lookup under its profile; no `components/maps/geoCenters.js` or label-specific coordinate table in generic source. | `GeoHeatmap.jsx` imports no profile folder or coordinate table; an Example Records-only location in a supplied dataset renders from its profile lookup with no edit outside `web/src/brand/`. |
+| Venue, market, region, artist, and campaign coordinates | Prefer coordinates in the supplied map dataset/API record; otherwise resolve its location key through active `profile.map?.centers`. In 4C copy the current legacy table intact to `brand/profiles/pulsegrid/locations.js` and reference it from that profile. A second label supplies its own lookup under its profile; no `components/maps/geoCenters.js` or label-specific coordinate table in generic source. | `GeoHeatmap.jsx` imports no profile folder or coordinate table; an Example Records-only location in a supplied dataset renders from its profile lookup with no edit outside `web/src/brand/`. |
 | Currency / number / date formatting | `profile.locale` through `utils/format.js`; no `'$'` or `'en-US'` literal in components | `grep -rn "'\$'\|\"\$\"\|en-US" web/src --exclude-dir=brand --exclude=format.js` → none |
-| Legacy label prose (`Mau5trap is fully indexed on Wikipedia…`, L3578) | belongs to the blocked label-identity banner (matrix row 6); if ever revived it renders `profile.name` + API data | — |
+| Legacy label prose (`Pulsegrid is fully indexed on Wikipedia…`, L3578) | belongs to the blocked label-identity banner (matrix row 6); if ever revived it renders `profile.name` + API data | — |
 | Example dashboards / reports / demo content | none in `web/`; the demo dataset lives in the backend `mock/` (reference seed — §15 class A) | — |
-| Storage keys | `platform.*` and the two legacy auth keys; never `mau5trap.*` | `grep -rn "localStorage\[" web/src` → keys in {`authToken`, `userData`, `platform.ai.selection`, `platform.brandProfile`} |
+| Storage keys | `platform.*` and the two legacy auth keys; never `pulsegrid.*` | `grep -rn "localStorage\[" web/src` → keys in {`authToken`, `userData`, `platform.ai.selection`, `platform.brandProfile`} |
 
 ### 14.6 Marks and loaders — registry, not imports
 
@@ -1361,7 +1361,7 @@ literally) if a lower floor is ever required.
   → else `defaults/RingLoader`: the contract §3.17 loader minus the ears —
   80px ring, 4px `--color-accent` border, `pulse 2s infinite`. Not a
   rotating spinner (contract §4 still holds for every profile).
-- The mau5trap profile registers `mau5head: { Mark: Mau5Head, Loader: Mau5HeadLoader }`
+- The pulsegrid profile registers `pulsemark: { Mark: PulseMark, Loader: PulseMarkLoader }`
   (§13.2). Profile components live under their profile folder and are
   imported by `registry.js` only. `Sidebar.jsx`, `LoadingScreen.jsx` and
   `LoginPage.jsx` import `BrandMark`/`BrandLoader` and nothing from
@@ -1369,7 +1369,7 @@ literally) if a lower floor is ever required.
 
 ### 14.7 Portability acceptance test (Phase 4 criterion)
 
-> If the active brand profile is switched from `mau5trap` to the fictional
+> If the active brand profile is switched from `pulsegrid` to the fictional
 > `example-records` profile, the login, application shell, navigation,
 > headings, branding, theme tokens and the dashboard widget keep working
 > **without editing any file under `web/src` outside `web/src/brand/`.**
@@ -1392,9 +1392,9 @@ export default {
 ```
 
 Procedure and pass conditions are in the handoff §15 "PORTABILITY" block.
-Expected observable differences vs the mau5trap run, and nothing else:
+Expected observable differences vs the pulsegrid run, and nothing else:
 wordmark `Example Records`, sublabel `LABEL OPERATIONS`, monogram `E`
-instead of the mau5-head, ring loader, magenta accents (the sublabel's
+instead of the legacy mark, ring loader, magenta accents (the sublabel's
 computed color is `rgb(255, 45, 149)`), placeholder `user@example-records.test`,
 third footer line, title `Example Records — Label Operations`, favicon path,
 KPI values formatted `£3.2m` · `£134.8m` · `£539.1m` (en-GB/GBP compact —
@@ -1402,29 +1402,29 @@ lowercase `m` is ICU's en-GB output, verified; same backend numbers,
 profile currency is a *display* setting and does not convert). Platform
 voice (`ACCESS ID`, `INITIALIZE SESSION`, `RESTRICTED ACCESS…`, `Terminate
 Session`, `CONNECTION FAILURE`) is unchanged. `document.body.innerText`
-contains no `mau5trap`.
+contains no `pulsegrid`.
 
-The mau5trap theme is not redesigned around this fixture; the fixture exists
+The pulsegrid theme is not redesigned around this fixture; the fixture exists
 to prove the seam.
 
 At the end of 4C, also exercise `GeoHeatmap` with a dataset location absent
-from the mau5trap lookup and present only in the Example Records profile's
+from the pulsegrid lookup and present only in the Example Records profile's
 `map.centers`. Its marker must render without editing generic map source.
-Under mau5trap, the profile-local `locations.js` must preserve the legacy
+Under pulsegrid, the profile-local `locations.js` must preserve the legacy
 region, city, and venue coordinates. The 4B slice has no map and needs no
 location fixture.
 
-### 14.8 What stays mau5trap-specific — by design, inside the profile
+### 14.8 What stays pulsegrid-specific — by design, inside the profile
 
-`brand/profiles/mau5trap/`: `profile.js` (the values in §14.2), `Mau5Head.jsx`,
-`Mau5HeadLoader.jsx`, `mau5head.module.css`, and in 4C `locations.js` (the
+`brand/profiles/pulsegrid/`: `profile.js` (the values in §14.2), `PulseMark.jsx`,
+`PulseMarkLoader.jsx`, `pulsemark.module.css`, and in 4C `locations.js` (the
 current map's region/city/venue coordinates, unchanged as label data);
-`brand/themes/mau5trap-console.css`
-(empty); `public/brands/mau5trap/favicon.svg`; the three `mau5trap`/`mau5head`
+`brand/themes/pulsegrid-console.css`
+(empty); `public/brands/pulsegrid/favicon.svg`; the three `pulsegrid`/`pulsemark`
 entries in `brand/registry.js` (default slug, profile map, marks map) and its
 theme import. Plus, outside `web/`: the
 backend seed dataset and the hardcodings catalogued in §15. That is the
-complete list. `MAU5TRAP_VISUAL_DESIGN_CONTRACT.md` keeps its name — it
+complete list. `PULSEGRID_VISUAL_DESIGN_CONTRACT.md` keeps its name — it
 documents the reference theme — but the software it describes is the
 platform.
 
@@ -1432,17 +1432,17 @@ platform.
 
 ## 15. Backend label-coupling audit (documented, NOT refactored in Phase 4A)
 
-Rule for every row: **externalize, do not remove.** Each mau5trap-specific
+Rule for every row: **externalize, do not remove.** Each pulsegrid-specific
 value below is useful intelligence for the current installation and stays
-active; the remediation moves it out of service code into the mau5trap
+active; the remediation moves it out of service code into the pulsegrid
 label profile (§15.3) and makes the service read `activeLabel.*`. No row
 proposes deleting a source, prefix, benchmark or mapping, and no row
-invents generic replacement data. Under the mau5trap profile every
+invents generic replacement data. Under the pulsegrid profile every
 externalized value is identical to today's literal, so behavior — and the
 frozen response snapshots — do not change.
 
-Method: `grep -rniE "mau5trap|deadmau5|rezz|@mau5trap.com"` over `src/`,
-`server.js`, `mau5trap-production-api.js`, `mock/`, `modules/`,
+Method: `grep -rniE "pulsegrid|lumenveil|novakin|@pulsegrid.fm"` over `src/`,
+`server.js`, `production-api.js`, `mock/`, `modules/`,
 `integrations/`, `scripts/`, `.env.example`, `tests/`, then reading each
 runtime hit. Classes: **A** demo/seed data (acceptable if isolated) ·
 **B** brand configuration (move behind centralized config) · **C** business
@@ -1453,31 +1453,31 @@ logic coupling (behavior depends on the current label; must be externalized)
 
 | # | Location | What | Class | Remediation |
 |---|---|---|---|---|
-| 1 | `mock/artistData.js` (29 artists, `labelTotals`) | the mau5trap reference roster + label totals | A | keep intact; relocate to `labels/mau5trap/roster.js`, loaded via `activeLabel.datasets.roster` (L4) |
-| 2 | `scripts/generate_roster.js` L10-45, L122 | roster generator with `deadmau5`/`REZZ`/`Feed Me` flagship rule, `"Mau5trap Sound"` influence | A | keep; move under `labels/mau5trap/tools/`; the flagship list and influence strings become fields of the label dataset it generates |
-| 3 | `src/models/index.js` L94-105 | seed users `admin@mau5trap.com`/`admin123`, `tours@rezz.com`/`rezz123` (`artistAccess:'art_rezz'`) | A (→ C via #12) | keep the same accounts; seed from `labels/mau5trap/users.js` via `activeLabel.datasets.users`; root admin = `activeLabel.rootAdminEmail` (config already has unused `ADMIN_EMAIL`/`ADMIN_PASS` env, L76-77) |
-| 4 | `src/repositories/operationsRepository.js` L45-74 | logistics/asset/contract fixtures naming REZZ, deadmau5 | A | keep; move to `labels/mau5trap/operations.js` |
-| 5 | `src/repositories/inMemoryStores.js` L77-83 | A&R seed demos (`soundcloud.com/mau5trap/…`, `submittedBy: 'deadmau5'/'rezz'`) | A | keep; move to `labels/mau5trap/anr-seeds.js` |
-| 6 | `integrations/index.js` L13-27 | artist → social-handle map keyed by `art_deadmau5`, `art_rezz` **in code** (Spotify/Instagram/Ticketmaster/Twitter/TikTok identities — the label's entity aliases) | **C** | keep every mapping; move to `labels/mau5trap/socials.js` (or a `socials` field on each artist record) and have `integrations/index.js` look up `activeLabel.datasets.socials[artistId]` |
-| 7 | `src/config/index.js` L115 | `EMAIL_FROM` default `"mau5trap OS" <notify@mau5trap.com>` | B | default = `activeLabel.email.from` (same string); env still overrides |
-| 8 | `src/config/index.js` L82 | SQLite file `mau5trap_v5.sqlite` | B | `activeLabel.db.sqliteFile` (same filename) / `DB_STORAGE` env |
-| 9 | `src/routes/auth.js` L135, `src/services/emailService.js` L75 | email subject `mau5trap OS - Password Reset Request` | B | `activeLabel.email.resetSubject` (same string) |
-| 10 | `src/reports/monthlyReport.js` L45, L54, L446; `src/routes/reports.js` L149, L175 | PDF brand color `#00FF00`, header `mau5trap`, footer `MAU5TRAP INTELLIGENCE • CONFIDENTIAL`, `mau5trap Intelligence Report`, `Generated by mau5trap OS v5.0` | B | `activeLabel.reports.{accent, header, footer, title, generatedBy}` (same strings); PDF bytes unchanged under mau5trap |
-| 11 | `src/config/logger.js` L31 | `defaultMeta.service: 'mau5trap-api'` | B | `activeLabel.logging.service` (same string) |
-| 12 | `src/routes/auth.js` L161 | `DELETE /v3/auth/me` refuses to delete `user.email === 'admin@mau5trap.com'` | **C** | `activeLabel.rootAdminEmail` = `'admin@mau5trap.com'` in the mau5trap profile; rule and response text unchanged |
-| 13 | `src/ai/prompts.js` L37 | system prompt `'AI analyst for mau5trap. Concise, data-driven insights.'` | **C** | `activeLabel.ai.systemContext` — the whole sentence is profile data (same string), so a label can enrich its AI context without touching `prompts.js` |
-| 14 | `src/routes/integrations.js` L65-69 | Google KG fallback query `` `mau5trap ${query}` `` | **C** | `` `${activeLabel.search.searchContext} ${query}` `` with `searchContext: 'mau5trap'` — the audit's canonical example; the fallback stays |
-| 15 | `modules/entityAudit.js` L63-64, L141 | artist entity-audit fallback search `` `mau5trap artist ${artistName}` `` | **C** | `` `${activeLabel.search.artistQueryPrefix} ${artistName}` `` with `artistQueryPrefix: 'mau5trap artist'`; the tertiary fallback stays |
-| 16 | `modules/entityAudit.js` L546-661 `auditLabel()` | `labelName = 'Mau5trap'`; Wikipedia summary URL + fallback summary/thumbnail; Fandom `deadmau5.fandom.com/wiki/Mau5trap`; Discogs `86878-Mau5trap-Recordings` | **C** (currently unreachable) | keep the function and every source; read `activeLabel.knowledge.{wikipedia, fandom, discogs}` (§15.3 preserves the URLs, page titles and the verbatim fallback summary). It is exported but no route calls it (`/v3/label/entity-audit` does not exist — matrix row 6); wiring a route is a separate sign-off |
-| 17 | `modules/entityAudit.js` L684-732 | `deadmau5.fandom.com` used as the wiki/roster/image source for **every** artist lookup | **C** | keep the source; host + pages from `activeLabel.knowledge.fandom` (`host: 'deadmau5.fandom.com'`); a label with no fandom sets `fandom: null` and the step is skipped — mau5trap keeps it |
-| 18 | `modules/entityAudit.js` L180, L206, L228, L287, L621 | `User-Agent: Mau5trapIntelligence/1.0 (admin@mau5trap.com)`, `mau5trap-api/1.0`, `Mau5trapBot/1.0 (bot@mau5trap.com)` | B | `activeLabel.http.{userAgent, apiUserAgent, botUserAgent}` (same strings) |
-| 19 | `src/routes/anr.js` L171 | `/v3/anr/evaluate` report `benchmark: 'deadmau5'` | **C** | `activeLabel.anr.benchmarkArtist` = `'deadmau5'` in the mau5trap profile — the benchmark is label intelligence, kept as data; response identical under mau5trap |
-| 20 | `src/ai/aiService.js` L133 | `/v3/ai/analyze` heuristic appends `"Rezz is second at 6.5x."` (hardcoded label-authored insight) | **C** | `activeLabel.ai.heuristics.roiRunnerUp` = that exact sentence in the mau5trap profile; the analyzer appends `activeLabel.ai.heuristics.roiRunnerUp ?? ''`. Response identical under mau5trap (snapshot `ai_analyze_*` unchanged). Whether 6.5x is still accurate against the roster is a **data-quality note for the profile owner**, not a code decision |
-| 21 | `server.js` L62, L77-79 | boot banner `mau5trap Production API`; seeded-account list — L79 `joel@deadmau5.com (mau5123)` is **not** seeded by `src/models/index.js` (stale) | B / D | banner name from `activeLabel.name`; account list derived from `activeLabel.datasets.users` so it cannot drift again (which resolves the stale L79 line either way — §20 Q19 asks whether that third account should exist) |
-| 22 | `mau5trap-production-api.js` (filename; `server.js` L33 requires it) | the monolith is brand-named | D (B if renamed) | rename to `app.js` in a mechanical refactor with the require updated; no behavior change |
-| 23 | `.env.example` L21, L31 | `mau5trap_db`, `EMAIL_FROM` example | D | reword to `<label>_db` once L1 lands |
-| 24 | `integrations/spotify.js` L36-37, L61; `integrations/ticketmaster.js` L15, L35; `src/auth/index.js` L13, L73-86; ~30 file headers "extracted from mau5trap-production-api.js" | comments | D | none required |
-| 25 | `tests/support/cases.js` L28-29 (+ snapshots, `units.test.js` L37-59, `services.test.js`) | tests encode the mau5trap seeds and `art_rezz`/`art_deadmau5` ids | D | re-baseline together with L4; tests should read the fixture, not literals |
+| 1 | `mock/artistData.js` (29 artists, `labelTotals`) | the pulsegrid reference roster + label totals | A | keep intact; relocate to `labels/pulsegrid/roster.js`, loaded via `activeLabel.datasets.roster` (L4) |
+| 2 | `scripts/generate_roster.js` L10-45, L122 | roster generator with `lumenveil`/`NOVAKIN`/`STATIC BLOOM` flagship rule, `"Pulsegrid Sound"` influence | A | keep; move under `labels/pulsegrid/tools/`; the flagship list and influence strings become fields of the label dataset it generates |
+| 3 | `src/models/index.js` L94-105 | seed users `admin@pulsegrid.fm`/`admin123`, `tours@novakin.band`/`novakin123` (`artistAccess:'art_novakin'`) | A (→ C via #12) | keep the same accounts; seed from `labels/pulsegrid/users.js` via `activeLabel.datasets.users`; root admin = `activeLabel.rootAdminEmail` (config already has unused `ADMIN_EMAIL`/`ADMIN_PASS` env, L76-77) |
+| 4 | `src/repositories/operationsRepository.js` L45-74 | logistics/asset/contract fixtures naming NOVAKIN, lumenveil | A | keep; move to `labels/pulsegrid/operations.js` |
+| 5 | `src/repositories/inMemoryStores.js` L77-83 | A&R seed demos (`soundcloud.com/pulsegrid/…`, `submittedBy: 'lumenveil'/'novakin'`) | A | keep; move to `labels/pulsegrid/anr-seeds.js` |
+| 6 | `integrations/index.js` L13-27 | artist → social-handle map keyed by `art_lumenveil`, `art_novakin` **in code** (Spotify/Instagram/Ticketmaster/Twitter/TikTok identities — the label's entity aliases) | **C** | keep every mapping; move to `labels/pulsegrid/socials.js` (or a `socials` field on each artist record) and have `integrations/index.js` look up `activeLabel.datasets.socials[artistId]` |
+| 7 | `src/config/index.js` L115 | `EMAIL_FROM` default `"pulsegrid OS" <notify@pulsegrid.fm>` | B | default = `activeLabel.email.from` (same string); env still overrides |
+| 8 | `src/config/index.js` L82 | SQLite file `pulsegrid_v5.sqlite` | B | `activeLabel.db.sqliteFile` (same filename) / `DB_STORAGE` env |
+| 9 | `src/routes/auth.js` L135, `src/services/emailService.js` L75 | email subject `pulsegrid OS - Password Reset Request` | B | `activeLabel.email.resetSubject` (same string) |
+| 10 | `src/reports/monthlyReport.js` L45, L54, L446; `src/routes/reports.js` L149, L175 | PDF brand color `#00FF00`, header `pulsegrid`, footer `PULSEGRID INTELLIGENCE • CONFIDENTIAL`, `pulsegrid Intelligence Report`, `Generated by pulsegrid OS v5.0` | B | `activeLabel.reports.{accent, header, footer, title, generatedBy}` (same strings); PDF bytes unchanged under pulsegrid |
+| 11 | `src/config/logger.js` L31 | `defaultMeta.service: 'pulsegrid-api'` | B | `activeLabel.logging.service` (same string) |
+| 12 | `src/routes/auth.js` L161 | `DELETE /v3/auth/me` refuses to delete `user.email === 'admin@pulsegrid.fm'` | **C** | `activeLabel.rootAdminEmail` = `'admin@pulsegrid.fm'` in the pulsegrid profile; rule and response text unchanged |
+| 13 | `src/ai/prompts.js` L37 | system prompt `'AI analyst for pulsegrid. Concise, data-driven insights.'` | **C** | `activeLabel.ai.systemContext` — the whole sentence is profile data (same string), so a label can enrich its AI context without touching `prompts.js` |
+| 14 | `src/routes/integrations.js` L65-69 | Google KG fallback query `` `pulsegrid ${query}` `` | **C** | `` `${activeLabel.search.searchContext} ${query}` `` with `searchContext: 'pulsegrid'` — the audit's canonical example; the fallback stays |
+| 15 | `modules/entityAudit.js` L63-64, L141 | artist entity-audit fallback search `` `pulsegrid artist ${artistName}` `` | **C** | `` `${activeLabel.search.artistQueryPrefix} ${artistName}` `` with `artistQueryPrefix: 'pulsegrid artist'`; the tertiary fallback stays |
+| 16 | `modules/entityAudit.js` L546-661 `auditLabel()` | `labelName = 'Pulsegrid'`; Wikipedia summary URL + fallback summary/thumbnail; Fandom `lumenveil.fandom.com/wiki/Pulsegrid`; Discogs `86878-Pulsegrid-Recordings` | **C** (currently unreachable) | keep the function and every source; read `activeLabel.knowledge.{wikipedia, fandom, discogs}` (§15.3 preserves the URLs, page titles and the verbatim fallback summary). It is exported but no route calls it (`/v3/label/entity-audit` does not exist — matrix row 6); wiring a route is a separate sign-off |
+| 17 | `modules/entityAudit.js` L684-732 | `lumenveil.fandom.com` used as the wiki/roster/image source for **every** artist lookup | **C** | keep the source; host + pages from `activeLabel.knowledge.fandom` (`host: 'lumenveil.fandom.com'`); a label with no fandom sets `fandom: null` and the step is skipped — pulsegrid keeps it |
+| 18 | `modules/entityAudit.js` L180, L206, L228, L287, L621 | `User-Agent: PulsegridIntelligence/1.0 (admin@pulsegrid.fm)`, `pulsegrid-api/1.0`, `PulsegridBot/1.0 (bot@pulsegrid.fm)` | B | `activeLabel.http.{userAgent, apiUserAgent, botUserAgent}` (same strings) |
+| 19 | `src/routes/anr.js` L171 | `/v3/anr/evaluate` report `benchmark: 'lumenveil'` | **C** | `activeLabel.anr.benchmarkArtist` = `'lumenveil'` in the pulsegrid profile — the benchmark is label intelligence, kept as data; response identical under pulsegrid |
+| 20 | `src/ai/aiService.js` L133 | `/v3/ai/analyze` heuristic appends `"Novakin is second at 6.5x."` (hardcoded label-authored insight) | **C** | `activeLabel.ai.heuristics.roiRunnerUp` = that exact sentence in the pulsegrid profile; the analyzer appends `activeLabel.ai.heuristics.roiRunnerUp ?? ''`. Response identical under pulsegrid (snapshot `ai_analyze_*` unchanged). Whether 6.5x is still accurate against the roster is a **data-quality note for the profile owner**, not a code decision |
+| 21 | `server.js` L62, L77-79 | boot banner `pulsegrid Production API`; seeded-account list — L79 `demo@novakin.band (demopass123)` is **not** seeded by `src/models/index.js` (stale) | B / D | banner name from `activeLabel.name`; account list derived from `activeLabel.datasets.users` so it cannot drift again (which resolves the stale L79 line either way — §20 Q19 asks whether that third account should exist) |
+| 22 | `production-api.js` (filename; `server.js` L33 requires it) | the monolith is brand-named | D (B if renamed) | rename to `app.js` in a mechanical refactor with the require updated; no behavior change |
+| 23 | `.env.example` L21, L31 | `pulsegrid_db`, `EMAIL_FROM` example | D | reword to `<label>_db` once L1 lands |
+| 24 | `integrations/spotify.js` L36-37, L61; `integrations/ticketmaster.js` L15, L35; `src/auth/index.js` L13, L73-86; ~30 file headers "extracted from production-api.js" | comments | D | none required |
+| 25 | `tests/support/cases.js` L28-29 (+ snapshots, `units.test.js` L37-59, `services.test.js`) | tests encode the pulsegrid seeds and `art_novakin`/`art_lumenveil` ids | D | re-baseline together with L4; tests should read the fixture, not literals |
 
 Not present (verified): no label literal in `src/routes/label.js` logic
 (comment only), `hasArtistAccess`/`checkExportAccess` are id-agnostic, no
@@ -1485,63 +1485,63 @@ label-specific CORS origins, no label-specific JWT claims.
 
 ### 15.2 Remediation sequence (a later backend phase — "Phase 4-LABEL"; needs explicit authorization; may be merged with Phase 4-AI)
 
-Every step is an externalization with the mau5trap values carried over
-verbatim, so under the mau5trap profile the JSON responses, PDFs and
+Every step is an externalization with the pulsegrid values carried over
+verbatim, so under the pulsegrid profile the JSON responses, PDFs and
 emails are byte-for-byte what they are today. Response snapshots change
 only if a step *moves fixture files* and the probe reads them differently
 — re-baseline then, with the diff kept, per the Phase-3 protocol.
 
-| Step | Change | Contract impact under mau5trap |
+| Step | Change | Contract impact under pulsegrid |
 |---|---|---|
-| L1 | `labels/mau5trap/label.config.js` created with the §15.3 values; `src/config/index.js` loads it as `config.label` (alias `activeLabel`) from `LABEL_SLUG` env (default `mau5trap`), env vars overriding individual fields | none |
+| L1 | `labels/pulsegrid/label.config.js` created with the §15.3 values; `src/config/index.js` loads it as `config.label` (alias `activeLabel`) from `LABEL_SLUG` env (default `pulsegrid`), env vars overriding individual fields | none |
 | L2 | Class-B sites (#7-#11, #18, #21) read `activeLabel.*` | none (identical strings) |
 | L3 | Class-C sites #12-#17 read `activeLabel.rootAdminEmail`, `.ai.systemContext`, `.search.*`, `.knowledge.*` | none (identical strings; KG/model *inputs* identical) |
-| L4 | Datasets relocated intact to `labels/mau5trap/` (#1, #2, #4, #5); seeds from `activeLabel.datasets.users` (#3); social/entity aliases from `activeLabel.datasets.socials` (#6) | none if files move byte-identical; `npm run snapshot:baseline` run to prove it, diff kept |
+| L4 | Datasets relocated intact to `labels/pulsegrid/` (#1, #2, #4, #5); seeds from `activeLabel.datasets.users` (#3); social/entity aliases from `activeLabel.datasets.socials` (#6) | none if files move byte-identical; `npm run snapshot:baseline` run to prove it, diff kept |
 | L5 | Class-C response-text sites #19, #20 read `activeLabel.anr.benchmarkArtist` / `activeLabel.ai.heuristics.roiRunnerUp` | none (identical values). Editing those *values* later is a profile-data change owned by the label, not a code change |
 | L6 | Optional: `GET /v3/label/profile` serving the presentation subset of §15.3 (no secrets, no seeds) so the frontend can hydrate at runtime | new endpoint; additive |
-| L7 | Optional: rename `mau5trap-production-api.js` → `app.js` (#22) | none |
+| L7 | Optional: rename `production-api.js` → `app.js` (#22) | none |
 
 Until L1-L3 land, a *different* label deployed on this backend would still
-receive mau5trap-flavoured AI answers (#13), mau5trap-prefixed entity
-searches (#14, #15), mau5trap-branded PDFs (#10) and password-reset emails
-(#9), and would inherit the `admin@mau5trap.com` root-admin rule (#12).
-For the mau5trap installation itself nothing is missing or degraded before
+receive pulsegrid-flavoured AI answers (#13), pulsegrid-prefixed entity
+searches (#14, #15), pulsegrid-branded PDFs (#10) and password-reset emails
+(#9), and would inherit the `admin@pulsegrid.fm` root-admin rule (#12).
+For the pulsegrid installation itself nothing is missing or degraded before
 or after Phase 4-LABEL — the phase changes *where the values live*, not
 what they are. The frontend architecture is label-neutral now; the
 *deployment* is label-neutral only after Phase 4-LABEL.
 
-### 15.3 Backend label profile — `labels/mau5trap/label.config.js` (target schema; every value is today's literal, preserved)
+### 15.3 Backend label profile — `labels/pulsegrid/label.config.js` (target schema; every value is today's literal, preserved)
 
 ```js
-// Target for Phase 4-LABEL (L1). Selected by LABEL_SLUG (default 'mau5trap'); exposed as config.label / activeLabel.
+// Target for Phase 4-LABEL (L1). Selected by LABEL_SLUG (default 'pulsegrid'); exposed as config.label / activeLabel.
 // Nothing here is a secret. Every string below is the literal the code uses TODAY, moved — not rewritten.
 module.exports = {
   schemaVersion: 1,
-  slug: 'mau5trap', name: 'mau5trap', displayName: 'mau5trap', domain: 'mau5trap.com',
-  contactEmail: 'admin@mau5trap.com',
-  rootAdminEmail: 'admin@mau5trap.com',                                             // #12 undeletable root account
-  email:   { from: '"mau5trap OS" <notify@mau5trap.com>',                            // #7  (EMAIL_FROM env still overrides)
-             resetSubject: 'mau5trap OS - Password Reset Request' },                 // #9
-  reports: { header: 'mau5trap', title: 'mau5trap Intelligence Report',              // #10
-             footer: 'MAU5TRAP INTELLIGENCE • CONFIDENTIAL', generatedBy: 'Generated by mau5trap OS v5.0',
+  slug: 'pulsegrid', name: 'pulsegrid', displayName: 'pulsegrid', domain: 'pulsegrid.fm',
+  contactEmail: 'admin@pulsegrid.fm',
+  rootAdminEmail: 'admin@pulsegrid.fm',                                             // #12 undeletable root account
+  email:   { from: '"pulsegrid OS" <notify@pulsegrid.fm>',                            // #7  (EMAIL_FROM env still overrides)
+             resetSubject: 'pulsegrid OS - Password Reset Request' },                 // #9
+  reports: { header: 'pulsegrid', title: 'pulsegrid Intelligence Report',              // #10
+             footer: 'PULSEGRID INTELLIGENCE • CONFIDENTIAL', generatedBy: 'Generated by pulsegrid OS v5.0',
              accent: '#00FF00' },
-  http:    { userAgent: 'Mau5trapIntelligence/1.0 (admin@mau5trap.com)',             // #18
-             apiUserAgent: 'mau5trap-api/1.0', botUserAgent: 'Mau5trapBot/1.0 (bot@mau5trap.com)' },
-  logging: { service: 'mau5trap-api' },                                               // #11
-  db:      { sqliteFile: 'mau5trap_v5.sqlite' },                                      // #8  (DB_STORAGE env overrides)
-  search:  { searchContext: 'mau5trap', artistQueryPrefix: 'mau5trap artist' },       // #14, #15 — KG/query context
+  http:    { userAgent: 'PulsegridIntelligence/1.0 (admin@pulsegrid.fm)',             // #18
+             apiUserAgent: 'pulsegrid-api/1.0', botUserAgent: 'PulsegridBot/1.0 (bot@pulsegrid.fm)' },
+  logging: { service: 'pulsegrid-api' },                                               // #11
+  db:      { sqliteFile: 'pulsegrid_v5.sqlite' },                                      // #8  (DB_STORAGE env overrides)
+  search:  { searchContext: 'pulsegrid', artistQueryPrefix: 'pulsegrid artist' },       // #14, #15 — KG/query context
   knowledge: {                                                                        // #16, #17 — label knowledge sources
-    wikipedia: { title: 'Mau5trap', pageUrl: 'https://en.wikipedia.org/wiki/Mau5trap',
-                 summaryApi: 'https://en.wikipedia.org/api/rest_v1/page/summary/Mau5trap',
+    wikipedia: { title: 'Pulsegrid', pageUrl: 'https://en.wikipedia.org/wiki/Pulsegrid',
+                 summaryApi: 'https://en.wikipedia.org/api/rest_v1/page/summary/Pulsegrid',
                  fallbackSummary: /* verbatim string from entityAudit.js L639 */ '…',
-                 fallbackThumbnail: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Mau5trap_logo.png/220px-Mau5trap_logo.png' },
-    fandom:    { host: 'deadmau5.fandom.com', labelPage: 'Mau5trap',
-                 labelUrl: 'https://deadmau5.fandom.com/wiki/Mau5trap', labelTitle: 'Mau5trap (Wiki)' },   // also the per-artist wiki/roster/image source (#17)
-    discogs:   { url: 'https://www.discogs.com/label/86878-Mau5trap-Recordings' },
+                 fallbackThumbnail: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Pulsegrid_logo.png/220px-Pulsegrid_logo.png' },
+    fandom:    { host: 'lumenveil.fandom.com', labelPage: 'Pulsegrid',
+                 labelUrl: 'https://lumenveil.fandom.com/wiki/Pulsegrid', labelTitle: 'Pulsegrid (Wiki)' },   // also the per-artist wiki/roster/image source (#17)
+    discogs:   { url: 'https://www.discogs.com/label/86878-Pulsegrid-Recordings' },
   },
-  anr:     { benchmarkArtist: 'deadmau5' },                                           // #19 — A&R benchmark artist
-  ai:      { systemContext: 'AI analyst for mau5trap. Concise, data-driven insights.',   // #13 — AI label context
-             heuristics: { roiRunnerUp: 'Rezz is second at 6.5x.' } },                // #20 — label-authored canned insight (owner to verify 6.5x)
+  anr:     { benchmarkArtist: 'lumenveil' },                                           // #19 — A&R benchmark artist
+  ai:      { systemContext: 'AI analyst for pulsegrid. Concise, data-driven insights.',   // #13 — AI label context
+             heuristics: { roiRunnerUp: 'Novakin is second at 6.5x.' } },                // #20 — label-authored canned insight (owner to verify 6.5x)
   datasets: { roster: './roster.js',            // #1  mock/artistData.js, intact
               socials: './socials.js',          // #6  integrations/index.js L13-27 map, intact (entity aliases: Spotify/Instagram/Ticketmaster/Twitter/TikTok)
               operations: './operations.js',    // #4

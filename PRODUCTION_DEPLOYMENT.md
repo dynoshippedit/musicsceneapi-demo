@@ -1,5 +1,5 @@
 # 🚀 Production Deployment Guide
-## Making mau5trap Analytics Live for Your Team
+## Making pulsegrid Analytics Live for Your Team
 
 ---
 
@@ -8,7 +8,7 @@
 ```
 Your Setup:
 ┌─────────────────────────────────────────────────────────┐
-│  analytics.mau5trap.com (or dashboard.mau5trap.com)    │
+│  analytics.pulsegrid.fm (or dashboard.pulsegrid.fm)    │
 │                                                         │
 │  - Public facing login page                            │
 │  - Role-based dashboards                               │

@@ -18,9 +18,9 @@ npm install
 npm run dev
 ```
 
-The backend base is set in `.env.development` as `VITE_API_BASE_URL=http://localhost:3000` (without `/v3`). The production backend URL should be supplied at build time. Seeded test accounts: `admin@mau5trap.com / admin123` and `tours@rezz.com / rezz123`.
+The backend base is set in `.env.development` as `VITE_API_BASE_URL=http://localhost:3000` (without `/v3`). The production backend URL should be supplied at build time. Seeded test accounts: `admin@pulsegrid.fm / admin123` and `tours@novakin.band / novakin123`.
 
-Select the portability test profile with `VITE_BRAND_PROFILE=example-records npm run dev`, or set `localStorage['platform.brandProfile']='example-records'` in development and reload. Remove the key and use the default configuration to restore mau5trap. Example Records changes presentation and display formatting over the current mau5trap backend numbers; the backend's label-specific intelligence, AI, PDFs, and reset email remain mau5trap-specific pending a separate bounded backend phase.
+Select the portability test profile with `VITE_BRAND_PROFILE=example-records npm run dev`, or set `localStorage['platform.brandProfile']='example-records'` in development and reload. Remove the key and use the default configuration to restore pulsegrid. Example Records changes presentation and display formatting over the current pulsegrid backend numbers; the backend's label-specific intelligence, AI, PDFs, and reset email remain pulsegrid-specific pending a separate bounded backend phase.
 
 ## Verified Phase 4B notes (amended pre-4C, 2026-09-17)
 
@@ -44,15 +44,15 @@ Static rules (`web/validation/static-checks.mjs`; each prints one `PASS | Sxx �
 
 | Id | Scope | Pattern | Allowed only | Catches |
 |---|---|---|---|---|
-| S01 | `web/src` outside `brand/` | `mau5trap\|deadmau5\|rezz\|mau5` (ci) | inside `/* */` comments of `styles/tokens.css` | label identity in any generic file (incl. comments, class names, storage keys) or in a `tokens.css` declaration/selector |
+| S01 | `web/src` outside `brand/` | `pulsegrid\|lumenveil\|novakin\` (ci) | inside `/* */` comments of `styles/tokens.css` | label identity in any generic file (incl. comments, class names, storage keys) or in a `tokens.css` declaration/selector |
 | S02 | `brand/` outside `profiles/`, `themes/` | same | `brand/registry.js` | profile identity hardcoded in brand core |
-| S03 | `web/src` outside `brand/profiles/mau5trap/` | `INTELLIGENCE PLATFORM`, `mau5trap Intelligence Platform`, `mau5trap.com` | `tokens.css` comments | brand tagline / title / domain in platform code |
-| S04 | all `web/src` | `@mau5trap.com\|@rezz.com` | `brand/profiles/**` | seed credentials, prefilled login, hardcoded contact |
+| S03 | `web/src` outside `brand/profiles/pulsegrid/` | `INTELLIGENCE PLATFORM`, `pulsegrid Intelligence Platform`, `pulsegrid.fm` | `tokens.css` comments | brand tagline / title / domain in platform code |
+| S04 | all `web/src` | `@pulsegrid.fm\|@novakin.band` | `brand/profiles/**` | seed credentials, prefilled login, hardcoded contact |
 | S05 | `web/src` minus `tokens.css`, `global.css`, `chartDefaults.js`, `brand/themes/`, `brand/profiles/` | `#hex`, `rgb(`, `hsl(` | those files | raw brand colour bypassing the theme layer |
 | S06 | all `web/src` | import/from of `…/profiles/…` or `…/themes/…` | `brand/registry.js` | a component importing a profile mark or theme directly |
 | S07 | all `web/src` | `ri-headphone\|ri-music\|ri-disc` | the `{ id: 'anr', … icon: 'ri-headphone-line' }` entry in `layout/nav.js` | a Remixicon standing in for the brand mark |
 | S08 | all `web/src` | `art_[a-z0-9]+` | nowhere | fixture artist ids |
-| S09 | all `web/src` | `admin123\|rezz123` | nowhere | seed passwords |
+| S09 | all `web/src` | `admin123\|novakin123` | nowhere | seed passwords |
 
 Browser checks added pre-4C: `G05` (login payloads carry `pageAccess`), `F18` (reconciled `userData` carries `pageAccess`), `F19` (a `/me` 404 keeps the session); `F10` derives the artist's expected nav from the live login payload.
 
@@ -75,8 +75,8 @@ Development aids, not part of acceptance: `node validation/smoke.mjs /route …`
 
 **Build exactly this, nothing else, first:**
 1. `web/` scaffold (Vite, React 18, React Router) — §16 files 1-4.
-2. `tokens.css` (contract §1 + architecture §13.9 + architecture §14.4, each verbatim) + `global.css` (contract §2 classes minus `.mau5-head`) — night theme live.
-3. **Brand layer** (architecture §14): `brand/schema.js`, `brand/registry.js`, `brand/index.js`, `brand/BrandContext.jsx`, `brand/BrandMark.jsx`, `brand/BrandLoader.jsx`, `brand/defaults/*`, the **mau5trap** profile (`profile.js`, `Mau5Head.jsx`, `Mau5HeadLoader.jsx`, `mau5head.module.css`), the **example-records** test profile (`profile.js`), both theme files, both favicons; `copy.js` (platform voice, architecture §13.1).
+2. `tokens.css` (contract §1 + architecture §13.9 + architecture §14.4, each verbatim) + `global.css` (contract §2 classes minus `.legacy-mark`) — night theme live.
+3. **Brand layer** (architecture §14): `brand/schema.js`, `brand/registry.js`, `brand/index.js`, `brand/BrandContext.jsx`, `brand/BrandMark.jsx`, `brand/BrandLoader.jsx`, `brand/defaults/*`, the **pulsegrid** profile (`profile.js`, `PulseMark.jsx`, `PulseMarkLoader.jsx`, `pulsemark.module.css`), the **example-records** test profile (`profile.js`), both theme files, both favicons; `copy.js` (platform voice, architecture §13.1).
 4. `api/client.js`, `api/endpoints.js` (`login`, `getMe`, `getLabelOverview`), `auth/*`, `hooks/*`, `utils/format.js` (`moneyCompact`, `integer` reading `profile.locale`).
 5. `LoginPage` — real login, per architecture §13.3; wordmark/tagline/placeholder/legal footer from `useBrand()` (forgot/reset states stubbed to 4C).
 6. `AppShell` + `Sidebar` (full NAV from `nav.js`, filtered; `<BrandMark/>` + `profile.displayName`/`tagline`; unbuilt routes redirect to `/dashboard`) + `Header` — per architecture §13.5.2-13.5.3.
@@ -101,10 +101,10 @@ the gate, not an optional extra.
 ```
 [ ] cd web && npm install && npm run dev  → starts, zero errors
 [ ] unauthenticated visit to / or /dashboard → redirected to /login
-[ ] admin@mau5trap.com / admin123 (backend running with JWT_SECRET) → lands on /dashboard
+[ ] admin@pulsegrid.fm / admin123 (backend running with JWT_SECRET) → lands on /dashboard
 [ ] admin KPI row reads exactly: MONTHLY REVENUE $3.2M · QUARTERLY PROJECTION $134.8M · ANNUAL PROJECTION $539.1M · ACTIVE ARTISTS 29
     (frozen snapshot label_overview_admin; mock data unchanged) — no NaN / undefined / null anywhere on the page
-[ ] tours@rezz.com / rezz123 → primary nav shows ONLY Dashboard and Artists (seeded pageAccess overview+roster); bottom group still shows
+[ ] tours@novakin.band / novakin123 → primary nav shows ONLY Dashboard and Artists (seeded pageAccess overview+roster); bottom group still shows
     Settings + Terminate Session; the four cards render that token's /v3/label/overview values (snapshot: $0 · $0 · $0 · 0), never NaN
 > Amended pre-4C (Decision 1, 2026-09-17): the artist's primary nav is DERIVED from the `pageAccess` array the backend now serves on
 >   POST /v3/auth/login and GET /v3/auth/me (seeded artist ['overview','roster'] → Dashboard + Artists; model default '["overview"]').
@@ -121,8 +121,8 @@ the gate, not an optional extra.
 [ ] 401 from any call clears session (edit localStorage.authToken to garbage, reload → /login)
 [ ] clicking an unbuilt nav item (e.g. Artists) → /dashboard (redirect), no 404 page, no console error
 [ ] npm run build → exit 0, dist/ produced
-[ ] git diff -- src server.js mau5trap-production-api.js package.json → empty
-[ ] git diff -- mau5trap-frontend-connected.html mau5trap-terminal-dashboard.html → empty
+[ ] git diff -- src server.js production-api.js package.json → empty
+[ ] git diff -- pulsegrid-frontend-connected.html pulsegrid-terminal-dashboard.html → empty
 [ ] git status shows web/ as the only new path beyond the six existing Phase 4A/audit documents listed in §1; nothing else outside web/ created or modified
 ```
 
@@ -142,31 +142,31 @@ COPY (architecture §13.1)
               "ACCESS ID" "PASSPHRASE" "INITIALIZE SESSION" "AUTHENTICATING..." "RESTRICTED ACCESS. UNAUTHORIZED CONNECTIONS WILL BE TERMINATED."
               "Authorized personnel only." "Forgot Password?" "Terminate Session" "Real-time label performance metrics"
               "MONTHLY REVENUE" "QUARTERLY PROJECTION" "ANNUAL PROJECTION" "ACTIVE ARTISTS" "CONNECTION FAILURE" "RETRY CONNECTION"
-[ ] [grep]    every BRAND string lives only under brand/profiles/mau5trap/ — "INTELLIGENCE PLATFORM", "mau5trap Intelligence Platform", "mau5trap.com" appear nowhere else in web/src;
-              the bare slug "mau5trap" may additionally appear only as the registry.js keys/defaultSlug and the theme file name/selector
+[ ] [grep]    every BRAND string lives only under brand/profiles/pulsegrid/ — "INTELLIGENCE PLATFORM", "pulsegrid Intelligence Platform", "pulsegrid.fm" appear nowhere else in web/src;
+              the bare slug "pulsegrid" may additionally appear only as the registry.js keys/defaultSlug and the theme file name/selector
 > Amended pre-4C (Decision 3, 2026-09-17): as written this cannot pass — the byte-for-byte tokens.css block ([diff] box above) carries
 >   `/* "INTELLIGENCE PLATFORM" wordmark sublabel */` at tokens.css:74. Corrected, scope-aware rule (gate check S03): the three brand
->   strings are grepped over web/src outside brand/profiles/mau5trap/ with /* */ COMMENTS stripped from styles/tokens.css only; a brand
+>   strings are grepped over web/src outside brand/profiles/pulsegrid/ with /* */ COMMENTS stripped from styles/tokens.css only; a brand
 >   string in a tokens.css declaration/selector or anywhere in any other file still FAILS. Run: `node web/validation/gate.mjs --static-only`.
 [ ] [grep]    forbidden-string grep from architecture §13.1 → no results (no Email / Password / Sign in / Log in / Sign out / Continue / Welcome / Assistant …)
-[ ] [grep]    grep -rniE "mau5trap|mau5|deadmau5|rezz" web/src --exclude-dir=brand → no results; same grep on web/src/brand --exclude-dir=profiles --exclude-dir=themes → only registry.js
+[ ] [grep]    grep -rniE "pulsegrid|lumenveil|novakin" web/src --exclude-dir=brand → no results; same grep on web/src/brand --exclude-dir=profiles --exclude-dir=themes → only registry.js
 > Amended pre-4C (Decision 3, 2026-09-17): the first grep cannot pass as written — it hits the byte-for-byte tokens.css COMMENTS the
->   [diff] box mandates (tokens.css:11 "mau5trap neon", :50 "mau5-head loader", :114 "Mau5Head", :128 "mau5trap-console"). Corrected rule
+>   [diff] box mandates (tokens.css:11 "pulsegrid neon", :50 "legacy mark loader", :114 "PulseMark", :128 "pulsegrid-console"). Corrected rule
 >   (gate check S01): same pattern over web/src outside brand/ — INCLUDING comments, class names and storage keys in every other file —
 >   with /* */ comments stripped from styles/tokens.css only, so identity in a tokens.css declaration or selector still FAILS.
 >   The second grep is unchanged (gate check S02: only brand/registry.js may match). Run: `node web/validation/gate.mjs --static-only`.
-[ ] [grep]    grep -rnE "art_[a-z0-9]+" web/src → no results; grep -rn "@mau5trap.com\|@rezz.com" web/src → no results
+[ ] [grep]    grep -rnE "art_[a-z0-9]+" web/src → no results; grep -rn "@pulsegrid.fm\|@novakin.band" web/src → no results
 > Amended pre-4C (Decision 3, 2026-09-17): the second grep cannot pass as written — it hits the schema-required contact/email data of
->   the mau5trap profile (brand/profiles/mau5trap/profile.js:12-13 `admin@mau5trap.com`, `notify@mau5trap.com`; architecture §14.2).
+>   the pulsegrid profile (brand/profiles/pulsegrid/profile.js:12-13 `admin@pulsegrid.fm`, `notify@pulsegrid.fm`; architecture §14.2).
 >   Corrected rule (gate check S04): label email domains are allowed under web/src/brand/profiles/** ONLY; a hit anywhere else in web/src
 >   (generic code or brand core — a prefilled login, a dev shortcut, a hardcoded contact) still FAILS. The `art_*` grep is unchanged
->   (gate check S08). Seed passwords admin123/rezz123 are additionally forbidden anywhere in web/src (gate check S09, architecture §14.5).
+>   (gate check S08). Seed passwords admin123/novakin123 are additionally forbidden anywhere in web/src (gate check S09, architecture §14.5).
 [ ] [grep]    emoji grep from architecture §13.1 → no results
 [ ] [grep]    grep -rn "Total Revenue\|Total Streams\|Avg ROI\|TOTAL REVENUE\|TOTAL STREAMS\|AVG ROI" web/src → no results (rows 39-41)
-[ ] [measure] under the mau5trap profile the wordmark renders lowercase "mau5trap" on login and sidebar (profile.displayName verbatim)
+[ ] [measure] under the pulsegrid profile the wordmark renders lowercase "pulsegrid" on login and sidebar (profile.displayName verbatim)
 
 MARK (architecture §13.2, §14.6)
-[ ] [grep]    web/src/brand/profiles/mau5trap/Mau5Head.jsx exists; contains the three <circle>, two <ellipse>, one <path d="M 30 70 Q 50 90 70 70 Q 50 82 30 70">;
+[ ] [grep]    web/src/brand/profiles/pulsegrid/PulseMark.jsx exists; contains the three <circle>, two <ellipse>, one <path d="M 30 70 Q 50 90 70 70 Q 50 82 30 70">;
               fills are var(--color-accent) / var(--color-text) only
 [ ] [grep]    layout/Sidebar.jsx and components/primitives/LoadingScreen.jsx import BrandMark / BrandLoader from brand/, and import NOTHING from brand/profiles/;
               grep -rn "from.*brand/profiles" web/src → only brand/registry.js
@@ -178,8 +178,8 @@ MARK (architecture §13.2, §14.6)
 >   component — still FAILS. The import rule two lines above is enforced the same way (gate check S06: profile/theme imports only in
 >   brand/registry.js). Run: `node web/validation/gate.mjs --static-only`; `node web/validation/static-checks.mjs --self-test` proves each
 >   S-rule still flags a synthetic leak.
-[ ] [measure] sidebar brand block: rendered mark is the Mau5Head SVG 40×40, wordmark 20px/800, sublabel 11px mono green uppercase (.label--accent, tracking-wide); nothing else in the block
-[ ] [measure] full-page loader is the mau5-head (80px ring + 2 ears, pulse) rendered via <BrandLoader/>, background #0A0A0A, no spinner, no text other than (optionally) INITIALIZING NEURAL LINK...
+[ ] [measure] sidebar brand block: rendered mark is the PulseMark SVG 40×40, wordmark 20px/800, sublabel 11px mono green uppercase (.label--accent, tracking-wide); nothing else in the block
+[ ] [measure] full-page loader is the legacy mark (80px ring + 2 ears, pulse) rendered via <BrandLoader/>, background #0A0A0A, no spinner, no text other than (optionally) INITIALIZING NEURAL LINK...
 
 LOGIN (architecture §13.3)
 [ ] [measure] card width 420px, computed padding 48px, border 1px rgba(0,255,95,.35), radius 4px, no box-shadow, centered in the viewport
@@ -215,7 +215,7 @@ STATES (architecture §13.6)
 [ ] [measure] Tab key shows the green focus ring (2px #00FF5F outline + soft glow) on every control on both screens; no control has outline:none
 
 GREEN AS SIGNAL, NOT DECORATION (architecture §13.7)
-[ ] [judge]   green appears in ALL of: sidebar sublabel, active nav tint, Mau5Head fill, all 4 StatCard left rules, focus ring, login button fill, Forgot Password? link
+[ ] [judge]   green appears in ALL of: sidebar sublabel, active nav tint, PulseMark fill, all 4 StatCard left rules, focus ring, login button fill, Forgot Password? link
 [ ] [judge]   green appears in NONE of: KPI values, body text, headings, page/panel backgrounds, panel borders (login card excepted), the wordmark
 [ ] [measure] no pixel in the blue/indigo/violet families on any slice screen; red only inside error states
 
@@ -223,41 +223,41 @@ RESPONSIVE (architecture §13.5.8)
 [ ] [measure] 1280×800: identical layout, 4 KPI columns
 [ ] [measure] 1024×768: 56px icon rail (BrandMark 24px only), KPIs 2×2, nothing overflows horizontally
 
-BRAND LAYER — mau5trap run (architecture §14)
+BRAND LAYER — pulsegrid run (architecture §14)
 [ ] [grep]    web/src/brand/{index.js,registry.js,schema.js,BrandContext.jsx,BrandMark.jsx,BrandLoader.jsx} exist; brand/defaults/{MonogramMark,RingLoader}.jsx exist
-[ ] [grep]    brand/profiles/mau5trap/profile.js contains every ● key of architecture §14.2 with the values listed there; validateProfile() logs nothing for it
-[ ] [grep]    brand/themes/mau5trap-console.css is the empty scoped block; brand/themes/example-records-magenta.css sets exactly the 4 brand tokens and nothing else
-[ ] [measure] document.title === "mau5trap Intelligence Platform"; <link rel="icon"> href ends /brands/mau5trap/favicon.svg; document.body.dataset.theme === "mau5trap-console"
+[ ] [grep]    brand/profiles/pulsegrid/profile.js contains every ● key of architecture §14.2 with the values listed there; validateProfile() logs nothing for it
+[ ] [grep]    brand/themes/pulsegrid-console.css is the empty scoped block; brand/themes/example-records-magenta.css sets exactly the 4 brand tokens and nothing else
+[ ] [measure] document.title === "pulsegrid Intelligence Platform"; <link rel="icon"> href ends /brands/pulsegrid/favicon.svg; document.body.dataset.theme === "pulsegrid-console"
 [ ] [measure] brand tokens resolve to the contract values on real elements: sidebar sublabel color → rgb(0, 255, 95); login card border-color → rgba(0, 255, 95, 0.35);
               active nav background → rgba(0, 255, 95, 0.1) — the brand layer reproduces the contract exactly (measure on elements, not via getPropertyValue of the custom property)
-[ ] [grep]    localStorage keys written by the app ⊆ { authToken, userData, platform.ai.selection, platform.brandProfile }; no "mau5trap." key
+[ ] [grep]    localStorage keys written by the app ⊆ { authToken, userData, platform.ai.selection, platform.brandProfile }; no "pulsegrid." key
 [ ] [grep]    utils/format.js is the only file calling Intl.NumberFormat; no '$' / 'en-US' literal in components (grep from architecture §14.5)
 [ ] [grep]    web/package.json "name" is label-neutral (label-intelligence-web); index.html static <title> is "Label Intelligence Platform"
 
 PORTABILITY — example-records run (architecture §14.7; the Phase 4 acceptance criterion)
-Procedure: with the mau5trap run passing, EITHER `VITE_BRAND_PROFILE=example-records npm run dev` OR (dev only) set localStorage['platform.brandProfile']='example-records' and reload.
+Procedure: with the pulsegrid run passing, EITHER `VITE_BRAND_PROFILE=example-records npm run dev` OR (dev only) set localStorage['platform.brandProfile']='example-records' and reload.
 Make NO file edits between the two runs. Then:
 [ ] [diff]    git status / git diff show no change under web/src outside web/src/brand/ between the two runs (the switch is configuration, not code)
 [ ] [measure] login: wordmark "Example Records", sublabel "LABEL OPERATIONS", placeholder "user@example-records.test", third footer line "© Example Records — portability test profile";
               platform voice unchanged (ACCESS ID / PASSPHRASE / INITIALIZE SESSION / RESTRICTED ACCESS… / Authorized personnel only.)
-[ ] [measure] shell: brand block shows the MonogramMark "E" (40×40 square, brand fill, mono glyph) + "Example Records" + "LABEL OPERATIONS"; nav, header, Terminate Session identical to the mau5trap run
+[ ] [measure] shell: brand block shows the MonogramMark "E" (40×40 square, brand fill, mono glyph) + "Example Records" + "LABEL OPERATIONS"; nav, header, Terminate Session identical to the pulsegrid run
 [ ] [measure] sidebar sublabel color → rgb(255, 45, 149); login card border-color → rgba(255, 45, 149, 0.35); active nav tint, StatCard left rules, focus ring, login button and Forgot Password? link are all magenta; no green pixel remains
 [ ] [measure] document.title === "Example Records — Label Operations"; favicon href ends /brands/example-records/favicon.svg; body.dataset.theme === "example-records-magenta"
 [ ] [measure] full-page loader is the RingLoader (80px ring, pulse, no ears); fullscreen ErrorState unchanged except the button/ring hue
 [ ] [measure] admin KPI row reads MONTHLY REVENUE £3.2m · QUARTERLY PROJECTION £134.8m · ANNUAL PROJECTION £539.1m · ACTIVE ARTISTS 29 (en-GB/GBP display formatting of the same backend numbers; lowercase m is ICU's en-GB compact suffix)
-[ ] [measure] document.body.innerText contains no "mau5trap" (case-insensitive) on /login and /dashboard; no element has a class containing "mau5"
+[ ] [measure] document.body.innerText contains no "pulsegrid" (case-insensitive) on /login and /dashboard; no element has a class containing "legacy"
 [ ] [grep]    contract §4/§5 greps and the §13.7 hue rule still pass for the example-records theme (magenta is hue 330°, outside the forbidden 200-290° band)
 [ ] [judge]   the example-records screens are recognisably the same console (geometry, density, mono labels, voice) in a different brand — NOT a redesign, NOT generic
-[ ] [measure] switch back to mau5trap (unset the env / remove the localStorage key) → every mau5trap box above passes again with no edits
+[ ] [measure] switch back to pulsegrid (unset the env / remove the localStorage key) → every pulsegrid box above passes again with no edits
 ```
 
 **VISUAL PASS — judgment (secondary FAIL; answered from screenshots with the logo cropped out):**
 ```
 [ ] Login: reads as an access terminal (ACCESS ID / PASSPHRASE / INITIALIZE SESSION / RESTRICTED ACCESS), not "Sign in to your account"
-[ ] Shell: reads as the legacy mau5trap workstation tightened (same sidebar/header/KPI arrangement, sharper), not a Linear/Vercel/shadcn admin template
+[ ] Shell: reads as the legacy pulsegrid workstation tightened (same sidebar/header/KPI arrangement, sharper), not a Linear/Vercel/shadcn admin template
 [ ] Dashboard: four hairline cards with green left rules and mono uppercase labels on near-black; nothing a crypto-admin template would add (icons, sparklines, delta pills)
 [ ] Typography: the uppercase mono .label hierarchy is the first thing you notice; Inter appears only in nav labels, h1/subtitle, chip name, error message
-[ ] Reviewer's one-line answer to "what product is this?" is "the mau5trap console" — not "an analytics dashboard"
+[ ] Reviewer's one-line answer to "what product is this?" is "the pulsegrid console" — not "an analytics dashboard"
 ```
 
 **FAIL** if any mechanical box is unchecked (including every BRAND LAYER

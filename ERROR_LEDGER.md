@@ -1,11 +1,11 @@
-# ERROR LEDGER — mau5trap forensic pass (HEAD `9101746`)
+# ERROR LEDGER — pulsegrid forensic pass (HEAD `9101746`)
 
 **Repair update, 2026-09-18:** The user authorized repairs after the review. Read [REPAIR_RESULTS_2026-09-18.md](REPAIR_RESULTS_2026-09-18.md) for the current state. Sales schema, access/cache checks, AI errors, persistent Room/campaigns, forecasts, graph/map, form refresh and session verification have been repaired. The operator database was backed up and migrated with all original rows preserved; API 3000/UI 5173 are running the repaired code. Gates: 150 backend tests, 54 API checks, 9 brand checks, 8 browser workflows passed. External OAuth/contracts remain explicitly unavailable; other feature gaps are listed in the repair report. **The ledger and “no repairs” statements below describe the earlier audit, not current status.**
 
 
 **Independent review update, 2026-09-18:** [APPLICATION_REVIEW_2026-09-18.md](APPLICATION_REVIEW_2026-09-18.md) adds RV-001 through RV-005 and qualifies earlier findings. RV-001 affects the current operator database: restart adds individual UNIQUE constraints to sales artist/month. RV-002 confirms AI cache authorization bypass; RV-003 confirms unauthorized royalty disclosure. RV-004 reproduces forecasts with incorrect history lengths; RV-005 reproduces invisible campaign errors. AI-004 is retracted below. `pageAccess` is intentionally navigation-only; missing artist authorization is the independently confirmed access defect. No product repair is claimed.
 
-Evidence date: 2026-09-18. Runtime: disposable `PORT=4010` + Vite `4173` against `/tmp/mau5-forensic.sqlite`. Operator DB **not** written by this pass.
+Evidence date: 2026-09-18. Runtime: disposable `PORT=4010` + Vite `4173` against `/tmp/legacy-forensic.sqlite`. Operator DB **not** written by this pass.
 
 Severity: BLOCKER | CRITICAL | MAJOR | MINOR | DEBT  
 Confidence: CONFIRMED | SOURCE-CONFIRMED | SUSPECTED | UNTESTABLE
@@ -38,7 +38,7 @@ Astra hypotheses were **re-verified independently**. Fixed items are listed at t
 | **AI-006** | MAJOR | SOURCE-CONFIRMED | `GET /v3/artists/:id/entity-audit` has **no** `hasArtistAccess` (unlike monthly-sales). | `artists.js:239` vs `257` |
 | **AI-007** | DEBT | SOURCE-CONFIRMED | Usage is a 100-entry log ring, not metering. Entity `ai_call` counted even on stub. | `usageService.js`; `entityAuditService.js:78-114` |
 | **GRAPH-001** | MAJOR | CONFIRMED | 0/29 roster `collaborations` are non-empty. Graph is 29 unlabeled orbiting dots, 0 edges. Honest renderer, **empty relationship data**. | `mock/artistData.js`; shot `_intelligence.png` |
-| **GRAPH-002** | MAJOR | CONFIRMED | No node labels, click, hover, or navigation (legacy drew names). | `NetworkGraph.jsx`; vs `mau5trap-frontend-connected.html:405` |
+| **GRAPH-002** | MAJOR | CONFIRMED | No node labels, click, hover, or navigation (legacy drew names). | `NetworkGraph.jsx`; vs `pulsegrid-frontend-connected.html:405` |
 | **GRAPH-003** | MINOR | SOURCE-CONFIRMED | Layout is fake orbit by array index, not force/geo/collab clustering. File comment “physics intact” is false. | `NetworkGraph.jsx:47-73` |
 | **CRUD-001** | CRITICAL | CONFIRMED | A&R store #2 (demos, ratings, whiteboard, listening) is **process memory**. Restart wipes it. Room UI is this store. | `inMemoryStores.js`; `anr.js:322-475`; durability tests omit demos |
 | **CRUD-002** | CRITICAL | CONFIRMED | Campaigns never persist. | See API-002 |
@@ -80,7 +80,7 @@ Astra hypotheses were **re-verified independently**. Fixed items are listed at t
 | Royalty malformed kills process | **FIXED** — probe 400, `/health` 200 |
 | Artist persist false 200 / success audit on fail | **FIXED** for create/archive/image (500, no audit on fail) |
 | Concurrent A&R votes lost | **FIXED on SQLite** — probe two users → `votes=2`. **Postgres still unlocked** (CRUD-004 class) |
-| Dashboard LOG SALE `amount`/`date` | **FIXED** — Playwright POST `{"artistId":"art_attlas","month":"2026-03","revenue":50}`; DB row exists |
+| Dashboard LOG SALE `amount`/`date` | **FIXED** — Playwright POST `{"artistId":"art_echoharbor","month":"2026-03","revenue":50}`; DB row exists |
 | Artist image draft A→B | **FIXED** — `useApiQuery` clear + `shown.id` + `key={shown.id}` |
 | Stale previous-artist UI on 403 | **FIXED** — data nulled; ACCESS DENIED on restricted user crawl |
 | NetworkGraph proximity edges | **FIXED** — collaboration `linked()`; remaining issue is **empty data** (GRAPH-001) |

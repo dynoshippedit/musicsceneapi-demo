@@ -1,4 +1,4 @@
-Application review, 2026-09-18 — repository `/home/dino/mau5trap-repo`, commit `9101746`.
+Application review, 2026-09-18 — repository `/home/dino/pulsegrid-repo`, commit `9101746`.
 
 **Subsequent repair pass:** See [REPAIR_RESULTS_2026-09-18.md](REPAIR_RESULTS_2026-09-18.md) for implemented changes, migration/backup evidence and remaining gaps. This review is retained as the original findings.
 
@@ -13,7 +13,7 @@ Read this alongside [ERROR_LEDGER.md](ERROR_LEDGER.md), [FULL_SYSTEM_FORENSIC_AU
 |---|---|---|
 | P1 | RV-001: sales schema changes incorrectly on restart | Reproduced with the actual Sequelize models; read-only inspection confirms the same invalid constraints in the operator database. Ordinary sales writes return 500. |
 | P1 | RV-002: AI cache bypasses artist authorization | An injected-provider test warms the cache as admin, then retrieves the same private revenue context as an account authorized for another artist. |
-| P1 | RV-003: artist restrictions are missing from additional APIs | The REZZ account receives 403 for deadmau5's artist record but 200 with deadmau5's royalty amounts from the royalty endpoint. |
+| P1 | RV-003: artist restrictions are missing from additional APIs | The NOVAKIN account receives 403 for lumenveil's artist record but 200 with lumenveil's royalty amounts from the royalty endpoint. |
 | P1 | AUTH-002: authentication proceeds after database revalidation fails | Injected database failure still calls the protected handler with the JWT's existing admin claims. |
 | P1 | API-003 / CRUD-001: A&R room workflow and persistence are incomplete | A browser submission appears in Scouting, not in the room queue. Room demos, ratings, board and listening state remain in memory. |
 | P1 | AI-001 / API-005: simulated success is shown as a working service | No AI key produces a fabricated recommendation and a READY chip; integration connect marks a mock token as connected. |
@@ -32,7 +32,7 @@ CREATE TABLE SalesEntries (
 );
 ```
 
-The composite unique index also remains, but it cannot cancel these stricter constraints. In the disposable API, January saved and February for the same artist returned `500 Failed to persist sale`; the server recorded `SequelizeUniqueConstraintError` on `artistId`. A separate in-memory model reproduction also rejected another artist in January, on `month`. Read-only schema inspection of `mau5trap_v5.sqlite` found both individual constraints already installed.
+The composite unique index also remains, but it cannot cancel these stricter constraints. In the disposable API, January saved and February for the same artist returned `500 Failed to persist sale`; the server recorded `SequelizeUniqueConstraintError` on `artistId`. A separate in-memory model reproduction also rejected another artist in January, on `month`. Read-only schema inspection of `pulsegrid_v5.sqlite` found both individual constraints already installed.
 
 Repair requires an explicit migration that preserves rows and restores only the composite uniqueness rule, plus removal of automatic production schema alteration. Back up and rehearse that migration on a copy of the actual database. Acceptance must include two artists in the same month and two months for the same artist, both before and after restart. The current durability test only verifies an existing saved record after restart, so it misses newly broken writes. This review did not run a migration on the operator database.
 
@@ -40,9 +40,9 @@ Repair requires an explicit migration that preserves rows and restores only the 
 
 Check artist authorization before every cache lookup and before provider work. Return an explicit denial for unauthorized artist IDs. Cache invalidation and keys must respect any user-specific context. Fixing the frontend to send `artistId` should happen together with this authorization repair.
 
-**RV-003 — direct APIs bypass artist restrictions.** With `tours@rezz.com`, both `GET /v3/artists/art_deadmau5` and its monthly-sales endpoint return 403. However, `POST /v3/royalties/calculate` with the same artist ID returns 200, including streaming, touring, merchandise, total revenue and payouts. [finance.js](src/routes/finance.js#L39) performs authentication but never calls `hasArtistAccess`.
+**RV-003 — direct APIs bypass artist restrictions.** With `tours@novakin.band`, both `GET /v3/artists/art_lumenveil` and its monthly-sales endpoint return 403. However, `POST /v3/royalties/calculate` with the same artist ID returns 200, including streaming, touring, merchandise, total revenue and payouts. [finance.js](src/routes/finance.js#L39) performs authentication but never calls `hasArtistAccess`.
 
-The same account receives deadmau5's development response, all-label campaign statistics, and other artists' fan-growth information. The projections handler also lacks an artist access check by source inspection; the prior entity-audit finding remains valid. Decide which aggregate views are intentionally shared and apply consistent artist scoping to the rest. The protected artist detail page cannot serve as the authorization boundary for separate API requests.
+The same account receives lumenveil's development response, all-label campaign statistics, and other artists' fan-growth information. The projections handler also lacks an artist access check by source inspection; the prior entity-audit finding remains valid. Decide which aggregate views are intentionally shared and apply consistent artist scoping to the rest. The protected artist detail page cannot serve as the authorization boundary for separate API requests.
 
 **AUTH-002 — database errors leave token permissions in effect.** In [context.js](src/routes/context.js#L82), the database lookup catch logs the failure and calls `next()`. The reproduction confirms that protected work proceeds after a failed revalidation. Return a temporary service error when permissions cannot be checked. `/health` is unprotected, so denying protected work does not require denying health checks.
 
@@ -96,7 +96,7 @@ The remaining inherited gaps are still relevant, with the following limits:
 
 An injected rejection in the rights-handler probe shows a missing handler boundary, but the real artist repository normally catches database lookup errors. That probe alone does not prove a live database-outage crash. No new live process crash is claimed in this report.
 
-**Validation performed.** Chromium login and a crawl covered 13 primary application routes, all nine artist-detail tabs, and four restricted-account routes. There were no uncaught page exceptions in either crawl. The main desktop pages had no document overflow or broken image elements. Artist pagination preserved the selected revenue tab; authorized artist pages loaded and forbidden artist/admin pages showed access denied. A sale entered in the UI was read back from disposable SQLite as `art_attlas / 2026-09 / 125`; the submission was also read back from the separate Scouting table.
+**Validation performed.** Chromium login and a crawl covered 13 primary application routes, all nine artist-detail tabs, and four restricted-account routes. There were no uncaught page exceptions in either crawl. The main desktop pages had no document overflow or broken image elements. Artist pagination preserved the selected revenue tab; authorized artist pages loaded and forbidden artist/admin pages showed access denied. A sale entered in the UI was read back from disposable SQLite as `art_echoharbor / 2026-09 / 125`; the submission was also read back from the separate Scouting table.
 
 The complete existing backend suite passed **143/143** in a temporary `git archive HEAD` copy with the installed dependencies. It was deliberately run there because `snapshot.test.js` renames and replaces the database under its project root. Running unit tests from the original working directory also exposed an environment-sensitive assertion: an empty admin override value fails a test that expects `undefined`; isolated execution passes. Frontend `npm run build` passed, with its existing bundle-size warning.
 
@@ -113,4 +113,4 @@ The first browser harness used the wrong button name for the marketing check; th
 
 **Recommended repair order:** first fix sales migrations and artist authorization, including AI cache access and auth revalidation. Next make AI/integration/report outcomes truthful and complete the persistent A&R room workflow. Then repair forecasts, campaign feedback, graph interaction and map configuration. Add workflow checks that verify saved data after restart, restricted access to every related endpoint, and visible error states before accepting the old completion claims.
 
-The operator database SHA-256 was identical before and after this review: `a71f9ec104d5bbcf66a471dbd03a1dac477403aac86aa2cf592c9f5a93aa919a`. All application writes used `/tmp/mau5-review-20260918-Dhbr1Q/review.sqlite` on API port 4011; the browser used frontend port 4174. No production migration, commit or push was performed.
+The operator database SHA-256 was identical before and after this review: `a71f9ec104d5bbcf66a471dbd03a1dac477403aac86aa2cf592c9f5a93aa919a`. All application writes used `/tmp/legacy-review-20260918-Dhbr1Q/review.sqlite` on API port 4011; the browser used frontend port 4174. No production migration, commit or push was performed.

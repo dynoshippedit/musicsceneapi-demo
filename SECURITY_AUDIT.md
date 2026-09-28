@@ -1,7 +1,7 @@
 # SECURITY_AUDIT.md
 
 Read-only review. Severity is my assessment for a real deployment of the canonical
-entrypoint `mau5trap-production-api.js`. Nothing here was exploited against a live
+entrypoint `production-api.js`. Nothing here was exploited against a live
 system — findings are from source plus isolated local reproductions of the exact code.
 
 ---
@@ -34,7 +34,7 @@ Verification detail: `PHASE_3_VALIDATION.md`.
 
 ## CRITICAL-1 — Unauthenticated admin token via empty request body
 
-**Location:** `mau5trap-production-api.js:481-488`
+**Location:** `production-api.js:481-488`
 
 ```js
 // Admin Override
@@ -75,13 +75,13 @@ signed with the L411 fallback secret in that same scenario, so it is also forgea
 
 ## CRITICAL-2 — Hardcoded JWT fallback secret
 
-**Location:** `mau5trap-production-api.js:411`
+**Location:** `production-api.js:411`
 
 ```js
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
 ```
 
-Also `Server v5.js:14`: `process.env.JWT_SECRET || 'mau5-secure-secret'`.
+Also `Server v5.js:14`: `process.env.JWT_SECRET || 'legacy-secure-secret'`.
 
 The production guard (L215-218) only fires when `NODE_ENV === 'production'`. Any
 deployment that omits or misspells `NODE_ENV` — Railway/Render/Heroku defaults, PM2
@@ -118,15 +118,15 @@ and silently disappear.
 
 ## HIGH-4 — Broken authorization denies artists their own data
 
-**Location:** `mau5trap-production-api.js:447-454` vs model L151 and seed L189
+**Location:** `production-api.js:447-454` vs model L151 and seed L189
 
-`User.artistAccess` is `DataTypes.STRING`; the seeded artist gets `'art_rezz'`.
+`User.artistAccess` is `DataTypes.STRING`; the seeded artist gets `'art_novakin'`.
 `hasArtistAccess` only handles `'all'` or an **array**, so a scalar string falls through
 to `return false`. Verified:
 
 ```
-seeded artist user can access art_rezz?     false
-seeded artist user can access art_deadmau5? false
+seeded artist user can access art_novakin?     false
+seeded artist user can access art_lumenveil? false
 ```
 
 This is a fail-closed bug (not a privilege escalation), but it means the entire
@@ -138,7 +138,7 @@ the comparison work — is exactly where a fail-open mistake would be introduced
 
 ## HIGH-5 — CORS reflects any origin with credentials
 
-**Location:** `mau5trap-production-api.js:246-249`
+**Location:** `production-api.js:246-249`
 
 ```js
 app.use(cors({ origin: true, credentials: true }));   // "Allow all origins (including file://)"
@@ -158,7 +158,7 @@ than automatic cookie replay — but the configuration is still wrong.
 
 ## HIGH-6 — Command injection surface in report auto-printing
 
-**Location:** `mau5trap-production-api.js:2505-2528`
+**Location:** `production-api.js:2505-2528`
 
 ```js
 printCommand = `powershell -Command "Start-Process -FilePath '${filepath}' -Verb Print"`;  // L2513
@@ -197,7 +197,7 @@ spent", "I paid money, give me everything fresh") but no enforcement was impleme
 
 ## MEDIUM-8 — User enumeration on password reset
 
-**Location:** `mau5trap-production-api.js:576`
+**Location:** `production-api.js:576`
 
 ```js
 if (!user) return res.status(404).json({ error: 'User not found' });
@@ -209,7 +209,7 @@ practice is an unconditional 200.
 Related — the reset flow is also **entirely non-functional**: the token minted at L578
 is emailed as a link to the hardcoded `http://localhost:8080/reset-password?token=...`
 (L583), and the frontend's `POST /v3/auth/reset-password`
-(`mau5trap-frontend-connected.html:2998`) has **no server route**. The token can never
+(`pulsegrid-frontend-connected.html:2998`) has **no server route**. The token can never
 be redeemed. Broken-and-leaky rather than exploitable for takeover.
 
 ---
@@ -236,7 +236,7 @@ SDK can include request metadata. `POST /v3/ai/query` returns `details: err.mess
 |---|---|---|
 | `clientId: 'your-client-id'`, `clientSecret: 'your-client-secret'` | api L2693-2694 | placeholders, but a live-path client (`GET /v3/anr/scout`) |
 | `password: 'admin'`, `password: 'demo'` | `Server v5.js:25-26` | **plaintext passwords in a user table**, no hashing |
-| `admin123` / `rezz123` / `mau5123` | api L3199-3201 banner; `MASTER_GUIDE.md:130,315`; `PRODUCTION_FEATURES.md:50,295,398`; `check_api_health.js:10,25`; `verify_*.js` | seeded defaults documented in 6+ files |
+| `admin123` / `novakin123` / `demopass123` | api L3199-3201 banner; `MASTER_GUIDE.md:130,315`; `PRODUCTION_FEATURES.md:50,295,398`; `check_api_health.js:10,25`; `verify_*.js` | seeded defaults documented in 6+ files |
 | `SIMULATION_TOKEN_123` | terminal dashboard L107 | client-side fake token, self-assigns `role:'admin'` in UI |
 | Spotify artist IDs, YouTube channel IDs, IG/TikTok handles | `integrations/index.js:12-30` | public identifiers, not secrets |
 

@@ -40,107 +40,22 @@
     "body": {
       "regions": [
         {
-          "percent": 0.7,
-          "region": "Los Angeles, US",
-          "value": 82000
+          "percent": 38.9,
+          "region": "North America",
+          "value": 4384009
         },
         {
-          "percent": 0.3,
-          "region": "Toronto, CA",
-          "value": 40000
+          "percent": 23.3,
+          "region": "Europe",
+          "value": 2630404
         },
         {
-          "percent": 0.6,
-          "region": "London, UK",
-          "value": 70500
-        },
-        {
-          "percent": 0.5,
-          "region": "Berlin, DE",
-          "value": 67000
-        },
-        {
-          "percent": 0.8,
-          "region": "Amsterdam, NL",
-          "value": 101100
-        },
-        {
-          "percent": 0.9,
-          "region": "New York, US",
-          "value": 106500
-        },
-        {
-          "percent": 0.7,
-          "region": "Sydney, AU",
-          "value": 80300
-        },
-        {
-          "percent": 0.1,
-          "region": "Tokyo, JP",
-          "value": 12000
-        },
-        {
-          "percent": 0.5,
-          "region": "Mexico City, MX",
-          "value": 67000
-        },
-        {
-          "percent": 0.4,
-          "region": "Paris, FR",
-          "value": 54000
+          "percent": 15.5,
+          "region": "Asia",
+          "value": 1753601
         },
         {
           "percent": 1,
-          "region": "Chicago, US",
-          "value": 118000
-        },
-        {
-          "percent": 0.3,
-          "region": "Detroit, US",
-          "value": 32000
-        },
-        {
-          "percent": 0.7,
-          "region": "Miami, US",
-          "value": 86000
-        },
-        {
-          "percent": 0.1,
-          "region": "Ibiza, ES",
-          "value": 15000
-        },
-        {
-          "percent": 0.6,
-          "region": "San Francisco, US",
-          "value": 70000
-        },
-        {
-          "percent": 0.1,
-          "region": "Austin, US",
-          "value": 6500
-        },
-        {
-          "percent": 0,
-          "region": "Vancouver, CA",
-          "value": 4500
-        },
-        {
-          "percent": 0,
-          "region": "Seattle, US",
-          "value": 4000
-        },
-        {
-          "percent": 0.1,
-          "region": "Manchester, UK",
-          "value": 8500
-        },
-        {
-          "percent": 0,
-          "region": "Glasgow, UK",
-          "value": 5200
-        },
-        {
-          "percent": 0.9,
           "region": "Space, Ibiza",
           "value": 110000
         },
@@ -155,9 +70,19 @@
           "value": 95000
         },
         {
-          "percent": 0.7,
+          "percent": 0.8,
           "region": "Womb, Tokyo",
           "value": 85000
+        },
+        {
+          "percent": 0.9,
+          "region": "New York, US",
+          "value": 97000
+        },
+        {
+          "percent": 1,
+          "region": "Chicago, US",
+          "value": 118000
         },
         {
           "percent": 0.7,
@@ -165,17 +90,17 @@
           "value": 80000
         },
         {
-          "percent": 0.6,
+          "percent": 0.7,
           "region": "Sao Paulo, BR",
           "value": 78000
         },
         {
-          "percent": 0.6,
+          "percent": 0.7,
           "region": "Warung, Brazil",
           "value": 76000
         },
         {
-          "percent": 0.6,
+          "percent": 0.7,
           "region": "Buenos Aires, AR",
           "value": 75000
         },
@@ -190,9 +115,19 @@
           "value": 70000
         },
         {
-          "percent": 0.5,
+          "percent": 0.8,
+          "region": "Miami, US",
+          "value": 86000
+        },
+        {
+          "percent": 0.6,
           "region": "Berghain, Berlin",
           "value": 65000
+        },
+        {
+          "percent": 0.5,
+          "region": "San Francisco, US",
+          "value": 62000
         },
         {
           "percent": 0.5,
@@ -200,12 +135,27 @@
           "value": 60000
         },
         {
+          "percent": 0.9,
+          "region": "Amsterdam, NL",
+          "value": 97000
+        },
+        {
+          "percent": 0.6,
+          "region": "Sydney, AU",
+          "value": 72000
+        },
+        {
+          "percent": 0.6,
+          "region": "Mexico City, MX",
+          "value": 67000
+        },
+        {
           "percent": 0.5,
           "region": "Mumbai, IN",
           "value": 55000
         },
         {
-          "percent": 0.4,
+          "percent": 0.5,
           "region": "Dubai, AE",
           "value": 52000
         },
@@ -220,37 +170,168 @@
           "value": 48000
         },
         {
-          "percent": 0.3,
+          "percent": 0.5,
+          "region": "Paris, FR",
+          "value": 54000
+        },
+        {
+          "percent": 0.4,
           "region": "Montreal, CA",
           "value": 40000
         },
         {
-          "percent": 1.1,
+          "percent": 1.2,
           "region": "Oceania",
           "value": 140000
         },
         {
-          "percent": 1.8,
+          "percent": 2,
           "region": "South America",
           "value": 220000
         },
         {
-          "percent": 39.3,
-          "region": "North America",
-          "value": 4789848
+          "percent": 0.6,
+          "region": "Berlin, DE",
+          "value": 67000
         },
         {
-          "percent": 23.6,
-          "region": "Europe",
-          "value": 2873901
+          "percent": 0.3,
+          "region": "Detroit, US",
+          "value": 32000
         },
         {
-          "percent": 15.7,
-          "region": "Asia",
-          "value": 1915930
+          "percent": 0.6,
+          "region": "Los Angeles, US",
+          "value": 70000
+        },
+        {
+          "percent": 0.5,
+          "region": "London, UK",
+          "value": 53000
+        },
+        {
+          "percent": 0.1,
+          "region": "Ibiza, ES",
+          "value": 15000
+        },
+        {
+          "percent": 0.3,
+          "region": "Toronto, CA",
+          "value": 35000
+        },
+        {
+          "percent": 0.1,
+          "region": "Tokyo, JP",
+          "value": 12000
         }
       ],
       "source": "fixture"
+    }
+  },
+  "analytics_projections": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "chartData": {
+        "datasets": [
+          {
+            "data": [],
+            "fill": true,
+            "label": "Recorded sales",
+            "spanGaps": false,
+            "tension": 0
+          },
+          {
+            "borderDash": [
+              5,
+              5
+            ],
+            "data": [],
+            "fill": false,
+            "label": "Forecast (linear)",
+            "tension": 0
+          }
+        ],
+        "labels": []
+      },
+      "entity": "Accessible artists",
+      "note": "Record at least three months to calculate a forecast.",
+      "source": "recorded_sales",
+      "stats": {
+        "intercept": 0,
+        "slope": 0
+      }
+    }
+  },
+  "anr_evaluate": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "analysis": "AI analysis indicates Unknown Artist shares 82% sonic similarity with the benchmark.",
+      "benchmark": "LUMEN VEIL",
+      "projectedRevenue": {
+        "y1": 150000,
+        "y2": 450000,
+        "y3": 1200000
+      },
+      "prospect": "Unknown Artist",
+      "recommendedDeal": "360 Deal / 50-50 Split",
+      "risks": [
+        "High competition in genre",
+        "Limited touring history"
+      ],
+      "signabilityScore": 73,
+      "source": "fixture"
+    }
+  },
+  "anr_state_after_writes": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "demos": [
+        {
+          "artist": "Void Walker",
+          "createdAt": "<VOLATILE>",
+          "genre": null,
+          "hasVoted": false,
+          "id": "<VOLATILE>",
+          "status": "new",
+          "submittedBy": "admin",
+          "title": "Deep Space",
+          "updatedAt": "<VOLATILE>",
+          "url": null
+        },
+        {
+          "artist": "Neon Glitch",
+          "createdAt": "<VOLATILE>",
+          "genre": null,
+          "hasVoted": false,
+          "id": "<VOLATILE>",
+          "status": "high-priority",
+          "submittedBy": "novakin",
+          "title": "Cyberpunk Bass",
+          "updatedAt": "<VOLATILE>",
+          "url": null
+        },
+        {
+          "artist": "Unknown Producer",
+          "createdAt": "<VOLATILE>",
+          "genre": null,
+          "hasVoted": false,
+          "id": "<VOLATILE>",
+          "status": "reviewing",
+          "submittedBy": "admin",
+          "title": "Analog Dreams",
+          "updatedAt": "<VOLATILE>",
+          "url": null
+        }
+      ],
+      "nowListening": {
+        "timestamp": "<VOLATILE>",
+        "updatedBy": "admin",
+        "url": "https://example.com/demo"
+      },
+      "whiteboard": "probe whiteboard"
     }
   },
   "anr_state_initial": {
@@ -277,7 +358,7 @@
           "hasVoted": false,
           "id": "<VOLATILE>",
           "status": "high-priority",
-          "submittedBy": "rezz",
+          "submittedBy": "novakin",
           "title": "Cyberpunk Bass",
           "updatedAt": "<VOLATILE>",
           "url": null
@@ -297,10 +378,77 @@
       ],
       "nowListening": {
         "timestamp": "<VOLATILE>",
-        "updatedBy": "deadmau5",
-        "url": "https://soundcloud.com/mau5trap/example-demo"
+        "updatedBy": "novakin",
+        "url": "https://soundcloud.com/pulsegrid/example-demo"
       },
       "whiteboard": "Currently Reviewing: Q1 2026 Compilation Submissions.\nFocus: Tech House / Minimal."
+    }
+  },
+  "anr_submissions_after_create": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "submissions": [
+        {
+          "artist": "Ghost Data",
+          "genre": "Synthwave",
+          "id": "<VOLATILE>",
+          "status": "pending",
+          "submittedAt": "<VOLATILE>",
+          "track": "Void Walker",
+          "url": "https://soundcloud.com/ghost-data/void-walker",
+          "votes": 15
+        },
+        {
+          "artist": "Probe Artist",
+          "genre": "Techno",
+          "id": "<VOLATILE>",
+          "status": "pending",
+          "submittedAt": "<VOLATILE>",
+          "track": "Probe Track",
+          "url": "https://example.com/t",
+          "voters": {},
+          "votes": 0
+        },
+        {
+          "artist": "Neon Relay",
+          "genre": "Techno",
+          "id": "<VOLATILE>",
+          "status": "shortlisted",
+          "submittedAt": "<VOLATILE>",
+          "track": "Sunspot",
+          "url": "https://open.spotify.com/track/0abcdef123456",
+          "votes": 42
+        }
+      ]
+    }
+  },
+  "anr_submissions_initial": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "submissions": [
+        {
+          "artist": "Ghost Data",
+          "genre": "Synthwave",
+          "id": "<VOLATILE>",
+          "status": "pending",
+          "submittedAt": "<VOLATILE>",
+          "track": "Void Walker",
+          "url": "https://soundcloud.com/ghost-data/void-walker",
+          "votes": 15
+        },
+        {
+          "artist": "Neon Relay",
+          "genre": "Techno",
+          "id": "<VOLATILE>",
+          "status": "shortlisted",
+          "submittedAt": "<VOLATILE>",
+          "track": "Sunspot",
+          "url": "https://open.spotify.com/track/0abcdef123456",
+          "votes": 42
+        }
+      ]
     }
   },
   "anr_vote_missing_demo": {
@@ -310,24 +458,1261 @@
       "error": "Invalid action. Use \"add\" or \"remove\"."
     }
   },
+  "artist_detail_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "brandDeals": [],
+      "collaborations": [],
+      "crm": {
+        "emailCount": 1195600,
+        "presaleSignups": 139800,
+        "smsCount": 25700
+      },
+      "displayName": "LUMEN VEIL (Flagship)",
+      "forecast": {
+        "nextMonth": 881096,
+        "threeMonth": 2643289,
+        "trend": "up"
+      },
+      "genreHybrids": "Electro House",
+      "growthRate": 0.8,
+      "id": "<VOLATILE>",
+      "influences": [
+        "Pulsegrid Sound",
+        "Techno",
+        "Prog House"
+      ],
+      "merch": {
+        "margin": 0.6,
+        "onlineSales": 257215,
+        "topItems": [
+          "T-Shirt",
+          "Hoodie",
+          "Stickers"
+        ],
+        "tourSales": 171477
+      },
+      "meta": {
+        "dataSource": "generated_mock",
+        "lastUpdated": "<VOLATILE>"
+      },
+      "monthlyListeners": 2842204,
+      "name": "LUMEN VEIL",
+      "priority": 1,
+      "projectedAnnual": 150368760,
+      "revenue": {
+        "branding": 1743619,
+        "merch": 428693,
+        "streaming": 1426368,
+        "streamingBreakdown": {
+          "byLocation": [
+            {
+              "percent": 7.7,
+              "region": "Space, Ibiza",
+              "value": 110000
+            },
+            {
+              "percent": 7.4,
+              "region": "Guvernment, Toronto",
+              "value": 105000
+            },
+            {
+              "percent": 6.7,
+              "region": "Ministry of Sound, London",
+              "value": 95000
+            },
+            {
+              "percent": 6,
+              "region": "Womb, Tokyo",
+              "value": 85000
+            },
+            {
+              "percent": 5.8,
+              "region": "New York, US",
+              "value": 82000
+            },
+            {
+              "percent": 5.6,
+              "region": "Chicago, US",
+              "value": 80000
+            },
+            {
+              "percent": 5.6,
+              "region": "Zouk, Singapore",
+              "value": 80000
+            },
+            {
+              "percent": 5.5,
+              "region": "Sao Paulo, BR",
+              "value": 78000
+            },
+            {
+              "percent": 5.4,
+              "region": "Warung, Brazil",
+              "value": 76000
+            },
+            {
+              "percent": 5.3,
+              "region": "Buenos Aires, AR",
+              "value": 75000
+            },
+            {
+              "percent": 5.1,
+              "region": "D-Edge, Sao Paulo",
+              "value": 72000
+            },
+            {
+              "percent": 4.9,
+              "region": "Palladium, Los Angeles",
+              "value": 70000
+            },
+            {
+              "percent": 4.8,
+              "region": "Miami, US",
+              "value": 68000
+            },
+            {
+              "percent": 4.6,
+              "region": "Berghain, Berlin",
+              "value": 65000
+            },
+            {
+              "percent": 4.3,
+              "region": "San Francisco, US",
+              "value": 62000
+            },
+            {
+              "percent": 4.2,
+              "region": "Seoul, KR",
+              "value": 60000
+            },
+            {
+              "percent": 4.2,
+              "region": "Amsterdam, NL",
+              "value": 59000
+            },
+            {
+              "percent": 4.1,
+              "region": "Sydney, AU",
+              "value": 58000
+            },
+            {
+              "percent": 4,
+              "region": "Mexico City, MX",
+              "value": 56000
+            },
+            {
+              "percent": 3.9,
+              "region": "Mumbai, IN",
+              "value": 55000
+            },
+            {
+              "percent": 3.7,
+              "region": "Dubai, AE",
+              "value": 52000
+            },
+            {
+              "percent": 3.5,
+              "region": "Red Rocks, Denver",
+              "value": 50000
+            },
+            {
+              "percent": 3.4,
+              "region": "Fabric, London",
+              "value": 48000
+            },
+            {
+              "percent": 3.2,
+              "region": "Paris, FR",
+              "value": 45000
+            },
+            {
+              "percent": 2.8,
+              "region": "Montreal, CA",
+              "value": 40000
+            },
+            {
+              "percent": 9.8,
+              "region": "Oceania",
+              "value": 140000
+            },
+            {
+              "percent": 15.4,
+              "region": "South America",
+              "value": 220000
+            }
+          ],
+          "total": 1426368
+        },
+        "sync": 142636,
+        "touring": 8718096,
+        "youtube": 71318
+      },
+      "roi": 6.5,
+      "social": {
+        "engagementRate": 5.6,
+        "instagram": 58753998,
+        "tiktok": 47003198,
+        "twitter": 23501599
+      },
+      "sustainability": {
+        "burnoutRisk": "Low",
+        "diversificationRatio": {},
+        "legacyImpact": 74,
+        "longevityScore": 8.6,
+        "progressionMilestones": [],
+        "revenueStability": "84%"
+      },
+      "tier": "flagship",
+      "totalRevenue": 12530730,
+      "totalStreams": 244429544,
+      "touring": {
+        "avgAttendance": 13438,
+        "avgTicketPrice": 65,
+        "carbonOffset": 25602,
+        "merchPerHead": 22.4,
+        "shows": [],
+        "sustainabilityScore": "B",
+        "upcomingShows": 9
+      },
+      "wikipedia": {
+        "summary": "The veil of Isis is a metaphor and allegorical artistic motif representing the inaccessibility of nature's secrets, personified as the goddess Isis shrouded by a veil or mantle.",
+        "thumbnail": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/Auguste_Puttemans_Isis_2.jpg/330px-Auguste_Puttemans_Isis_2.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+        "wikiUrl": "https://en.wikipedia.org/wiki/Veil_of_Isis"
+      }
+    }
+  },
   "artist_development": {
     "status": 200,
     "contentType": "application/json",
     "body": {
-      "artist": "deadmau5",
+      "artist": "LUMEN VEIL",
       "focusAreas": [
         "TikTok Content",
         "LATAM Tour",
         "Limited Merch"
       ],
       "insights": [
-        "deadmau5's streaming growth is outpacing the genre average by 15%.",
+        "LUMEN VEIL's streaming growth is outpacing the genre average by 15%.",
         "Strong engagement in South America suggests potential for a Q3 tour leg.",
         "Merch sales per listener are lower than expected; strictly limit supply for next drop."
       ],
       "projection": "Positive",
       "projectionBasis": "placeholder",
       "projectionNote": "Canned assessment from the label profile; not computed from this artist data."
+    }
+  },
+  "artist_own_detail_artist_role": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "brandDeals": [],
+      "collaborations": [],
+      "crm": {
+        "emailCount": 2901900,
+        "presaleSignups": 354900,
+        "smsCount": 356700
+      },
+      "displayName": "NOVAKIN (Flagship)",
+      "forecast": {
+        "nextMonth": 620209,
+        "threeMonth": 1860629,
+        "trend": "up"
+      },
+      "genreHybrids": "Electro House",
+      "growthRate": 6.4,
+      "id": "<VOLATILE>",
+      "influences": [
+        "Pulsegrid Sound",
+        "Techno",
+        "Prog House"
+      ],
+      "merch": {
+        "margin": 0.6,
+        "onlineSales": 680815,
+        "topItems": [
+          "T-Shirt",
+          "Hoodie",
+          "Stickers"
+        ],
+        "tourSales": 453876
+      },
+      "meta": {
+        "dataSource": "generated_mock",
+        "lastUpdated": "<VOLATILE>"
+      },
+      "monthlyListeners": 7499636,
+      "name": "NOVAKIN",
+      "priority": 1,
+      "projectedAnnual": 101570604,
+      "revenue": {
+        "branding": 302117,
+        "merch": 1134692,
+        "streaming": 4797238,
+        "streamingBreakdown": {
+          "byLocation": [
+            {
+              "percent": 50,
+              "region": "North America",
+              "value": 2398619
+            },
+            {
+              "percent": 30,
+              "region": "Europe",
+              "value": 1439171
+            },
+            {
+              "percent": 20,
+              "region": "Asia",
+              "value": 959447
+            }
+          ],
+          "total": 4797238
+        },
+        "sync": 479723,
+        "touring": 1510586,
+        "youtube": 239861
+      },
+      "roi": 8.7,
+      "social": {
+        "engagementRate": 6.1,
+        "instagram": 58466080,
+        "tiktok": 46772864,
+        "twitter": 23386432
+      },
+      "sustainability": {
+        "burnoutRisk": "Low",
+        "diversificationRatio": {},
+        "legacyImpact": 63,
+        "longevityScore": 9.2,
+        "progressionMilestones": [],
+        "revenueStability": "92%"
+      },
+      "tier": "flagship",
+      "totalRevenue": 8464217,
+      "totalStreams": 847458868,
+      "touring": {
+        "avgAttendance": 6789,
+        "avgTicketPrice": 74,
+        "carbonOffset": 45447,
+        "merchPerHead": 32.4,
+        "shows": [],
+        "sustainabilityScore": "B",
+        "upcomingShows": 16
+      },
+      "wikipedia": null
+    }
+  },
+  "artists_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "artists": [
+        {
+          "brandDeals": [],
+          "collaborations": [],
+          "crm": {
+            "emailCount": 2901900,
+            "presaleSignups": 354900,
+            "smsCount": 356700
+          },
+          "displayName": "NOVAKIN (Flagship)",
+          "forecast": {
+            "nextMonth": 620209,
+            "threeMonth": 1860629,
+            "trend": "up"
+          },
+          "genreHybrids": "Electro House",
+          "growthRate": 6.4,
+          "id": "<VOLATILE>",
+          "influences": [
+            "Pulsegrid Sound",
+            "Techno",
+            "Prog House"
+          ],
+          "merch": {
+            "margin": 0.6,
+            "onlineSales": 680815,
+            "topItems": [
+              "T-Shirt",
+              "Hoodie",
+              "Stickers"
+            ],
+            "tourSales": 453876
+          },
+          "meta": {
+            "dataSource": "generated_mock",
+            "lastUpdated": "<VOLATILE>"
+          },
+          "monthlyListeners": 7499636,
+          "name": "NOVAKIN",
+          "priority": 1,
+          "revenue": {
+            "branding": 302117,
+            "merch": 1134692,
+            "streaming": 4797238,
+            "streamingBreakdown": {
+              "byLocation": [
+                {
+                  "percent": 50,
+                  "region": "North America",
+                  "value": 2398619
+                },
+                {
+                  "percent": 30,
+                  "region": "Europe",
+                  "value": 1439171
+                },
+                {
+                  "percent": 20,
+                  "region": "Asia",
+                  "value": 959447
+                }
+              ],
+              "total": 4797238
+            },
+            "sync": 479723,
+            "touring": 1510586,
+            "youtube": 239861
+          },
+          "roi": 8.7,
+          "social": {
+            "engagementRate": 6.1,
+            "instagram": 58466080,
+            "tiktok": 46772864,
+            "twitter": 23386432
+          },
+          "sustainability": {
+            "burnoutRisk": "Low",
+            "diversificationRatio": {},
+            "legacyImpact": 63,
+            "longevityScore": 9.2,
+            "progressionMilestones": [],
+            "revenueStability": "92%"
+          },
+          "tier": "flagship",
+          "totalStreams": 847458868,
+          "touring": {
+            "avgAttendance": 6789,
+            "avgTicketPrice": 74,
+            "carbonOffset": 45447,
+            "merchPerHead": 32.4,
+            "shows": [],
+            "sustainabilityScore": "B",
+            "upcomingShows": 16
+          }
+        },
+        {
+          "brandDeals": [],
+          "collaborations": [],
+          "crm": {
+            "emailCount": 1195600,
+            "presaleSignups": 139800,
+            "smsCount": 25700
+          },
+          "displayName": "LUMEN VEIL (Flagship)",
+          "forecast": {
+            "nextMonth": 881096,
+            "threeMonth": 2643289,
+            "trend": "up"
+          },
+          "genreHybrids": "Electro House",
+          "growthRate": 0.8,
+          "id": "<VOLATILE>",
+          "influences": [
+            "Pulsegrid Sound",
+            "Techno",
+            "Prog House"
+          ],
+          "merch": {
+            "margin": 0.6,
+            "onlineSales": 257215,
+            "topItems": [
+              "T-Shirt",
+              "Hoodie",
+              "Stickers"
+            ],
+            "tourSales": 171477
+          },
+          "meta": {
+            "dataSource": "generated_mock",
+            "lastUpdated": "<VOLATILE>"
+          },
+          "monthlyListeners": 2842204,
+          "name": "LUMEN VEIL",
+          "priority": 1,
+          "revenue": {
+            "branding": 1743619,
+            "merch": 428693,
+            "streaming": 1426368,
+            "streamingBreakdown": {
+              "byLocation": [
+                {
+                  "percent": 7.7,
+                  "region": "Space, Ibiza",
+                  "value": 110000
+                },
+                {
+                  "percent": 7.4,
+                  "region": "Guvernment, Toronto",
+                  "value": 105000
+                },
+                {
+                  "percent": 6.7,
+                  "region": "Ministry of Sound, London",
+                  "value": 95000
+                },
+                {
+                  "percent": 6,
+                  "region": "Womb, Tokyo",
+                  "value": 85000
+                },
+                {
+                  "percent": 5.8,
+                  "region": "New York, US",
+                  "value": 82000
+                },
+                {
+                  "percent": 5.6,
+                  "region": "Chicago, US",
+                  "value": 80000
+                },
+                {
+                  "percent": 5.6,
+                  "region": "Zouk, Singapore",
+                  "value": 80000
+                },
+                {
+                  "percent": 5.5,
+                  "region": "Sao Paulo, BR",
+                  "value": 78000
+                },
+                {
+                  "percent": 5.4,
+                  "region": "Warung, Brazil",
+                  "value": 76000
+                },
+                {
+                  "percent": 5.3,
+                  "region": "Buenos Aires, AR",
+                  "value": 75000
+                },
+                {
+                  "percent": 5.1,
+                  "region": "D-Edge, Sao Paulo",
+                  "value": 72000
+                },
+                {
+                  "percent": 4.9,
+                  "region": "Palladium, Los Angeles",
+                  "value": 70000
+                },
+                {
+                  "percent": 4.8,
+                  "region": "Miami, US",
+                  "value": 68000
+                },
+                {
+                  "percent": 4.6,
+                  "region": "Berghain, Berlin",
+                  "value": 65000
+                },
+                {
+                  "percent": 4.3,
+                  "region": "San Francisco, US",
+                  "value": 62000
+                },
+                {
+                  "percent": 4.2,
+                  "region": "Seoul, KR",
+                  "value": 60000
+                },
+                {
+                  "percent": 4.2,
+                  "region": "Amsterdam, NL",
+                  "value": 59000
+                },
+                {
+                  "percent": 4.1,
+                  "region": "Sydney, AU",
+                  "value": 58000
+                },
+                {
+                  "percent": 4,
+                  "region": "Mexico City, MX",
+                  "value": 56000
+                },
+                {
+                  "percent": 3.9,
+                  "region": "Mumbai, IN",
+                  "value": 55000
+                },
+                {
+                  "percent": 3.7,
+                  "region": "Dubai, AE",
+                  "value": 52000
+                },
+                {
+                  "percent": 3.5,
+                  "region": "Red Rocks, Denver",
+                  "value": 50000
+                },
+                {
+                  "percent": 3.4,
+                  "region": "Fabric, London",
+                  "value": 48000
+                },
+                {
+                  "percent": 3.2,
+                  "region": "Paris, FR",
+                  "value": 45000
+                },
+                {
+                  "percent": 2.8,
+                  "region": "Montreal, CA",
+                  "value": 40000
+                },
+                {
+                  "percent": 9.8,
+                  "region": "Oceania",
+                  "value": 140000
+                },
+                {
+                  "percent": 15.4,
+                  "region": "South America",
+                  "value": 220000
+                }
+              ],
+              "total": 1426368
+            },
+            "sync": 142636,
+            "touring": 8718096,
+            "youtube": 71318
+          },
+          "roi": 6.5,
+          "social": {
+            "engagementRate": 5.6,
+            "instagram": 58753998,
+            "tiktok": 47003198,
+            "twitter": 23501599
+          },
+          "sustainability": {
+            "burnoutRisk": "Low",
+            "diversificationRatio": {},
+            "legacyImpact": 74,
+            "longevityScore": 8.6,
+            "progressionMilestones": [],
+            "revenueStability": "84%"
+          },
+          "tier": "flagship",
+          "totalStreams": 244429544,
+          "touring": {
+            "avgAttendance": 13438,
+            "avgTicketPrice": 65,
+            "carbonOffset": 25602,
+            "merchPerHead": 22.4,
+            "shows": [],
+            "sustainabilityScore": "B",
+            "upcomingShows": 9
+          }
+        },
+        {
+          "brandDeals": [],
+          "collaborations": [],
+          "crm": {
+            "emailCount": 452170,
+            "presaleSignups": 36420,
+            "smsCount": 21130
+          },
+          "displayName": "GLASSWOLFE (Core)",
+          "forecast": {
+            "nextMonth": 100894,
+            "threeMonth": 302684,
+            "trend": "up"
+          },
+          "genreHybrids": "Techno/Progressive",
+          "growthRate": 9.7,
+          "id": "<VOLATILE>",
+          "influences": [
+            "Pulsegrid Sound",
+            "Techno",
+            "Prog House"
+          ],
+          "merch": {
+            "margin": 0.6,
+            "onlineSales": 78535,
+            "topItems": [
+              "T-Shirt",
+              "Hoodie",
+              "Stickers"
+            ],
+            "tourSales": 52357
+          },
+          "meta": {
+            "dataSource": "generated_mock",
+            "lastUpdated": "<VOLATILE>"
+          },
+          "monthlyListeners": 113289,
+          "name": "GLASSWOLFE",
+          "priority": 2,
+          "revenue": {
+            "branding": 163646,
+            "merch": 130893,
+            "streaming": 261612,
+            "streamingBreakdown": {
+              "byLocation": [
+                {
+                  "percent": 17.2,
+                  "region": "Berlin, DE",
+                  "value": 45000
+                },
+                {
+                  "percent": 14.5,
+                  "region": "Chicago, US",
+                  "value": 38000
+                },
+                {
+                  "percent": 12.2,
+                  "region": "Detroit, US",
+                  "value": 32000
+                },
+                {
+                  "percent": 10.7,
+                  "region": "Los Angeles, US",
+                  "value": 28000
+                },
+                {
+                  "percent": 9.5,
+                  "region": "London, UK",
+                  "value": 25000
+                },
+                {
+                  "percent": 7.6,
+                  "region": "Amsterdam, NL",
+                  "value": 20000
+                },
+                {
+                  "percent": 6.9,
+                  "region": "Miami, US",
+                  "value": 18000
+                },
+                {
+                  "percent": 5.7,
+                  "region": "Ibiza, ES",
+                  "value": 15000
+                }
+              ],
+              "total": 261612
+            },
+            "sync": 26161,
+            "touring": 818233,
+            "youtube": 13080
+          },
+          "roi": 8.8,
+          "social": {
+            "engagementRate": 3.7,
+            "instagram": 2901538,
+            "tiktok": 2321230,
+            "twitter": 1160615
+          },
+          "sustainability": {
+            "burnoutRisk": "Low",
+            "diversificationRatio": {},
+            "legacyImpact": 83,
+            "longevityScore": 7.2,
+            "progressionMilestones": [],
+            "revenueStability": "61%"
+          },
+          "tier": "core",
+          "totalStreams": 7590363,
+          "touring": {
+            "avgAttendance": 952,
+            "avgTicketPrice": 28,
+            "carbonOffset": 34491,
+            "merchPerHead": 18.7,
+            "shows": [],
+            "sustainabilityScore": "A",
+            "upcomingShows": 17
+          }
+        }
+      ],
+      "limit": 3,
+      "offset": 0,
+      "total": 8
+    }
+  },
+  "artists_admin_offset": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "artists": [
+        {
+          "brandDeals": [],
+          "collaborations": [],
+          "crm": {
+            "emailCount": 16800,
+            "presaleSignups": 62810,
+            "smsCount": 11970
+          },
+          "displayName": "MIDNIGHT CIRCUIT (Core)",
+          "forecast": {
+            "nextMonth": 63673,
+            "threeMonth": 191020,
+            "trend": "up"
+          },
+          "genreHybrids": "Techno/Progressive",
+          "growthRate": 12,
+          "id": "<VOLATILE>",
+          "influences": [
+            "Pulsegrid Sound",
+            "Techno",
+            "Prog House"
+          ],
+          "merch": {
+            "margin": 0.6,
+            "onlineSales": 85657,
+            "topItems": [
+              "T-Shirt",
+              "Hoodie",
+              "Stickers"
+            ],
+            "tourSales": 57105
+          },
+          "meta": {
+            "dataSource": "generated_mock",
+            "lastUpdated": "<VOLATILE>"
+          },
+          "monthlyListeners": 112718,
+          "name": "MIDNIGHT CIRCUIT",
+          "priority": 2,
+          "revenue": {
+            "branding": 34315,
+            "merch": 142763,
+            "streaming": 449744,
+            "streamingBreakdown": {
+              "byLocation": [
+                {
+                  "percent": 50,
+                  "region": "North America",
+                  "value": 224872
+                },
+                {
+                  "percent": 30,
+                  "region": "Europe",
+                  "value": 134923
+                },
+                {
+                  "percent": 20,
+                  "region": "Asia",
+                  "value": 89948
+                }
+              ],
+              "total": 449744
+            },
+            "sync": 44974,
+            "touring": 171576,
+            "youtube": 22487
+          },
+          "roi": 4.1,
+          "social": {
+            "engagementRate": 3.5,
+            "instagram": 5897246,
+            "tiktok": 4717796,
+            "twitter": 2358898
+          },
+          "sustainability": {
+            "burnoutRisk": "Low",
+            "diversificationRatio": {},
+            "legacyImpact": 58,
+            "longevityScore": 7.2,
+            "progressionMilestones": [],
+            "revenueStability": "88%"
+          },
+          "tier": "core",
+          "totalStreams": 7777542,
+          "touring": {
+            "avgAttendance": 1199,
+            "avgTicketPrice": 40,
+            "carbonOffset": 21254,
+            "merchPerHead": 15.4,
+            "shows": [],
+            "sustainabilityScore": "A",
+            "upcomingShows": 19
+          }
+        },
+        {
+          "brandDeals": [],
+          "collaborations": [],
+          "crm": {
+            "emailCount": 398040,
+            "presaleSignups": 42610,
+            "smsCount": 15420
+          },
+          "displayName": "ECHO HARBOR (Core)",
+          "forecast": {
+            "nextMonth": 88408,
+            "threeMonth": 265226,
+            "trend": "up"
+          },
+          "genreHybrids": "Techno/Progressive",
+          "growthRate": 20.7,
+          "id": "<VOLATILE>",
+          "influences": [
+            "Pulsegrid Sound",
+            "Techno",
+            "Prog House"
+          ],
+          "merch": {
+            "margin": 0.6,
+            "onlineSales": 36845,
+            "topItems": [
+              "T-Shirt",
+              "Hoodie",
+              "Stickers"
+            ],
+            "tourSales": 24563
+          },
+          "meta": {
+            "dataSource": "generated_mock",
+            "lastUpdated": "<VOLATILE>"
+          },
+          "monthlyListeners": 558138,
+          "name": "ECHO HARBOR",
+          "priority": 2,
+          "revenue": {
+            "branding": 143741,
+            "merch": 61409,
+            "streaming": 280790,
+            "streamingBreakdown": {
+              "byLocation": [
+                {
+                  "percent": 15,
+                  "region": "Los Angeles, US",
+                  "value": 42000
+                },
+                {
+                  "percent": 12.5,
+                  "region": "Toronto, CA",
+                  "value": 35000
+                },
+                {
+                  "percent": 10,
+                  "region": "London, UK",
+                  "value": 28000
+                },
+                {
+                  "percent": 7.8,
+                  "region": "Berlin, DE",
+                  "value": 22000
+                },
+                {
+                  "percent": 6.4,
+                  "region": "Amsterdam, NL",
+                  "value": 18000
+                },
+                {
+                  "percent": 5.3,
+                  "region": "New York, US",
+                  "value": 15000
+                },
+                {
+                  "percent": 5,
+                  "region": "Sydney, AU",
+                  "value": 14000
+                },
+                {
+                  "percent": 4.3,
+                  "region": "Tokyo, JP",
+                  "value": 12000
+                },
+                {
+                  "percent": 3.9,
+                  "region": "Mexico City, MX",
+                  "value": 11000
+                },
+                {
+                  "percent": 3.2,
+                  "region": "Paris, FR",
+                  "value": 9000
+                }
+              ],
+              "total": 280790
+            },
+            "sync": 28079,
+            "touring": 718706,
+            "youtube": 14039
+          },
+          "roi": 7.4,
+          "social": {
+            "engagementRate": 7.6,
+            "instagram": 9779623,
+            "tiktok": 7823698,
+            "twitter": 3911849
+          },
+          "sustainability": {
+            "burnoutRisk": "Low",
+            "diversificationRatio": {},
+            "legacyImpact": 84,
+            "longevityScore": 8.4,
+            "progressionMilestones": [],
+            "revenueStability": "84%"
+          },
+          "tier": "core",
+          "totalStreams": 27906900,
+          "touring": {
+            "avgAttendance": 448,
+            "avgTicketPrice": 24,
+            "carbonOffset": 32207,
+            "merchPerHead": 24.3,
+            "shows": [],
+            "sustainabilityScore": "A",
+            "upcomingShows": 2
+          }
+        }
+      ],
+      "limit": 2,
+      "offset": 5,
+      "total": 8
+    }
+  },
+  "artists_admin_search": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "artists": [
+        {
+          "brandDeals": [],
+          "collaborations": [],
+          "crm": {
+            "emailCount": 2901900,
+            "presaleSignups": 354900,
+            "smsCount": 356700
+          },
+          "displayName": "NOVAKIN (Flagship)",
+          "forecast": {
+            "nextMonth": 620209,
+            "threeMonth": 1860629,
+            "trend": "up"
+          },
+          "genreHybrids": "Electro House",
+          "growthRate": 6.4,
+          "id": "<VOLATILE>",
+          "influences": [
+            "Pulsegrid Sound",
+            "Techno",
+            "Prog House"
+          ],
+          "merch": {
+            "margin": 0.6,
+            "onlineSales": 680815,
+            "topItems": [
+              "T-Shirt",
+              "Hoodie",
+              "Stickers"
+            ],
+            "tourSales": 453876
+          },
+          "meta": {
+            "dataSource": "generated_mock",
+            "lastUpdated": "<VOLATILE>"
+          },
+          "monthlyListeners": 7499636,
+          "name": "NOVAKIN",
+          "priority": 1,
+          "revenue": {
+            "branding": 302117,
+            "merch": 1134692,
+            "streaming": 4797238,
+            "streamingBreakdown": {
+              "byLocation": [
+                {
+                  "percent": 50,
+                  "region": "North America",
+                  "value": 2398619
+                },
+                {
+                  "percent": 30,
+                  "region": "Europe",
+                  "value": 1439171
+                },
+                {
+                  "percent": 20,
+                  "region": "Asia",
+                  "value": 959447
+                }
+              ],
+              "total": 4797238
+            },
+            "sync": 479723,
+            "touring": 1510586,
+            "youtube": 239861
+          },
+          "roi": 8.7,
+          "social": {
+            "engagementRate": 6.1,
+            "instagram": 58466080,
+            "tiktok": 46772864,
+            "twitter": 23386432
+          },
+          "sustainability": {
+            "burnoutRisk": "Low",
+            "diversificationRatio": {},
+            "legacyImpact": 63,
+            "longevityScore": 9.2,
+            "progressionMilestones": [],
+            "revenueStability": "92%"
+          },
+          "tier": "flagship",
+          "totalStreams": 847458868,
+          "touring": {
+            "avgAttendance": 6789,
+            "avgTicketPrice": 74,
+            "carbonOffset": 45447,
+            "merchPerHead": 32.4,
+            "shows": [],
+            "sustainabilityScore": "B",
+            "upcomingShows": 16
+          }
+        }
+      ],
+      "limit": 50,
+      "offset": 0,
+      "total": 1
+    }
+  },
+  "artists_artist_role": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "artists": [
+        {
+          "brandDeals": [],
+          "collaborations": [],
+          "crm": {
+            "emailCount": 2901900,
+            "presaleSignups": 354900,
+            "smsCount": 356700
+          },
+          "displayName": "NOVAKIN (Flagship)",
+          "forecast": {
+            "nextMonth": 620209,
+            "threeMonth": 1860629,
+            "trend": "up"
+          },
+          "genreHybrids": "Electro House",
+          "growthRate": 6.4,
+          "id": "<VOLATILE>",
+          "influences": [
+            "Pulsegrid Sound",
+            "Techno",
+            "Prog House"
+          ],
+          "merch": {
+            "margin": 0.6,
+            "onlineSales": 680815,
+            "topItems": [
+              "T-Shirt",
+              "Hoodie",
+              "Stickers"
+            ],
+            "tourSales": 453876
+          },
+          "meta": {
+            "dataSource": "generated_mock",
+            "lastUpdated": "<VOLATILE>"
+          },
+          "monthlyListeners": 7499636,
+          "name": "NOVAKIN",
+          "priority": 1,
+          "revenue": {
+            "branding": 302117,
+            "merch": 1134692,
+            "streaming": 4797238,
+            "streamingBreakdown": {
+              "byLocation": [
+                {
+                  "percent": 50,
+                  "region": "North America",
+                  "value": 2398619
+                },
+                {
+                  "percent": 30,
+                  "region": "Europe",
+                  "value": 1439171
+                },
+                {
+                  "percent": 20,
+                  "region": "Asia",
+                  "value": 959447
+                }
+              ],
+              "total": 4797238
+            },
+            "sync": 479723,
+            "touring": 1510586,
+            "youtube": 239861
+          },
+          "roi": 8.7,
+          "social": {
+            "engagementRate": 6.1,
+            "instagram": 58466080,
+            "tiktok": 46772864,
+            "twitter": 23386432
+          },
+          "sustainability": {
+            "burnoutRisk": "Low",
+            "diversificationRatio": {},
+            "legacyImpact": 63,
+            "longevityScore": 9.2,
+            "progressionMilestones": [],
+            "revenueStability": "92%"
+          },
+          "tier": "flagship",
+          "totalStreams": 847458868,
+          "touring": {
+            "avgAttendance": 6789,
+            "avgTicketPrice": 74,
+            "carbonOffset": 45447,
+            "merchPerHead": 32.4,
+            "shows": [],
+            "sustainabilityScore": "B",
+            "upcomingShows": 16
+          }
+        }
+      ],
+      "limit": 50,
+      "offset": 0,
+      "total": 1
+    }
+  },
+  "auth_me_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "artistAccess": "all",
+      "email": "admin@pulsegrid.fm",
+      "id": "<VOLATILE>",
+      "name": "Admin User",
+      "pageAccess": [
+        "all"
+      ],
+      "role": "admin"
+    }
+  },
+  "auth_me_artist_role": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "artistAccess": "art_novakin",
+      "email": "tours@novakin.band",
+      "id": "<VOLATILE>",
+      "name": "Vera Kessler",
+      "pageAccess": [
+        "overview",
+        "roster"
+      ],
+      "role": "artist"
     }
   },
   "campaigns_stats_admin": {
@@ -338,9 +1723,9 @@
       "note": "Reference CRM counts. No historical campaign performance has been recorded.",
       "source": "roster_reference",
       "stats": {
-        "presaleSignups": 1782772,
-        "totalEmails": 11218910,
-        "totalSMS": 1010297
+        "presaleSignups": 1609356,
+        "totalEmails": 10160690,
+        "totalSMS": 929417
       }
     }
   },
@@ -351,6 +1736,131 @@
       "error": "New password must be at least 8 characters"
     }
   },
+  "exports_admin_csv_artist": {
+    "status": 200,
+    "contentType": "text/csv",
+    "body": {
+      "__nonJson": "text/csv",
+      "__sizeBucket": 6
+    }
+  },
+  "fans_demographics_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "demographics": {
+        "age": [
+          {
+            "range": "18-24",
+            "value": 35
+          },
+          {
+            "range": "25-34",
+            "value": 45
+          },
+          {
+            "range": "35-44",
+            "value": 15
+          },
+          {
+            "range": "45+",
+            "value": 5
+          }
+        ],
+        "gender": [
+          {
+            "label": "Male",
+            "value": 55
+          },
+          {
+            "label": "Female",
+            "value": 42
+          },
+          {
+            "label": "Other",
+            "value": 3
+          }
+        ],
+        "locations": [
+          {
+            "city": "Los Angeles",
+            "country": "USA",
+            "value": 120000
+          },
+          {
+            "city": "London",
+            "country": "UK",
+            "value": 85000
+          },
+          {
+            "city": "Toronto",
+            "country": "Canada",
+            "value": 60000
+          },
+          {
+            "city": "Berlin",
+            "country": "Germany",
+            "value": 45000
+          },
+          {
+            "city": "Sydney",
+            "country": "Australia",
+            "value": 30000
+          }
+        ],
+        "platformGrowth": [
+          {
+            "growth": 12.5,
+            "platform": "Spotify"
+          },
+          {
+            "growth": 28.4,
+            "platform": "TikTok"
+          },
+          {
+            "growth": 5.2,
+            "platform": "Instagram"
+          },
+          {
+            "growth": 8.1,
+            "platform": "YouTube"
+          }
+        ]
+      },
+      "topMovers": [
+        {
+          "engagement": 7.6,
+          "growth": 20.7,
+          "id": "<VOLATILE>",
+          "name": "ECHO HARBOR"
+        },
+        {
+          "engagement": 3.5,
+          "growth": 12,
+          "id": "<VOLATILE>",
+          "name": "MIDNIGHT CIRCUIT"
+        },
+        {
+          "engagement": 2.9,
+          "growth": 10.4,
+          "id": "<VOLATILE>",
+          "name": "STATIC BLOOM"
+        },
+        {
+          "engagement": 3.7,
+          "growth": 9.7,
+          "id": "<VOLATILE>",
+          "name": "GLASSWOLFE"
+        },
+        {
+          "engagement": 6.1,
+          "growth": 6.4,
+          "id": "<VOLATILE>",
+          "name": "NOVAKIN"
+        }
+      ]
+    }
+  },
   "integrations_auth_spotify": {
     "status": 501,
     "contentType": "application/json",
@@ -358,11 +1868,109 @@
       "error": "Account connection is not implemented. No account was connected."
     }
   },
+  "integrations_status_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "services": [
+        {
+          "available": false,
+          "connected": false,
+          "id": "<VOLATILE>",
+          "lastSync": "<VOLATILE>",
+          "message": "Account connection is not available yet.",
+          "name": "Spotify Web API",
+          "quotaUsed": null,
+          "status": "not_implemented"
+        },
+        {
+          "available": false,
+          "connected": false,
+          "id": "<VOLATILE>",
+          "lastSync": "<VOLATILE>",
+          "message": "Account connection is not available yet.",
+          "name": "YouTube Analytics",
+          "quotaUsed": null,
+          "status": "not_implemented"
+        },
+        {
+          "available": false,
+          "connected": false,
+          "id": "<VOLATILE>",
+          "lastSync": "<VOLATILE>",
+          "message": "Account connection is not available yet.",
+          "name": "TikTok API",
+          "quotaUsed": null,
+          "status": "not_implemented"
+        },
+        {
+          "available": false,
+          "connected": false,
+          "id": "<VOLATILE>",
+          "lastSync": "<VOLATILE>",
+          "message": "Account connection is not available yet.",
+          "name": "Instagram Graph",
+          "quotaUsed": null,
+          "status": "not_implemented"
+        },
+        {
+          "available": false,
+          "connected": false,
+          "id": "<VOLATILE>",
+          "lastSync": "<VOLATILE>",
+          "message": "Account connection is not available yet.",
+          "name": "Shopify API",
+          "quotaUsed": null,
+          "status": "not_implemented"
+        },
+        {
+          "available": false,
+          "connected": false,
+          "id": "<VOLATILE>",
+          "lastSync": "<VOLATILE>",
+          "message": "Account connection is not available yet.",
+          "name": "Ticketmaster Discovery",
+          "quotaUsed": null,
+          "status": "not_implemented"
+        },
+        {
+          "available": false,
+          "connected": false,
+          "id": "<VOLATILE>",
+          "lastSync": "<VOLATILE>",
+          "message": "Account connection is not available yet.",
+          "name": "Bandsintown API",
+          "quotaUsed": null,
+          "status": "not_implemented"
+        },
+        {
+          "available": false,
+          "connected": false,
+          "id": "<VOLATILE>",
+          "lastSync": "<VOLATILE>",
+          "message": "Account connection is not available yet.",
+          "name": "Chartmetric API",
+          "quotaUsed": null,
+          "status": "not_implemented"
+        },
+        {
+          "available": false,
+          "connected": false,
+          "id": "<VOLATILE>",
+          "lastSync": "<VOLATILE>",
+          "message": "Account connection is not available yet.",
+          "name": "Revelator API",
+          "quotaUsed": null,
+          "status": "not_implemented"
+        }
+      ]
+    }
+  },
   "label_overview_admin": {
     "status": 200,
     "contentType": "application/json",
     "body": {
-      "activeArtists": 29,
+      "activeArtists": 8,
       "annualProjection": null,
       "month": null,
       "monthlyRevenue": null,
@@ -386,11 +1994,189 @@
       "topArtists": []
     }
   },
+  "login_admin_seeded": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "token": "<JWT>",
+      "user": {
+        "artistAccess": "all",
+        "email": "admin@pulsegrid.fm",
+        "id": "<VOLATILE>",
+        "name": "Admin User",
+        "pageAccess": [
+          "all"
+        ],
+        "role": "admin"
+      }
+    }
+  },
+  "login_artist_seeded": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "token": "<JWT>",
+      "user": {
+        "artistAccess": "art_novakin",
+        "email": "tours@novakin.band",
+        "id": "<VOLATILE>",
+        "name": "Vera Kessler",
+        "pageAccess": [
+          "overview",
+          "roster"
+        ],
+        "role": "artist"
+      }
+    }
+  },
   "marketing_campaign_create": {
     "status": 400,
     "contentType": "application/json",
     "body": {
       "error": "A campaign name, supported strategy and platforms are required"
+    }
+  },
+  "monthly_sales_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "artistId": "art_lumenveil",
+      "artistName": "LUMEN VEIL",
+      "tourRevenue": []
+    }
+  },
+  "monthly_sales_artist_role": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "artistId": "art_novakin",
+      "artistName": "NOVAKIN",
+      "tourRevenue": []
+    }
+  },
+  "ops_assets_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "assets": [
+        {
+          "artist": "LUMEN VEIL",
+          "id": "<VOLATILE>",
+          "size": "248 MB",
+          "status": "Approved",
+          "title": "LUMEN VEIL - Halide (Master WAV)",
+          "type": "Audio Master",
+          "uploaded": "2024-03-15"
+        },
+        {
+          "artist": "NOVAKIN",
+          "id": "<VOLATILE>",
+          "size": "1.8 GB",
+          "status": "Processing",
+          "title": "NOVAKIN - Surge (Official Video)",
+          "type": "Video",
+          "uploaded": "2025-01-10"
+        },
+        {
+          "artist": "GLASSWOLFE",
+          "id": "<VOLATILE>",
+          "size": "89 MB",
+          "status": "Approved",
+          "title": "GLASSWOLFE - Album Artwork Pack",
+          "type": "Artwork",
+          "uploaded": "2025-02-20"
+        }
+      ]
+    }
+  },
+  "ops_contracts_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "contracts": [
+        {
+          "advance": "$0",
+          "artist": "LUMEN VEIL",
+          "id": "<VOLATILE>",
+          "nextMilestone": null,
+          "recoupable": null,
+          "royaltyRate": "50%",
+          "signedDate": "2018-06-01",
+          "status": "Active",
+          "term": "Perpetuity",
+          "type": "Master Recording"
+        },
+        {
+          "advance": "$150k",
+          "artist": "NOVAKIN",
+          "id": "<VOLATILE>",
+          "nextMilestone": "Album 3 Q2 2026",
+          "recoupable": "$120k remaining",
+          "royaltyRate": "Standard",
+          "signedDate": "2022-11-15",
+          "status": "Active",
+          "term": "3 Albums",
+          "type": "Exclusive Recording"
+        },
+        {
+          "advance": "$40k",
+          "artist": "GLASSWOLFE",
+          "id": "<VOLATILE>",
+          "nextMilestone": "Option Mar 2026",
+          "recoupable": "Fully Recouped",
+          "royaltyRate": "18%",
+          "signedDate": "2024-08-20",
+          "status": "Active",
+          "term": "2+2",
+          "type": "Single Deal + Option"
+        }
+      ]
+    }
+  },
+  "ops_logistics_admin": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "logistics": [
+        {
+          "eta": "2025-12-18",
+          "id": "<VOLATILE>",
+          "item": "Pulsegrid Helmet Replica (Gen 4)",
+          "location": "Los Angeles Warehouse",
+          "quantity": 150,
+          "status": "In Transit",
+          "tracking": "FW123456789",
+          "vendor": "Fourthwall"
+        },
+        {
+          "eta": null,
+          "id": "<VOLATILE>",
+          "item": "Tour Tee (GLASSWOLFE)",
+          "location": "EU Fulfillment Center",
+          "quantity": 800,
+          "status": "Stocked",
+          "tracking": "PF987654321",
+          "vendor": "Printful"
+        },
+        {
+          "eta": null,
+          "id": "<VOLATILE>",
+          "item": "NOVAKIN Visor Replica",
+          "location": "Toronto Warehouse",
+          "quantity": 45,
+          "status": "Low Stock",
+          "tracking": "MB456789123",
+          "vendor": "Merchbar"
+        }
+      ]
+    }
+  },
+  "reports_monthly_artist_role": {
+    "status": 200,
+    "contentType": "application/pdf",
+    "body": {
+      "__nonJson": "application/pdf",
+      "__sizeBucket": 280
     }
   },
   "rights_contracts_admin": {
@@ -407,6 +2193,48 @@
       "error": "Artist not found"
     }
   },
+  "royalties_calc": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "artistName": "LUMEN VEIL",
+      "breakdown": {
+        "merch": 428693,
+        "streaming": 1426368,
+        "touring": 8718096
+      },
+      "payout": {
+        "artist": 7401209.899999999,
+        "label": 3171947.1
+      },
+      "splits": {
+        "artist": 0.7,
+        "label": 0.3
+      },
+      "totalRevenue": 10573157
+    }
+  },
+  "royalties_calc_zero": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": {
+      "artistName": "LUMEN VEIL",
+      "breakdown": {
+        "merch": 428693,
+        "streaming": 1426368,
+        "touring": 8718096
+      },
+      "payout": {
+        "artist": 7401209.899999999,
+        "label": 3171947.1
+      },
+      "splits": {
+        "artist": 0.7,
+        "label": 0.3
+      },
+      "totalRevenue": 10573157
+    }
+  },
   "users_list_admin": {
     "status": 200,
     "contentType": "application/json",
@@ -415,7 +2243,7 @@
         "active": true,
         "artistAccess": "all",
         "createdAt": "<VOLATILE>",
-        "email": "admin@mau5trap.com",
+        "email": "admin@pulsegrid.fm",
         "id": "<VOLATILE>",
         "integrationCount": 10,
         "name": "Admin User",
@@ -427,12 +2255,12 @@
       },
       {
         "active": true,
-        "artistAccess": "art_rezz",
+        "artistAccess": "art_novakin",
         "createdAt": "<VOLATILE>",
-        "email": "tours@rezz.com",
+        "email": "tours@novakin.band",
         "id": "<VOLATILE>",
         "integrationCount": 5,
-        "name": "Isabelle Rezazadeh",
+        "name": "Vera Kessler",
         "pageAccess": [
           "overview",
           "roster"

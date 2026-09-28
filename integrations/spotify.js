@@ -34,8 +34,8 @@ class SpotifyIntegration {
 
     /**
      * Fetch artist data by Spotify Artist ID
-     * @param {string} spotifyArtistId - Spotify artist ID (e.g., "2CIMQHirSU0MQqyYHq0eOx" for deadmau5)
-     * @returns {Object} Artist data mapped to mau5trap schema
+     * @param {string} spotifyArtistId - Spotify artist ID (e.g., "2CIMQHirSU0MQqyYHq0eOx" for lumenveil)
+     * @returns {Object} Artist data mapped to pulsegrid schema
      */
     async getArtistData(spotifyArtistId) {
         try {

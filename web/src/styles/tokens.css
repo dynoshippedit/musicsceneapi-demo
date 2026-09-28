@@ -8,7 +8,7 @@
   --color-input-bg:      rgba(0, 0, 0, 0.30);
 
   /* ============ GREEN — THE ONLY SIGNAL COLOR ============ */
-  --green-500:           #00FF5F;   /* mau5trap neon. Level-1 accent. */
+  --green-500:           #00FF5F;   /* pulsegrid neon. Level-1 accent. */
   --green-300:           #66FF9F;   /* hover/lift of level-1 text only */
   --green-700:           #00A63E;   /* pressed state of primary button */
   --green-a20:           rgba(0, 255, 95, 0.20);
@@ -47,7 +47,7 @@
   /* ============ GEOMETRY ============ */
   --radius-control:      2px;    /* buttons, inputs, selects, badges (square-ish) */
   --radius-panel:        4px;    /* panels, cards, modals, chart/map containers */
-  --radius-pill:         999px;  /* ONLY: status pills <= 22px tall, avatar circles, the mau5-head loader */
+  --radius-pill:         999px;  /* ONLY: status pills <= 22px tall, avatar circles, the neutral ring loader */
   /* No other radius values exist. 16px "glass card" radius from the legacy file is
      deliberately RETIRED — it is the single biggest source of generic-SaaS drift. */
 
@@ -111,7 +111,7 @@
   --login-card-pad:      48px;
 
   /* shell geometry (§13.5) — measurable, not adjectival */
-  --brand-mark-size:     40px;    /* Mau5Head in the sidebar; 24px in the rail */
+  --brand-mark-size:     40px;    /* PulseMark in the sidebar; 24px in the rail */
   --nav-item-height:     40px;
   --kpi-height-min:      88px;    /* StatCard content height without delta; max 112px with delta; never stretched */
 
@@ -125,7 +125,7 @@
   /* ============ BRAND LAYER — FRONTEND_ARCHITECTURE.md §14.4 ============ */
   /* The theme contract. A brand theme file (brand/themes/<id>.css, scoped to body[data-theme="<id>"])
      overrides ONLY the four --color-brand-* tokens below (fonts/surfaces: see §14.4 "theme surface").
-     Reference values = mau5trap-console = the contract §1 palette. */
+     Reference values = pulsegrid-console = the contract §1 palette. */
   --color-brand-primary:        var(--green-500);
   --color-brand-primary-bright: var(--green-300);
   --color-brand-primary-deep:   var(--green-700);

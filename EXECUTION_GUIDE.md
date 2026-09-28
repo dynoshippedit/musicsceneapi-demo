@@ -1,6 +1,6 @@
 # EXECUTION_GUIDE.md
 
-**Date:** 2026-09-17 · **Repo:** mau5trap-repo
+**Date:** 2026-09-17 · **Repo:** pulsegrid-repo
 **Current HEAD for execution:** Step 3 `d6b692d` on D0 `7336323`. Historical recipes were written against `7efb44b` + uncommitted 4CF.
 **Authority:** supersedes the per-step recipes produced by 5 planning agents (2026-09-17,
 transcripts on file) and /home/dino/step7-8-recipe.md (fully incorporated here).
@@ -73,12 +73,12 @@ Step 7's documented edit.
 - ecosystem.config.js: full rewrite — `script:'./server.js'`, `exec_mode:'fork'`,
   `instances:1`, `restart_delay:3000`, keep `max_memory_restart:'1G'`, `env_production`.
 - README.md:74+96, QUICKSTART.md:18, PRODUCTION_DEPLOYMENT.md:78 (+:33/:62 wording),
-  package-production.json:7 (+:5/:8) — `mau5trap-production-api.js` → `server.js`.
+  package-production.json:7 (+:5/:8) — `production-api.js` → `server.js`.
   (PRODUCTION_DEPLOYMENT.md:37 is already correct — leave.)
 - Verify: `node --check ecosystem.config.js`. Isolated PM2 check only (§14.2):
   disposable cwd, scratch `DB_STORAGE`, unused PORT, isolated `PM2_HOME` and app
   name; curl that child's `/health`; delete only the process this step created.
-  Never `pm2 start`/`delete mau5trap-api` against the operator namespace or DB.
+  Never `pm2 start`/`delete pulsegrid-api` against the operator namespace or DB.
 
 ### Step 2 — Hermetic verify (small/medium)
 - New `scripts/run-verify-hermetic.js`: spawn `server.js` (dedicated port 3971, temp
@@ -124,7 +124,7 @@ Step 7's documented edit.
 - **Operator-DB hazard (correction, must be actioned):** SQLite cannot
   `ALTER TABLE … ADD COLUMN … NOT NULL` on a non-empty table — boot would fail to
   alter, initDB returns false, server runs with the OLD schema, then stamped writes
-  500. Mitigation: one-time delete/rebuild of `mau5trap_v5.sqlite` (seeds regenerate)
+  500. Mitigation: one-time delete/rebuild of `pulsegrid_v5.sqlite` (seeds regenerate)
   or manual backfill before boot. Do NOT add a `defaultValue` (it would mask future
   unstamped create sites).
 - Tests: extend units models pins + durability sqlite3 readback for labelSlug.
@@ -266,7 +266,7 @@ Cross-ref after filing: NEXT_STEPS_PLAN.md Step 7 SIGNED-OFF line + REFACTOR_PRO
   (routeTable ⊆ spec.paths)'` — normalize `:param` → `{param}`; assert every TABLE
   entry has an operation; optional reverse drift guard. Add `js-yaml` devDep.
 - Optional static serve (pin-invisible): `app.use('/openapi.yaml', express.static(...))`
-  in mau5trap-production-api.js after registerRoutes — express.static layers have no
+  in production-api.js after registerRoutes — express.static layers have no
   `layer.route`, so routeTable/name-guard/count pins are unaffected.
 - API_INVENTORY.md: versioning/deprecation policy section (additive-only /v3; breaking
   → /v4; ≥6-month deprecation window; Deprecation/Sunset headers; openapi.yaml is the
@@ -284,7 +284,7 @@ Cross-ref after filing: NEXT_STEPS_PLAN.md Step 7 SIGNED-OFF line + REFACTOR_PRO
   (:96-105) already fetched by DashboardPage; render as a new Section. Gate pin:
   V16 `mainChildren.length <= 4` → 5 (ledger). New bar-chart gate box.
 - 11B: new components/media/UniversalPlayer.jsx (port legacy sniffer from
-  mau5trap-frontend-connected.html; SoundCloud accent via token → hex conversion,
+  pulsegrid-frontend-connected.html; SoundCloud accent via token → hex conversion,
   NO literals; drop auto_play=true). Wire in AnrRoomView.jsx:42-47 (nowListening) +
   DemoRow (:65). New player gate box.
 - Doc drift: FRONTEND_ARCHITECTURE.md:201/207/220 mark as 4A-plan-not-shipped.
@@ -358,7 +358,7 @@ These amend the recipes above. They do not authorize D7, D12F, or product-policy
    argv[2] is used as `BASE` verbatim; a bare port fails before the first assertion.
 2. Step 1 PM2 verification must use an isolated `PM2_HOME`, a unique app name, a
    disposable working copy/cwd, an unused port, and a scratch SQLite `DB_STORAGE`.
-   Do not `pm2 start`/`pm2 delete mau5trap-api` against the operator namespace or DB.
+   Do not `pm2 start`/`pm2 delete pulsegrid-api` against the operator namespace or DB.
 3. Any hermetic child must set `DB_DIALECT=sqlite`, empty `DATABASE_URL`, reference
    `LABEL_SLUG`, isolated cwd, blank admin/provider/mail credentials, and
    `SCHEDULE_JOBS=false`. `DB_STORAGE` alone does not isolate the Postgres branch.

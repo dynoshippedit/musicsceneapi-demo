@@ -17,7 +17,7 @@ async function verifyAdminPermissions() {
     try {
         // 1. Admin Login
         console.log('Logging in as Admin...');
-        const adminAuth = await login('admin@mau5trap.com', 'admin123');
+        const adminAuth = await login('admin@pulsegrid.fm', 'admin123');
         const tokenAdmin = adminAuth.accessToken || adminAuth.token;
 
         // 2. Create Restricted User

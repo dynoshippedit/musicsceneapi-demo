@@ -24,7 +24,7 @@ const crypto = require('node:crypto');
 const sqlite3 = require('sqlite3');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'mau5-integrity-'));
+const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'pulsegrid-integrity-'));
 const dbFile = path.join(scratch, 'probe.sqlite');
 
 let child = null;
@@ -54,7 +54,7 @@ async function boot() {
         DB_DIALECT: 'sqlite',
         DB_STORAGE: dbFile,
         DATABASE_URL: '',
-        LABEL_SLUG: 'mau5trap',
+        LABEL_SLUG: 'pulsegrid',
         ACTIVE_LABEL: '',
         JWT_SECRET: crypto.randomBytes(32).toString('hex'),
         ADMIN_EMAIL: '',
@@ -116,7 +116,7 @@ async function api(method, pathname, token, body) {
     }
 }
 
-async function login(email = 'admin@mau5trap.com', password = 'admin123') {
+async function login(email = 'admin@pulsegrid.fm', password = 'admin123') {
     const r = await api('POST', '/v3/auth/login', null, { email, password });
     assert.equal(r.status, 200, `login ${email} failed`);
     return r.body.token;
@@ -146,20 +146,20 @@ test('rejected writes, concurrent votes, royalties and sales contract hold on di
 
     // FE-01: mistaken client keys stay 400; the API contract is artistId/month/revenue.
     const oldKeys = await api('POST', '/v3/analytics/sales', token, {
-        artistId: 'art_rezz', amount: 100, date: new Date().toISOString()
+        artistId: 'art_novakin', amount: 100, date: new Date().toISOString()
     });
     assert.equal(oldKeys.status, 400);
     assert.equal(oldKeys.body.error, 'Missing fields');
 
     const sale = await api('POST', '/v3/analytics/sales', token, {
-        artistId: 'art_rezz', month: '2026-09', revenue: 100
+        artistId: 'art_novakin', month: '2026-09', revenue: 100
     });
     assert.equal(sale.status, 200);
     assert.equal(sale.body.success, true);
 
     // $0 is a real sale (promo / write-off). `!revenue` used to 400 it.
     const zeroSale = await api('POST', '/v3/analytics/sales', token, {
-        artistId: 'art_rezz', month: '2026-08', revenue: 0
+        artistId: 'art_novakin', month: '2026-08', revenue: 0
     });
     assert.equal(zeroSale.status, 200, `zero-revenue sale rejected: ${JSON.stringify(zeroSale)}`);
     assert.equal(zeroSale.body.success, true);
@@ -179,7 +179,7 @@ test('rejected writes, concurrent votes, royalties and sales contract hold on di
 
     // Same class as B1: non-string month used to unhandled-reject and shut the API down.
     const badMonth = await api('POST', '/v3/analytics/sales', token, {
-        artistId: 'art_rezz', month: ['2026-09'], revenue: 1
+        artistId: 'art_novakin', month: ['2026-09'], revenue: 1
     });
     assert.ok(badMonth.status >= 400 && badMonth.status < 500, `bad month status ${badMonth.status}`);
     const healthAfterSale = await api('GET', '/health');
@@ -187,14 +187,14 @@ test('rejected writes, concurrent votes, royalties and sales contract hold on di
     assert.equal(child.exitCode, null);
 
     // B2: SQLite trigger rejects UPDATE; responses must not claim success.
-    const before = (await api('GET', '/v3/artists/art_rezz', token)).body;
-    await sql("CREATE TRIGGER d0_reject_artist_update BEFORE UPDATE ON Artists WHEN NEW.id='art_rezz' BEGIN SELECT RAISE(ABORT, 'D0 disposable write rejection'); END");
-    const archive = await api('POST', '/v3/artists/art_rezz/archive', token);
-    const image = await api('PUT', '/v3/artists/art_rezz/image', token, {
+    const before = (await api('GET', '/v3/artists/art_novakin', token)).body;
+    await sql("CREATE TRIGGER d0_reject_artist_update BEFORE UPDATE ON Artists WHEN NEW.id='art_novakin' BEGIN SELECT RAISE(ABORT, 'D0 disposable write rejection'); END");
+    const archive = await api('POST', '/v3/artists/art_novakin/archive', token);
+    const image = await api('PUT', '/v3/artists/art_novakin/image', token, {
         imageUrl: 'https://example.test/d0-image.png'
     });
-    const after = (await api('GET', '/v3/artists/art_rezz', token)).body;
-    const audits = await sql("SELECT action, resourceId FROM AuditEvents WHERE resourceId='art_rezz' ORDER BY id");
+    const after = (await api('GET', '/v3/artists/art_novakin', token)).body;
+    const audits = await sql("SELECT action, resourceId FROM AuditEvents WHERE resourceId='art_novakin' ORDER BY id");
     assert.ok(archive.status >= 400, `archive acknowledged a rejected write: ${archive.status}`);
     assert.ok(image.status >= 400, `image acknowledged a rejected write: ${image.status}`);
     assert.equal(after.tier, before.tier);
@@ -204,7 +204,7 @@ test('rejected writes, concurrent votes, royalties and sales contract hold on di
     await stop();
     await boot();
     token = await login();
-    const restart = (await api('GET', '/v3/artists/art_rezz', token)).body;
+    const restart = (await api('GET', '/v3/artists/art_novakin', token)).body;
     assert.equal(restart.tier, before.tier);
     assert.equal(restart.manualImage ?? null, before.manualImage ?? null);
 
@@ -236,7 +236,7 @@ test('rejected writes, concurrent votes, royalties and sales contract hold on di
 
     // B1 last: object revenueSources used to unhandled-reject and shut the process down.
     const royalty = await api('POST', '/v3/royalties/calculate', token, {
-        artistId: 'art_rezz', revenueSources: { streaming: true }
+        artistId: 'art_novakin', revenueSources: { streaming: true }
     });
     assert.ok(royalty.status >= 400 && royalty.status < 500, `royalty status ${royalty.status}`);
     await delay(100);

@@ -1,7 +1,7 @@
 /**
  * src/middleware/index.js
  *
- * Express middleware stack extracted from mau5trap-production-api.js
+ * Express middleware stack extracted from production-api.js
  * L240-263 (request pipeline) and L3157-3174 (error + 404 handlers).
  *
  * Order is load-bearing and preserved exactly:

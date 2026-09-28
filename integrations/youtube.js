@@ -44,7 +44,7 @@ class YouTubeIntegration {
     /**
      * Fetch YouTube channel data by channel ID
      * @param {string} channelId - YouTube channel ID
-     * @returns {Object} YouTube metrics mapped to mau5trap schema
+     * @returns {Object} YouTube metrics mapped to pulsegrid schema
      */
     async getChannelData(channelId) {
         try {

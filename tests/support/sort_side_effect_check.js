@@ -15,7 +15,7 @@ async function login() {
     const res = await fetch(`${BASE}/v3/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'admin@mau5trap.com', password: 'admin123' })
+        body: JSON.stringify({ email: 'admin@pulsegrid.fm', password: 'admin123' })
     });
     return (await res.json()).token;
 }

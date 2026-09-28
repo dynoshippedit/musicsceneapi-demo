@@ -1,6 +1,6 @@
 # NEXT_STEPS_PLAN.md
 
-**Date:** 2026-09-17 · **Repo:** mau5trap-repo (HEAD `7efb44b`, Phase 4CF complete/uncommitted)
+**Date:** 2026-09-17 · **Repo:** pulsegrid-repo (HEAD `7efb44b`, Phase 4CF complete/uncommitted)
 **Basis:** five read-only research agents (P1–P5, transcripts on file) + the external product
 review. Every step cites verified file:line evidence. Nothing here is implemented yet.
 **Execution mechanics:** see EXECUTION_GUIDE.md (supersedes this file's line-level details;
@@ -127,7 +127,7 @@ Verify: spec validators + coverage test + unchanged suites.
 - RevenueBarChart.jsx: consume /v3/label/overview topArtists (label.js:98-105); amends gate
   V16 (gate.mjs:346) — pin edit required.
 - UniversalPlayer.jsx: port the legacy sniffer from
-  mau5trap-frontend-connected.html (Spotify/SoundCloud/YouTube embed detection);
+  pulsegrid-frontend-connected.html (Spotify/SoundCloud/YouTube embed detection);
   SoundCloud accent from theme token (hardcoding trips S05, static-checks.mjs:84-89); wire
   into AnrRoomView for nowListening + DemoRow.
 - Also correct doc drift: FRONTEND_ARCHITECTURE.md:201/207/220 describe RevenueBarChart,

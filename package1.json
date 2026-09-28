@@ -1,11 +1,11 @@
 {
-  "name": "mau5trap-api",
+  "name": "pulsegrid-api",
   "version": "3.0.0",
-  "description": "Label Intelligence Platform API for mau5trap",
-  "main": "mau5trap-api-server.js",
+  "description": "Label Intelligence Platform API for pulsegrid",
+  "main": "pulsegrid-api-server.js",
   "scripts": {
-    "start": "node mau5trap-api-server.js",
-    "dev": "nodemon mau5trap-api-server.js",
+    "start": "node pulsegrid-api-server.js",
+    "dev": "nodemon pulsegrid-api-server.js",
     "test": "echo \"Tests coming soon\" && exit 0"
   },
   "keywords": [
@@ -13,9 +13,9 @@
     "label",
     "analytics",
     "api",
-    "mau5trap"
+    "pulsegrid"
   ],
-  "author": "mau5trap",
+  "author": "pulsegrid",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",

@@ -12,7 +12,7 @@ const { spawn } = require('node:child_process');
 process.env.DB_STORAGE = ':memory:';
 process.env.JWT_SECRET = 'review-fixes-test-secret';
 const ROOT = path.resolve(__dirname, '../..');
-const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'mau5-repairs-'));
+const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'pulsegrid-repairs-'));
 const { repairSalesSchema } = require('../../src/models/migrations');
 const delay = ms => new Promise(r => setTimeout(r, ms));
 let child, base;
@@ -44,7 +44,7 @@ async function api(token, method, route, body) {
     const response = await fetch(base + route, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
     return { status: response.status, body: await response.json() };
 }
-async function login(email = 'admin@mau5trap.com', password = 'admin123') {
+async function login(email = 'admin@pulsegrid.fm', password = 'admin123') {
     const result = await api(null, 'POST', '/v3/auth/login', { email, password }); assert.equal(result.status, 200); return result.body.token;
 }
 
@@ -130,7 +130,7 @@ test('graph derives edges only from recorded collaborators, supports names/IDs, 
 });
 
 test('room, campaigns and multimonth sales survive two restarts; restricted reads and writes are denied', async () => {
-    await boot(); let admin = await login(); const artist = await login('tours@rezz.com', 'rezz123');
+    await boot(); let admin = await login(); const artist = await login('tours@novakin.band', 'novakin123');
     const room = await api(admin, 'POST', '/v3/anr/demos', { artist: 'Repair Artist', title: 'Durable Demo', genre: 'Techno', url: 'https://example.com/demo.mp3' });
     assert.equal(room.status, 201); const demoId = room.body.demo.id;
     await api(admin, 'POST', '/v3/anr/whiteboard', { message: 'Durable whiteboard' });
@@ -138,25 +138,25 @@ test('room, campaigns and multimonth sales survive two restarts; restricted read
     await api(admin, 'POST', `/v3/anr/vote/${demoId}`, { action: 'add' });
     assert.equal((await api(artist, 'POST', `/v3/anr/vote/${demoId}`, { action: 'add' })).status, 403);
     assert.equal((await api(admin, 'GET', `/v3/anr/stats/${demoId}`)).body.artistVotes, 1);
-    const draft = await api(admin, 'POST', '/v3/marketing/campaigns', { name: 'Durable plan', artistId: 'art_deadmau5', type: 'playlist-push', platforms: ['spotify'] });
+    const draft = await api(admin, 'POST', '/v3/marketing/campaigns', { name: 'Durable plan', artistId: 'art_lumenveil', type: 'playlist-push', platforms: ['spotify'] });
     assert.equal(draft.status, 201); assert.equal(draft.body.status, 'draft');
     const sale = (token, artistId, month, revenue) => api(token, 'POST', '/v3/analytics/sales', { artistId, month, revenue });
     for (let month = 1; month <= 13; month++) {
         const label = month <= 12 ? `2025-${String(month).padStart(2, '0')}` : '2026-01';
-        assert.equal((await sale(admin, 'art_deadmau5', label, month * 100)).status, 200);
+        assert.equal((await sale(admin, 'art_lumenveil', label, month * 100)).status, 200);
     }
-    assert.equal((await sale(admin, 'art_rezz', '2025-01', 40)).status, 200);
-    assert.equal((await sale(admin, 'art_rezz', '2025-03', 60)).status, 200);
-    assert.equal((await sale(admin, 'art_rezz', '2025-04', 70)).status, 200);
-    for (const value of [-1, '123junk', ' ', true]) assert.equal((await sale(admin, 'art_rezz', '2025-05', value)).status, 400);
-    assert.equal((await sale(admin, 'art_rezz', '2025-99', 1)).status, 400);
+    assert.equal((await sale(admin, 'art_novakin', '2025-01', 40)).status, 200);
+    assert.equal((await sale(admin, 'art_novakin', '2025-03', 60)).status, 200);
+    assert.equal((await sale(admin, 'art_novakin', '2025-04', 70)).status, 200);
+    for (const value of [-1, '123junk', ' ', true]) assert.equal((await sale(admin, 'art_novakin', '2025-05', value)).status, 400);
+    assert.equal((await sale(admin, 'art_novakin', '2025-99', 1)).status, 400);
     for (const [method, route, body] of [
-        ['POST', '/v3/analytics/sales', { artistId: 'art_deadmau5', month: '2026-02', revenue: 999 }],
-        ['POST', '/v3/royalties/calculate', { artistId: 'art_deadmau5' }],
-        ['POST', '/v3/ai/query', { prompt: 'secret', artistId: 'art_deadmau5' }],
-        ['GET', '/v3/analytics/projections?artistId=art_deadmau5'],
-        ['GET', '/v3/artists/art_deadmau5/entity-audit'],
-        ['GET', '/v3/artists/art_deadmau5/development']
+        ['POST', '/v3/analytics/sales', { artistId: 'art_lumenveil', month: '2026-02', revenue: 999 }],
+        ['POST', '/v3/royalties/calculate', { artistId: 'art_lumenveil' }],
+        ['POST', '/v3/ai/query', { prompt: 'secret', artistId: 'art_lumenveil' }],
+        ['GET', '/v3/analytics/projections?artistId=art_lumenveil'],
+        ['GET', '/v3/artists/art_lumenveil/entity-audit'],
+        ['GET', '/v3/artists/art_lumenveil/development']
     ]) assert.equal((await api(artist, method, route, body)).status, 403, route);
     assert.equal((await api(artist, 'GET', '/v3/label/overview')).body.monthlyRevenue, 70);
     assert.equal((await api(artist, 'GET', '/v3/marketing/campaigns')).body.campaigns.length, 0);
@@ -164,14 +164,14 @@ test('room, campaigns and multimonth sales survive two restarts; restricted read
     assert.deepEqual(sparse.labels, ['2025-01', '2025-02', '2025-03', '2025-04', '2025-05']);
     assert.deepEqual(sparse.datasets[0].data, [40, null, 60, 70, null]); assert.equal(sparse.datasets[1].data.at(-1), 80);
     for (const endpoint of ['query', 'analyze']) {
-        const ai = await api(admin, 'POST', `/v3/ai/${endpoint}`, { prompt: 'growth', artistId: 'art_rezz' });
+        const ai = await api(admin, 'POST', `/v3/ai/${endpoint}`, { prompt: 'growth', artistId: 'art_novakin' });
         assert.equal(ai.status, 503); assert.equal(ai.body.answer, undefined);
     }
     assert.equal((await api(admin, 'GET', '/v3/ai/providers')).body.status, 'unconfigured');
     assert.equal((await api(admin, 'GET', '/v3/integrations/auth/spotify')).status, 501);
     assert.ok((await api(admin, 'GET', '/v3/integrations/status')).body.services.every(s => !s.connected));
     assert.equal((await api(admin, 'GET', '/v3/rights/contracts?artistId=missing')).status, 404);
-    assert.equal((await api(admin, 'GET', '/v3/rights/contracts?artistId=art_rezz')).status, 501);
+    assert.equal((await api(admin, 'GET', '/v3/rights/contracts?artistId=art_novakin')).status, 501);
     for (let restart = 0; restart < 2; restart++) {
         await shutdown(); await boot(); admin = await login();
         const state = (await api(admin, 'GET', '/v3/anr/state')).body;
@@ -179,9 +179,9 @@ test('room, campaigns and multimonth sales survive two restarts; restricted read
         assert.equal(state.whiteboard, 'Durable whiteboard'); assert.equal(state.nowListening.url, 'https://example.com/listen.mp3');
         assert.equal((await api(admin, 'GET', `/v3/anr/stats/${demoId}`)).body.artistVotes, 1);
         assert.ok((await api(admin, 'GET', '/v3/marketing/campaigns')).body.campaigns.some(c => c.id === draft.body.id && c.name === 'Durable plan'));
-        const forecast = (await api(admin, 'GET', '/v3/analytics/projections?artistId=art_deadmau5&months=1')).body.chartData;
+        const forecast = (await api(admin, 'GET', '/v3/analytics/projections?artistId=art_lumenveil&months=1')).body.chartData;
         assert.equal(forecast.labels.length, 14); assert.equal(forecast.labels.at(-1), '2026-02'); assert.equal(forecast.datasets[1].data.at(-1), 1400);
-        assert.equal((await sale(admin, 'art_deadmau5', '2026-01', 1300)).status, 200);
-        assert.equal((await sale(admin, 'art_rezz', `2026-0${restart + 2}`, 0)).status, 200);
+        assert.equal((await sale(admin, 'art_lumenveil', '2026-01', 1300)).status, 200);
+        assert.equal((await sale(admin, 'art_novakin', `2026-0${restart + 2}`, 0)).status, 200);
     }
 });

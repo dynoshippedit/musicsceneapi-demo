@@ -10,7 +10,7 @@ ChatGPT's recap described the **Astra stop** (D0 blocked). That stop is closed. 
 ## 1. Operator work tree (status against this repo)
 
 ```
-mau5trap / Music Label Intelligence Platform
+pulsegrid / Music Label Intelligence Platform
 │
 ├── COMPLETE
 │   ├── Phase 1 — canonical entrypoint/config
@@ -58,7 +58,7 @@ mau5trap / Music Label Intelligence Platform
 
 ## 2. Astra five blockers — CLOSED
 
-Reproduced on disposable SQLite only. Operator `mau5trap_v5.sqlite` never migrated. Regression coverage: `tests/regression/integrity.test.js`.
+Reproduced on disposable SQLite only. Operator `pulsegrid_v5.sqlite` never migrated. Regression coverage: `tests/regression/integrity.test.js`.
 
 | ID | Defect | Repair | Evidence |
 |---|---|---|---|

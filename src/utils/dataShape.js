@@ -2,7 +2,7 @@
  * src/utils/dataShape.js
  *
  * Pure data-shaping helpers extracted verbatim from
- * mau5trap-production-api.js L2067-2070, L2556-2576.
+ * production-api.js L2067-2070, L2556-2576.
  *
  * These are side-effect-free and independently testable, which is why they are
  * extracted first — they are the safest possible starting point for the split.

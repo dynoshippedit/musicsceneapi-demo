@@ -1,6 +1,6 @@
 # 👋 START HERE
 
-**Welcome to the mau5trap Intelligence Platform.**
+**Welcome to the pulsegrid Intelligence Platform.**
 
 This repository contains the full source code for the label's operating system.
 
@@ -16,8 +16,8 @@ This repository contains the full source code for the label's operating system.
     👉 Open [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md)
 
 ## Critical Files
-*   `mau5trap-production-api.js`: The backend code.
-*   `mau5trap-frontend-connected.html`: The main dashboard.
-*   `mau5trap-terminal-dashboard.html`: The executive dashboard.
+*   `production-api.js`: The backend code.
+*   `pulsegrid-frontend-connected.html`: The main dashboard.
+*   `pulsegrid-terminal-dashboard.html`: The executive dashboard.
 
 *Generated: 2025-12-10*

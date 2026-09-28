@@ -25,10 +25,10 @@ const CASES = [
     { name: 'login_empty_body', method: 'POST', path: '/v3/auth/login', body: {} },
     { name: 'login_nulls', method: 'POST', path: '/v3/auth/login', body: { email: null, password: null } },
     { name: 'login_bad_creds', method: 'POST', path: '/v3/auth/login', body: { email: 'nope@example.com', password: 'wrong' } },
-    { name: 'login_admin_seeded', method: 'POST', path: '/v3/auth/login', body: { email: 'admin@mau5trap.com', password: 'admin123' } },
-    { name: 'login_artist_seeded', method: 'POST', path: '/v3/auth/login', body: { email: 'tours@rezz.com', password: 'rezz123' } },
+    { name: 'login_admin_seeded', method: 'POST', path: '/v3/auth/login', body: { email: 'admin@pulsegrid.fm', password: 'admin123' } },
+    { name: 'login_artist_seeded', method: 'POST', path: '/v3/auth/login', body: { email: 'tours@novakin.band', password: 'novakin123' } },
     { name: 'forgot_password_unknown', method: 'POST', path: '/v3/auth/forgot-password', body: { email: 'nobody@example.com' } },
-    { name: 'forgot_password_known', method: 'POST', path: '/v3/auth/forgot-password', body: { email: 'tours@rezz.com' } },
+    { name: 'forgot_password_known', method: 'POST', path: '/v3/auth/forgot-password', body: { email: 'tours@novakin.band' } },
 
     // ---------- auth/me family (broken by missing `id` claim) ----------
     { name: 'auth_me_admin', method: 'GET', path: '/v3/auth/me', useToken: 'admin' },
@@ -38,12 +38,12 @@ const CASES = [
 
     // ---------- artists: reads ----------
     { name: 'artists_admin', method: 'GET', path: '/v3/artists?limit=3', useToken: 'admin' },
-    { name: 'artists_admin_search', method: 'GET', path: '/v3/artists?search=rezz', useToken: 'admin' },
+    { name: 'artists_admin_search', method: 'GET', path: '/v3/artists?search=novakin', useToken: 'admin' },
     { name: 'artists_admin_offset', method: 'GET', path: '/v3/artists?limit=2&offset=5', useToken: 'admin' },
-    { name: 'artist_detail_admin', method: 'GET', path: '/v3/artists/art_deadmau5', useToken: 'admin' },
+    { name: 'artist_detail_admin', method: 'GET', path: '/v3/artists/art_lumenveil', useToken: 'admin' },
     { name: 'artist_detail_missing', method: 'GET', path: '/v3/artists/art_nonexistent', useToken: 'admin' },
-    { name: 'artist_development', method: 'GET', path: '/v3/artists/art_deadmau5/development', useToken: 'admin' },
-    { name: 'monthly_sales_admin', method: 'GET', path: '/v3/artists/art_deadmau5/monthly-sales', useToken: 'admin' },
+    { name: 'artist_development', method: 'GET', path: '/v3/artists/art_lumenveil/development', useToken: 'admin' },
+    { name: 'monthly_sales_admin', method: 'GET', path: '/v3/artists/art_lumenveil/monthly-sales', useToken: 'admin' },
 
     // ---------- artists: admin-only mutations ----------
     { name: 'create_artist_missing_fields', method: 'POST', path: '/v3/artists', body: {}, useToken: 'admin' },
@@ -51,7 +51,7 @@ const CASES = [
     { name: 'archive_artist_missing', method: 'POST', path: '/v3/artists/art_nonexistent/archive', useToken: 'admin' },
     { name: 'restore_artist_missing', method: 'POST', path: '/v3/artists/art_nonexistent/restore', useToken: 'admin' },
     { name: 'image_artist_missing', method: 'PUT', path: '/v3/artists/art_nonexistent/image', body: { imageUrl: 'http://x/y.png' }, useToken: 'admin' },
-    { name: 'image_artist_role_denied', method: 'PUT', path: '/v3/artists/art_deadmau5/image', body: { imageUrl: 'http://x/y.png' }, useToken: 'artist' },
+    { name: 'image_artist_role_denied', method: 'PUT', path: '/v3/artists/art_lumenveil/image', body: { imageUrl: 'http://x/y.png' }, useToken: 'artist' },
 
     // ---------- label / ops / misc reads ----------
     { name: 'label_overview_admin', method: 'GET', path: '/v3/label/overview', useToken: 'admin' },
@@ -62,13 +62,13 @@ const CASES = [
     { name: 'ops_logistics_admin', method: 'GET', path: '/v3/operations/logistics', useToken: 'admin' },
     { name: 'ops_assets_admin', method: 'GET', path: '/v3/operations/assets', useToken: 'admin' },
     { name: 'ops_contracts_admin', method: 'GET', path: '/v3/operations/contracts', useToken: 'admin' },
-    { name: 'rights_contracts_admin', method: 'GET', path: '/v3/rights/contracts?artistId=art_deadmau5', useToken: 'admin' },
+    { name: 'rights_contracts_admin', method: 'GET', path: '/v3/rights/contracts?artistId=art_lumenveil', useToken: 'admin' },
     { name: 'rights_contracts_no_artist', method: 'GET', path: '/v3/rights/contracts', useToken: 'admin' },
 
     // ---------- royalties (money maths) ----------
-    { name: 'royalties_calc', method: 'POST', path: '/v3/royalties/calculate', body: { artistId: 'art_deadmau5', grossRevenue: 100000 }, useToken: 'admin' },
+    { name: 'royalties_calc', method: 'POST', path: '/v3/royalties/calculate', body: { artistId: 'art_lumenveil', grossRevenue: 100000 }, useToken: 'admin' },
     { name: 'royalties_calc_missing_artist', method: 'POST', path: '/v3/royalties/calculate', body: { grossRevenue: 100000 }, useToken: 'admin' },
-    { name: 'royalties_calc_zero', method: 'POST', path: '/v3/royalties/calculate', body: { artistId: 'art_deadmau5', grossRevenue: 0 }, useToken: 'admin' },
+    { name: 'royalties_calc_zero', method: 'POST', path: '/v3/royalties/calculate', body: { artistId: 'art_lumenveil', grossRevenue: 0 }, useToken: 'admin' },
 
     // ---------- AI: keyword-chain endpoint (no LLM) ----------
     { name: 'ai_analyze_roi', method: 'POST', path: '/v3/ai/analyze', body: { query: 'who has the best roi' }, useToken: 'admin' },
@@ -101,8 +101,8 @@ const CASES = [
     { name: 'anr_shortlist', method: 'POST', path: '/v3/anr/shortlist', body: { artistName: 'Probe', spotifyId: 'x' }, useToken: 'admin' },
 
     // ---------- marketing / analytics writes ----------
-    { name: 'marketing_campaign_create', method: 'POST', path: '/v3/marketing/campaigns', body: { artistId: 'art_deadmau5', type: 'Playlist Push', budget: 5000 }, useToken: 'admin' },
-    { name: 'analytics_sales_post', method: 'POST', path: '/v3/analytics/sales', body: { artistId: 'art_deadmau5', month: '2026-01', amount: 1234 }, useToken: 'admin' },
+    { name: 'marketing_campaign_create', method: 'POST', path: '/v3/marketing/campaigns', body: { artistId: 'art_lumenveil', type: 'Playlist Push', budget: 5000 }, useToken: 'admin' },
+    { name: 'analytics_sales_post', method: 'POST', path: '/v3/analytics/sales', body: { artistId: 'art_lumenveil', month: '2026-01', amount: 1234 }, useToken: 'admin' },
 
     // ---------- integrations ----------
     { name: 'integrations_status_admin', method: 'GET', path: '/v3/integrations/status', useToken: 'admin' },
@@ -121,17 +121,17 @@ const CASES = [
 
     // ---------- artist-role authorization (HIGH-4 fail-closed) ----------
     { name: 'artists_artist_role', method: 'GET', path: '/v3/artists', useToken: 'artist' },
-    { name: 'artist_own_detail_artist_role', method: 'GET', path: '/v3/artists/art_rezz', useToken: 'artist' },
-    { name: 'artist_other_detail_artist_role', method: 'GET', path: '/v3/artists/art_deadmau5', useToken: 'artist' },
-    { name: 'monthly_sales_artist_role', method: 'GET', path: '/v3/artists/art_rezz/monthly-sales', useToken: 'artist' },
+    { name: 'artist_own_detail_artist_role', method: 'GET', path: '/v3/artists/art_novakin', useToken: 'artist' },
+    { name: 'artist_other_detail_artist_role', method: 'GET', path: '/v3/artists/art_lumenveil', useToken: 'artist' },
+    { name: 'monthly_sales_artist_role', method: 'GET', path: '/v3/artists/art_novakin/monthly-sales', useToken: 'artist' },
     { name: 'exports_artist_role_labelwide', method: 'GET', path: '/v3/exports?format=csv', useToken: 'artist' },
-    { name: 'exports_artist_role_own', method: 'GET', path: '/v3/exports?format=csv&artistId=art_rezz', useToken: 'artist' },
-    { name: 'reports_monthly_artist_role', method: 'GET', path: '/v3/reports/monthly/art_rezz/2026-01', useToken: 'artist' },
+    { name: 'exports_artist_role_own', method: 'GET', path: '/v3/exports?format=csv&artistId=art_novakin', useToken: 'artist' },
+    { name: 'reports_monthly_artist_role', method: 'GET', path: '/v3/reports/monthly/art_novakin/2026-01', useToken: 'artist' },
     { name: 'reports_generate_all_artist_role', method: 'POST', path: '/v3/reports/generate-all', body: { month: '2026-01' }, useToken: 'artist' },
     { name: 'reports_generate_all_no_month', method: 'POST', path: '/v3/reports/generate-all', body: {}, useToken: 'admin' },
 
     // ---------- exports (admin, CSV only: PDF needs native canvas) ----------
-    { name: 'exports_admin_csv_artist', method: 'GET', path: '/v3/exports?format=csv&artistId=art_deadmau5', useToken: 'admin' },
+    { name: 'exports_admin_csv_artist', method: 'GET', path: '/v3/exports?format=csv&artistId=art_lumenveil', useToken: 'admin' },
     { name: 'exports_admin_csv_label', method: 'GET', path: '/v3/exports?format=csv', useToken: 'admin' },
 
     // ---------- analytics reads (nondeterministic bodies; status/shape only) ----------

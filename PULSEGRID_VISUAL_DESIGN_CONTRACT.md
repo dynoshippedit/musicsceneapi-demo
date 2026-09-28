@@ -1,6 +1,6 @@
-# MAU5TRAP VISUAL DESIGN CONTRACT
+# PULSEGRID VISUAL DESIGN CONTRACT
 
-Authoritative visual specification for the mau5trap Label Intelligence
+Authoritative visual specification for the pulsegrid Label Intelligence
 frontend. `FRONTEND_ARCHITECTURE.md` and `PHASE_4A_HANDOFF.md` reference this
 file; they do not restate it. When the two disagree, THIS file wins.
 
@@ -18,9 +18,9 @@ terminal that grew a data layer: black environment, one neon green doing all
 the signalling, monospace for anything that is a number or an identifier,
 tight sharp panels packed with information.
 
-Reference artifacts (read-only, do not edit): `mau5trap-frontend-connected.html`
+Reference artifacts (read-only, do not edit): `pulsegrid-frontend-connected.html`
 (the `:root` block at L30-52 and the sidebar/console at L3416-3796) and
-`mau5trap-terminal-dashboard.html` (the Tailwind theme at L24-46 and the
+`pulsegrid-terminal-dashboard.html` (the Tailwind theme at L24-46 and the
 terminal at L233-267). The contract below is those two files' shared
 identity, normalized and tightened — it is NOT a new design.
 
@@ -42,7 +42,7 @@ component file may declare a raw hex/rgb color, font-family, or radius.
   --color-input-bg:      rgba(0, 0, 0, 0.30);
 
   /* ============ GREEN — THE ONLY SIGNAL COLOR ============ */
-  --green-500:           #00FF5F;   /* mau5trap neon. Level-1 accent. */
+  --green-500:           #00FF5F;   /* pulsegrid neon. Level-1 accent. */
   --green-300:           #66FF9F;   /* hover/lift of level-1 text only */
   --green-700:           #00A63E;   /* pressed state of primary button */
   --green-a20:           rgba(0, 255, 95, 0.20);
@@ -81,7 +81,7 @@ component file may declare a raw hex/rgb color, font-family, or radius.
   /* ============ GEOMETRY ============ */
   --radius-control:      2px;    /* buttons, inputs, selects, badges (square-ish) */
   --radius-panel:        4px;    /* panels, cards, modals, chart/map containers */
-  --radius-pill:         999px;  /* ONLY: status pills <= 22px tall, avatar circles, the mau5-head loader */
+  --radius-pill:         999px;  /* ONLY: status pills <= 22px tall, avatar circles, the legacy mark loader */
   /* No other radius values exist. 16px "glass card" radius from the legacy file is
      deliberately RETIRED — it is the single biggest source of generic-SaaS drift. */
 
@@ -183,8 +183,8 @@ body { background: var(--color-bg) var(--gradient-decoration) fixed no-repeat;
 :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; box-shadow: var(--glow-accent-soft); }
 
 /* scrollbar: 8px; track var(--color-bg-deep); thumb #333; thumb:hover var(--color-accent) */
-/* animations: @keyframes pulse (mau5-head), scanline, blink (█ cursor), fadeIn (10px rise, 400ms) */
-@media (prefers-reduced-motion: reduce) { .scanline, .terminal-cursor::after, .mau5-head { animation: none; } }
+/* animations: @keyframes pulse (legacy mark), scanline, blink (█ cursor), fadeIn (10px rise, 400ms) */
+@media (prefers-reduced-motion: reduce) { .scanline, .terminal-cursor::after, .legacy-mark { animation: none; } }
 ```
 
 ---
@@ -205,14 +205,14 @@ Each rule is a REQUIREMENT. "Legacy" cites where the rule comes from.
 | L1 solid fill `--color-accent` | the strongest signal | primary buttons (black text), active status dots, the wordmark sublabel, KPI delta text, `.text-neon` (≤4 words), progress bar fills |
 | L2 green text | `color: var(--color-accent)` on dark | links, `.label--accent` section labels, active tab text, ROI/positive numbers, console prompt `>` |
 | L3 tint `--color-accent-dim` | selection/hover fills | active nav item bg, tier badge "flagship" bg, hover fill on rows/buttons, outline-button hover |
-| L4 glow | pulse/focus only | status dots, focus ring, console cursor, mau5-head loader ring |
+| L4 glow | pulse/focus only | status dots, focus ring, console cursor, legacy mark loader ring |
 
 - Green must remain the ONLY hue used for signalling. `--color-info` (cyan) and `--color-tier-dev` (purple) exist because the legacy NetworkGraph tier legend uses them; they are confined to that legend and to explicitly-labelled tier badges. **A page with no NetworkGraph on it has zero cyan/purple pixels.**
 - Active nav item text is `--color-text` (white) on `--color-accent-dim` — NOT green text on green tint (legacy L3469-3470).
 
 ### 3.3 Typography and monospace
 - UI prose, nav labels, button labels, paragraph text: `--font-ui`.
-- **Everything that is a number, identifier, code, timestamp, currency, percentage, or console text is `--font-mono`** with `tabular-nums`: KPI values, every numeric table cell, artist IDs (`art_deadmau5`), dates, badges, `.label` headers, form labels, the AI console (input and output), the login inputs (legacy L3089/L3106 use mono for credentials — keep).
+- **Everything that is a number, identifier, code, timestamp, currency, percentage, or console text is `--font-mono`** with `tabular-nums`: KPI values, every numeric table cell, artist IDs (`art_lumenveil`), dates, badges, `.label` headers, form labels, the AI console (input and output), the login inputs (legacy L3089/L3106 use mono for credentials — keep).
 - Section/panel/KPI labels are `.label`: 11px mono, bold, uppercase, `--tracking-label`, muted. This is the single most recognizable typographic move in the legacy UI ("TOTAL REVENUE", "PREDICTIVE ANALYTICS", "COMMAND CENTER // v3.1", "NOW PLAYING") — it must appear on every panel header and every KPI.
 - Hierarchy: page H1 28px/700 ui → section 20px/600 ui → panel title 16px/600 ui (often paired with a `.label` kicker above it) → body 14px → dense table 13px → labels 11px mono → legend 10px mono.
 - Console/terminal copy convention: idle text begins with `// `, system lines with `> ` or `[SYSTEM]`, all mono, `--leading-console`.
@@ -237,7 +237,7 @@ Each rule is a REQUIREMENT. "Legacy" cites where the rule comes from.
 
 ### 3.7 Navigation (sidebar)
 - Fixed left, `--sidebar-width`, `--color-panel` + `--gradient-decoration`, right hairline border, `backdrop-filter: blur(20px)`.
-- Top: mau5-head SVG logo (green fill) + wordmark "mau5trap" 20px/800 ui + `.label--accent` sublabel "INTELLIGENCE PLATFORM" `--tracking-wide`.
+- Top: legacy mark SVG logo (green fill) + wordmark "pulsegrid" 20px/800 ui + `.label--accent` sublabel "INTELLIGENCE PLATFORM" `--tracking-wide`.
 - Items: 40px tall, 12px/16px padding, `--radius-control`, icon (Remixicon `ri-*`, 18px) + label 14px. Inactive `--color-text-muted`; hover `--color-text`; active white text on `--color-accent-dim`, 600 weight.
 - Bottom group (pinned with `margin-top:auto`): Settings (gear), then a hairline, then "Terminate Session" (logout) in muted text with `ri-logout-box-line`. Keep the legacy copy "Terminate Session".
 - Collapsed rail (≤1279px): `--sidebar-rail-width`, icons only, tooltips on hover.
@@ -296,7 +296,7 @@ Each rule is a REQUIREMENT. "Legacy" cites where the rule comes from.
 - Focus: global ring. Active/pressed: buttons darken one step. Selected (tab, nav): `--color-accent-dim` bg + 2px `--color-accent` bottom border for tabs (legacy L2097).
 
 ### 3.17 Loading
-- Full-page: the pulsing **mau5-head** loader (legacy L200-227: 80px ring + two ear circles, `pulse 2s infinite`). This is brand; never replace with a generic spinner.
+- Full-page: the pulsing **legacy mark** loader (legacy L200-227: 80px ring + two ear circles, `pulse 2s infinite`). This is brand; never replace with a generic spinner.
 - In-panel / inline: mono muted text with a blinking block cursor: `// loading roster data█` (terminal dashboard `.terminal-cursor`). Optional flat skeleton bars (`--color-surface-1`, `--radius-control`, heights matching the text they replace) for tables/charts. **No shimmer/sweep gradient animations.**
 - Long operations (PDF report generation, AI query): mono status lines `// analyzing neural patterns...` in `--color-accent` (legacy L3756).
 
@@ -365,7 +365,7 @@ rendered page; `[judge]` is a yes/no a reviewer answers from a screenshot.
 - `[grep]` `alert(`, `confirm(`, `prompt(` in `web/src`.
 - `[grep]` A toast/snackbar library in `web/package.json`.
 - `[grep]` `outline: none` / `outline: 0` without an accompanying `:focus-visible` rule in the same file.
-- `[judge]` Loading uses a generic circular spinner instead of the mau5-head (full page) or mono cursor/skeleton (inline).
+- `[judge]` Loading uses a generic circular spinner instead of the legacy mark (full page) or mono cursor/skeleton (inline).
 - `[judge]` Empty states use an illustration, emoji, or oversized icon.
 - `[grep]` A vendor name (`Groq`, `OpenAI`, `Anthropic`, `Gemini`, `xAI`, `OpenRouter`) hardcoded in a component label/JSX string, as opposed to rendered from provider metadata returned by the API.
 - `[grep]` `localhost:3000` anywhere in `web/src`.
@@ -394,7 +394,7 @@ rendered page; `[judge]` is a yes/no a reviewer answers from a screenshot.
 [ ] Screenshot: all numbers are mono tabular
 [ ] Screenshot: no cyan/purple on Dashboard, Artists, Login
 [ ] Screenshot: background is #0A0A0A-family; the only hue present is green (+ red for danger/error states if shown)
-[ ] Full-page loader is the mau5-head; inline loading is mono cursor or flat skeleton
+[ ] Full-page loader is the legacy mark; inline loading is mono cursor or flat skeleton
 [ ] Keyboard: Tab shows the green focus ring on every interactive element
-[ ] Logo-cropped screenshot: a reviewer says "this is the mau5trap console", not "an analytics dashboard"
+[ ] Logo-cropped screenshot: a reviewer says "this is the pulsegrid console", not "an analytics dashboard"
 ```

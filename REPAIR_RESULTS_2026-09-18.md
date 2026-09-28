@@ -24,7 +24,7 @@ Implemented in the working tree after the user's “fix those problems” instru
 - Rehearsed on a consistent SQLite copy, then ran the migration twice: first repairs, second is a no-op.
 - All original table contents matched before/after by row count and SHA-256 of serialized rows: 29 artists, 2 users, 2 scouting submissions, 0 recorded sales, 0 stats, 0 audit events.
 - Stopped the old API before migrating the operator file. A private backup is saved at:
-  `/home/dino/mau5trap-repo/backups/before-sales-repair-1789709474929-b8be77a9-0646-4b11-a95b-124f16a92c7d.sqlite`
+  `/home/dino/pulsegrid-repo/backups/before-sales-repair-1789709474929-b8be77a9-0646-4b11-a95b-124f16a92c7d.sqlite`
 - SQLite integrity check passed. The only sales unique index is `(artistId, month)`.
 - Restarted the operator API on port 3000 using existing local credentials, with `SCHEDULE_JOBS=false` during verification. Existing UI on `http://127.0.0.1:5173` loads the fixes.
 - Startup created the new Room/Campaign tables; all original rows were checked again afterward and remain unchanged. No test sales, demos or campaigns were written to the operator database.

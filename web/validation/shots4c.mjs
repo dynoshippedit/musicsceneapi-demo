@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const BASE = (process.env.BASE_URL || 'http://127.0.0.1:5173').replace(/\/$/, '');
 const OUT = path.dirname(fileURLToPath(import.meta.url));
-const ADMIN = { email: 'admin@mau5trap.com', password: 'admin123' };
+const ADMIN = { email: 'admin@pulsegrid.fm', password: 'admin123' };
 
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -31,7 +31,7 @@ for (const [route, name] of [
   await page.waitForTimeout(900);
   await page.screenshot({ path: path.join(OUT, `phase4c-${name}.png`) });
 }
-await page.goto(`${BASE}/artists/art_rezz`, { waitUntil: 'networkidle' });
+await page.goto(`${BASE}/artists/art_novakin`, { waitUntil: 'networkidle' });
 await page.waitForTimeout(800);
 await page.screenshot({ path: path.join(OUT, 'phase4c-artist-detail.png') });
 

@@ -13,35 +13,35 @@ inferred from code wiring below.
 
 | Candidate | Lines | Verdict | Evidence |
 |---|---|---|---|
-| `mau5trap-production-api.js` | 3207 | **CANONICAL** | Only file the two dashboards target (port 3000, `/v3` prefix); named by `ecosystem.config.js:4`; named by `package-production.json` `main`/`start`; `module.exports = app` (L3207) |
-| `Server v5.js` | 99 | **LEGACY / ORPHAN** | Different API surface (`/api/*`, not `/v3/*`); different store (`mau5_db.json`, L15); plaintext passwords (L25-26); no frontend references it; filename contains a space so it cannot be an npm script target |
+| `production-api.js` | 3207 | **CANONICAL** | Only file the two dashboards target (port 3000, `/v3` prefix); named by `ecosystem.config.js:4`; named by `package-production.json` `main`/`start`; `module.exports = app` (L3207) |
+| `Server v5.js` | 99 | **LEGACY / ORPHAN** | Different API surface (`/api/*`, not `/v3/*`); different store (`legacy_db.json`, L15); plaintext passwords (L25-26); no frontend references it; filename contains a space so it cannot be an npm script target |
 | `server.js` | — | **DOES NOT EXIST** | `package.json:5` declares `"main": "server.js"` and `"start": "node server.js"` |
-| `mau5trap-api-server.js` | — | **DOES NOT EXIST** | `package1.json` `main`/`start`/`dev` all point at it |
+| `pulsegrid-api-server.js` | — | **DOES NOT EXIST** | `package1.json` `main`/`start`/`dev` all point at it |
 
 Verified startup behaviour (real exit codes, this machine, Node v22.23.2):
 
 ```
 $ npm start                 # uses canonical package.json
 > node server.js
-Error: Cannot find module '/home/dino/mau5trap-repo/server.js'
+Error: Cannot find module '/home/dino/pulsegrid-repo/server.js'
 EXIT: 1
 
-$ node mau5trap-production-api.js
+$ node production-api.js
 Error: Cannot find module 'express'        # node_modules absent; npm install never run
 ```
 
 So the documented start path is broken independent of dependency installation.
 `PRODUCTION_DEPLOYMENT.md` §"Deploying to Clouds" gives the correct command
-(`node mau5trap-production-api.js`), which contradicts `package.json`.
+(`node production-api.js`), which contradicts `package.json`.
 
 ### Four competing project identities
 
 | File | `name` | `version` | deps |
 |---|---|---|---|
 | `package.json` | `electronic-label-os` | 5.0.0 | 27 |
-| `package-production.json` | `mau5trap-production-api` | 3.0.0 | 8 |
-| `package1.json` | `mau5trap-api` | 3.0.0 | 4 |
-| `package-lock.json` | `mau5trap-authority-platform` | 5.0.0 | lockfileVersion 3 |
+| `package-production.json` | `production-api` | 3.0.0 | 8 |
+| `package1.json` | `pulsegrid-api` | 3.0.0 | 4 |
+| `package-lock.json` | `pulsegrid-authority-platform` | 5.0.0 | lockfileVersion 3 |
 
 `package.json` is the only manifest whose dependency set actually satisfies every
 `require()` in the tree (verified: zero missing). It is therefore the canonical manifest
@@ -79,7 +79,7 @@ is enforced.
 
 Persistence is split three ways with no owner:
 
-**(a) Sequelize / SQLite** — `mau5trap_v5.sqlite` (L139), dialect switchable to
+**(a) Sequelize / SQLite** — `pulsegrid_v5.sqlite` (L139), dialect switchable to
 postgres via `DB_DIALECT` (L128-142). Three models only:
 
 | Model | Line | Key | Notes |
@@ -143,8 +143,8 @@ sorts **in place**:
 
 Verified:
 ```
-order before: art_attlas,art_blackgummy,art_bluemora
-order after : art_holyu,art_blackgummy,art_fehrplay
+order before: art_echoharbor,art_glasswolfe,art_bluemora
+order after : art_holo u,art_glasswolfe,art_fernplay
 MUTATED: true
 ```
 Any request hitting these paths permanently reorders the roster for every subsequent
@@ -159,7 +159,7 @@ ordering, so pagination is nondeterministic per request.
 | Concern | Status | Evidence |
 |---|---|---|
 | Monthly report cron | **registered** | `cron.schedule('0 3 1 * *')` L2472; iterates `labelData.artists`, writes `reports/<YYYY-MM>/`, optional `autoPrintReport` |
-| Master sync loop | **NEVER REGISTERED** | `sync/masterLoop.js` exports `masterSyncLoop` (L80); the only `require` of it is in `test_sync.js` / `test_sync_draft.js`. `grep masterSyncLoop mau5trap-production-api.js` → no match |
+| Master sync loop | **NEVER REGISTERED** | `sync/masterLoop.js` exports `masterSyncLoop` (L80); the only `require` of it is in `test_sync.js` / `test_sync_draft.js`. `grep masterSyncLoop production-api.js` → no match |
 | `NodeCache` | active | L25, `stdTTL: 3600`; used for artist data (L296-311, 24h), entity audit (L1043, 2 weeks), Genius (L1058, unlimited), AI query (L1232) |
 | `apiCache` | **dead** | declared L724, zero reads/writes |
 | PDF | active | `pdfkit-table` L18; 4 global `ChartJSNodeCanvas` instances L28-31 |
@@ -221,9 +221,9 @@ Problems:
    as `success: true` with no distinguishing flag other than `source: 'fallback'`. A
    client reading `answer` cannot tell this from a real analysis.
 4. **`POST /v3/ai/analyze` is branded AI and is a keyword `if` chain**, hardcoding
-   `confidence: 0.98` and the literal string "Rezz is second at 6.5x" (L901). This is the
+   `confidence: 0.98` and the literal string "Novakin is second at 6.5x" (L901). This is the
    endpoint the executive Command Center calls for its "AI Query Terminal"
-   (`mau5trap-terminal-dashboard.html:492`).
+   (`pulsegrid-terminal-dashboard.html:492`).
 5. **No token/cost ceiling or per-user quota.** `max_tokens` is capped per call
    (300/400) but any authenticated user can call `POST /v3/ai/query` up to the global
    1000 req/hour IP limit. Cost is billed to the operator's Groq key.
@@ -270,12 +270,12 @@ function hasArtistAccess(user, artistId) {   // L447
 ```
 
 `User.artistAccess` is a `DataTypes.STRING` (L151) and the seeded artist gets the scalar
-`'art_rezz'` (L189). A string is never `Array.isArray`, so the function falls through to
+`'art_novakin'` (L189). A string is never `Array.isArray`, so the function falls through to
 `return false`. Verified:
 
 ```
-seeded artist user can access art_rezz?     false
-seeded artist user can access art_deadmau5? false
+seeded artist user can access art_novakin?     false
+seeded artist user can access art_lumenveil? false
 ```
 
 The seeded artist account cannot read its own artist record. Every artist-scoped
@@ -296,7 +296,7 @@ client — but **never enforced server-side**; no route reads it. It is decorati
 `POST /v3/auth/forgot-password` (L572) mints a token, stores it (L579-581), and emails a
 link to `http://localhost:8080/reset-password?token=...` — **hardcoded localhost**
 (L583). The frontend posts to `POST /v3/auth/reset-password`
-(`mau5trap-frontend-connected.html:2998`) and **that route does not exist** on the
+(`pulsegrid-frontend-connected.html:2998`) and **that route does not exist** on the
 server. The reset token can never be redeemed.
 
 Additional: L576 returns `404 {'error':'User not found'}` for unknown emails — a user
@@ -397,6 +397,6 @@ The workstation UI votes through **both** `/v3/anr/submissions/${id}/vote` and
 | `PRODUCTION_DEPLOYMENT.md` "app will crash on startup if JWT_SECRET is missing" | True only when `NODE_ENV === 'production'` (L215). Otherwise silently falls back to `'your-secret-key-change-this'` (L411) |
 | `PRODUCTION_DEPLOYMENT.md` "In-memory caching for the heavy `/v3/artists` endpoint (5-minute TTL)" | `apiCache` (L724) is dead; `/v3/artists` (L729) is uncached and hits the DB every request |
 | `PRODUCTION_DEPLOYMENT.md` "Logs are written to the `logs/` directory" | `logs/` absent, no `mkdirSync` |
-| Server banner L3201 `joel@deadmau5.com (mau5123)` | Never seeded. Only 2 users created (L188-189). Also asserted by `MASTER_GUIDE.md:130`, `PRODUCTION_FEATURES.md:50` |
+| Server banner L3201 `demo@novakin.band (demopass123)` | Never seeded. Only 2 users created (L188-189). Also asserted by `MASTER_GUIDE.md:130`, `PRODUCTION_FEATURES.md:50` |
 | Banner L3193 "Monthly Report Generation ✓", L3194 "Auto-Printing Enabled ✓" | Cron is registered but printing requires `AUTO_PRINT=true` (L2493); banner prints unconditionally |
 | `START_HERE.md` "full source code for the label's operating system" | Canonical entrypoint cannot start via documented command |

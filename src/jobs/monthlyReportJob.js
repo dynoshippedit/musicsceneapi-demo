@@ -2,7 +2,7 @@
  * src/jobs/monthlyReportJob.js
  *
  * Scheduled monthly report generation and the printer shell-out, extracted
- * from mau5trap-production-api.js (cron.schedule at Phase 1 L1888-1918 and
+ * from production-api.js (cron.schedule at Phase 1 L1888-1918 and
  * autoPrintReport at L1921-1945).
  *
  * ============================================================================
@@ -10,7 +10,7 @@
  * ============================================================================
  * The original registered the cron job as a SIDE EFFECT of requiring the API
  * module. That meant:
- *   - every `require('./mau5trap-production-api')` in a test started a timer,
+ *   - every `require('./production-api')` in a test started a timer,
  *     which is why tests had to run with --test-force-exit
  *   - the schedule could not be disabled for a test run
  *

@@ -1,8 +1,8 @@
 # COMMERCIAL_FOUNDATION_RECHECK.md
 
-**Date:** 2026-09-17 · **Repo:** `/home/dino/mau5trap-repo` (branch `master`, HEAD `7efb44b` + uncommitted Phase 4C tree)
+**Date:** 2026-09-17 · **Repo:** `/home/dino/pulsegrid-repo` (branch `master`, HEAD `7efb44b` + uncommitted Phase 4C tree)
 **Nature:** Independent adversarial recheck of `COMMERCIAL_PRODUCT_READINESS_AUDIT.md` (Kimi K3, 2026-09-17 02:25). No fixes implemented, no Phase 4D started, nothing committed. Exactly one new repository file: this one.
-**Method:** every Kimi finding was re-traced from source AND re-reproduced live against a throwaway database (fresh SQLite in `/tmp/recheck-probe`, server on :3100, ~40 probes across two restart cycles). The operator's `mau5trap_v5.sqlite` was never opened by the probe server (storage is a cwd-relative path; the probe ran from /tmp). Verified untouched at session end: mtime 01:39, size 167,936, unchanged.
+**Method:** every Kimi finding was re-traced from source AND re-reproduced live against a throwaway database (fresh SQLite in `/tmp/recheck-probe`, server on :3100, ~40 probes across two restart cycles). The operator's `pulsegrid_v5.sqlite` was never opened by the probe server (storage is a cwd-relative path; the probe ran from /tmp). Verified untouched at session end: mtime 01:39, size 167,936, unchanged.
 **Repro environment:** Node v22.23.2, `npm test` → **127 pass / 0 fail / 27 suites** (exactly matches Kimi's claim), static portability gate `--self-test` → **23/23 pass** (re-run independently).
 
 ---
@@ -11,7 +11,7 @@
 
 **Kimi's commercial audit is materially trustworthy.** All seven headline findings were reproduced live, byte-for-byte where claims were specific (line numbers, stored values, status codes). Three of its claims are imprecise, one conclusion is understated by the audit itself, and one remediation premise is wrong in a way that makes the fix slightly larger than described — none of these change the audit's recommendations, and all are detailed below.
 
-The repository is exactly what Kimi says: a well-disciplined single-label prototype with a portable frontend, a tested but mau5trap-coupled backend, three live lying-success CRUD defects, split-brain artist persistence, and process-memory "product" state. The commercial gap is a small number of cheap seams, not a rewrite. Nothing found requires re-litigating the audit.
+The repository is exactly what Kimi says: a well-disciplined single-label prototype with a portable frontend, a tested but pulsegrid-coupled backend, three live lying-success CRUD defects, split-brain artist persistence, and process-memory "product" state. The commercial gap is a small number of cheap seams, not a rewrite. Nothing found requires re-litigating the audit.
 
 The one place this recheck is STRICTER than Kimi: ordinary Phase 4D feature work should not begin until the CRUD-truth pass lands, because two of the reproduced defects (silently dropped `artistAccess`; unguarded user deletion) sit on surfaces Phase 4C already shipped and 4D will build on.
 
@@ -22,16 +22,16 @@ The one place this recheck is STRICTER than Kimi: ordinary Phase 4D feature work
 | Claim area | Independent result |
 |---|---|
 | Test suite 127 pass / 0 fail / 27 suites | **REPRODUCED EXACTLY** (own run) |
-| F-1 artistAccess silently dropped by live PUT | **CONFIRMED live** (`PUT {artistAccess:'art_deadmau5'}` → `{success:true}`; read-back `'art_rezz'`) |
+| F-1 artistAccess silently dropped by live PUT | **CONFIRMED live** (`PUT {artistAccess:'art_lumenveil'}` → `{success:true}`; read-back `'art_novakin'`) |
 | F-2 reachable DELETE lacks self-delete/root-admin guards | **CONFIRMED live** (admin deleted root admin id=1 → root login 401; self-delete → 200) |
 | F-3 API-created artists 404 on detail/archive after restart | **CONFIRMED live** (list total=1, detail/archive/restore/image all 404 post-restart) |
-| F-4 duplicate artist name → success with divergence | **CONFIRMED live** (`POST {name:'deadmau5'}` on existing → 200) |
+| F-4 duplicate artist name → success with divergence | **CONFIRMED live** (`POST {name:'lumenveil'}` on existing → 200) |
 | F-5 A&R/sales/integrations/campaigns lost on restart | **CONFIRMED live** (sales [1000,2000,3000]→synthetic [10946892,…]; A&R 3→2 seeds; spotify disconnected; whiteboard reverted) |
 | F-6 quotaUsed `Math.random()` per call | **CONFIRMED live** (two consecutive status calls, every service's quota changed) |
 | F-7 validation gaps (sideways vote, ghost sales, 1-char password, malformed JSON 500, limit=abc, reset-password 404, free-text role) | **CONFIRMED live or code-certain** (all probed except ghost-sales and free-text role, both certain from code: no artistId check at `analytics.js:79-90`; zod `role: z.string().min(1)` with no enum at `src/validation/index.js:42` — fail-closed, so low severity) |
-| F-8 PM2 entrypoint exits immediately | **CONFIRMED live** (`node mau5trap-production-api.js` → exit 0) |
+| F-8 PM2 entrypoint exits immediately | **CONFIRMED live** (`node production-api.js` → exit 0) |
 | F-9 unbounded paid-provider spend | **CODE-CONFIRMED** (JWT-only, `refresh=true` bypasses cache, only global 1000/h/IP limiter); not runtime-probed (no Groq key in probe env) |
-| Label-literal inventory (R01–R33 class) | **SPOT-CHECKED, ALL PRESENT** (48 mau5trap hits across 28 `src/` files; prompts.js:37, aiService.js:133, monthlyReport.js:45/54/446, reports.js:149/175, auth.js:173, models seeds, config email default, integrations.js:69 KG prefix, entityAudit.js hardcoded `deadmau5.fandom.com`) |
+| Label-literal inventory (R01–R33 class) | **SPOT-CHECKED, ALL PRESENT** (48 pulsegrid hits across 28 `src/` files; prompts.js:37, aiService.js:133, monthlyReport.js:45/54/446, reports.js:149/175, auth.js:173, models seeds, config email default, integrations.js:69 KG prefix, entityAudit.js hardcoded `lumenveil.fandom.com`) |
 | `ARTIST_MAPPINGS` 2/29 coverage; Instagram `getAccountData()` unscoped per artist | **CONFIRMED in source** (`integrations/index.js:12-30`, `:68`) |
 | zod wired to exactly 2 write routes | **CONFIRMED** (grep: `aiQuery`, `createUser` only) |
 | Stats table never written | **CONFIRMED** (`sync/masterLoop.js` is the only writer; unregistered per `src/jobs/index.js:7`) |
@@ -43,7 +43,7 @@ The one place this recheck is STRICTER than Kimi: ordinary Phase 4D feature work
 2. The audit's §5 F-2 credits the shadowed duplicate with the self-delete guard and the `DELETE /v3/auth/me` route with the root-admin guard — both true — but doesn't state plainly that **no reachable route has either guard**, which it implicitly concludes correctly. Presentation nuance only.
 3. Kimi's §6 error-envelope row counts four response shapes including `{error,message}`. Current source has **three** error shapes (`{error}`, `{error,details[]}`, `{error,path}`); no `{error,message}` pair exists anywhere in `src/routes/` (grep-verified this session). The normalization recommendation is unaffected.
 
-**Understatement in Kimi's own finding (blast radius):** F-3 is wider than described. Not only API-created artists diverge after restart — **seeded/mock artists do too**. Live probe: archive `art_rezz` → 200; DB row persisted `tier:'archived'`; after restart the LIST shows `tier=archived` (reads DB) while DETAIL shows `tier=flagship` (reads memory). Archive/restore/image effects are silently non-durable for the detail view on every roster artist, not just created ones.
+**Understatement in Kimi's own finding (blast radius):** F-3 is wider than described. Not only API-created artists diverge after restart — **seeded/mock artists do too**. Live probe: archive `art_novakin` → 200; DB row persisted `tier:'archived'`; after restart the LIST shows `tier=archived` (reads DB) while DETAIL shows `tier=flagship` (reads memory). Archive/restore/image effects are silently non-durable for the detail view on every roster artist, not just created ones.
 
 **Verdict: materially trustworthy. CONFIRMED with corrections as noted.**
 
@@ -55,7 +55,7 @@ The one place this recheck is STRICTER than Kimi: ordinary Phase 4D feature work
 - `AdminPage.jsx:58` builds edit payload `{ name, role, artistAccess, pageAccess }` → `updateUser()` → `PUT /v3/users/:id`.
 - Reachable handler `src/routes/users.js:131-161` destructures `{ email, role, pageAccess, name, password }` — **no `artistAccess`** — then saves. Returns `{success:true}`.
 - The shadowed duplicate at `:196-213` *does* assign `artistAccess` (`if (artistAccess) user.artistAccess = artistAccess`) but is unreachable: Express binds the first matching registration.
-- **Live:** `PUT /v3/users/2 {artistAccess:'art_deadmau5',…}` → `200 {success:true}`; `GET /v3/users` → stored value unchanged (`'art_rezz'`).
+- **Live:** `PUT /v3/users/2 {artistAccess:'art_lumenveil',…}` → `200 {success:true}`; `GET /v3/users` → stored value unchanged (`'art_novakin'`).
 
 **Classification: CONFIRMED.** It is one field bug — but it is the second instance of a defect class (pageAccess had the identical silent-drop until the Phase 4C fix at `users.js:136-144`), and it lands on the one permission that scopes staff users to artists. The 4C fix pattern (destructure + persist + round-trip test) exists in-file; `artistAccess` was simply not included. **Evidence of class, not systemic schema mismatch** — the frontend permission structures round-trip fine everywhere else (probed: create persists `artistAccess`; login/`/me` agree).
 
@@ -68,8 +68,8 @@ The one place this recheck is STRICTER than Kimi: ordinary Phase 4D feature work
 **Trace (independent):**
 - Reachable `DELETE /v3/users/:id` at `users.js:164-168`: admin check → `User.destroy` → `{success:true}`. **No self-delete guard, no root-admin guard, no last-admin check.**
 - Shadowed duplicate `:216-229` has self-delete only (`user.email === req.user.email` → 400). Unreachable.
-- Root-admin protection exists ONLY on `DELETE /v3/auth/me` (`auth.js:173`), which hardcodes `admin@mau5trap.com` — a label literal inside an authorization rule (separate coupling defect, noted for 4-LABEL).
-- **Live:** admin2 deleted rezz (200), deleted **root admin id=1** (200 → root login 401), deleted **itself** (200 → login 401). The UI hides self-delete, but the server is authoritative and offers no protection.
+- Root-admin protection exists ONLY on `DELETE /v3/auth/me` (`auth.js:173`), which hardcodes `admin@pulsegrid.fm` — a label literal inside an authorization rule (separate coupling defect, noted for 4-LABEL).
+- **Live:** admin2 deleted novakin (200), deleted **root admin id=1** (200 → root login 401), deleted **itself** (200 → login 401). The UI hides self-delete, but the server is authoritative and offers no protection.
 
 **Classification: CONFIRMED.** Kimi's severity (MAJOR) is correct; the Phase 4C handoff's own rating of the self-delete gap as "MINOR, untouched" is understated — it missed root-admin deletion and token survival entirely.
 
@@ -103,7 +103,7 @@ The one place this recheck is STRICTER than Kimi: ordinary Phase 4D feature work
 - **Create** (`artists.js:106-116`): `Artist.create` to DB **and** `labelData.artists.push` to shared memory. On DB failure: memory-only push + 200 warning (prototype-robustness pattern that has become a lying-success).
 - **List** (`:51-58`): `Artist.findAll()` (DB) ∪ `labelData.artists` (memory), id-deduped. Inline — does NOT call `artistRepo.findAllHybrid()` (dead code, zero call sites).
 - **Detail** (`:189`), **archive** (`:124`), **restore** (`:143`), **image** (`:163`): `labelData.artists.find(...)` — **memory only**; DB updates happen opportunistically but are never read back.
-- **Live:** created artist: list 200 / detail 404 / archive 404 after restart (DB row exists, memory does not). Seeded artist `art_rezz`: archived pre-restart → post-restart list shows `archived`, detail shows `flagship` — **the same artist disagrees with itself across two views.**
+- **Live:** created artist: list 200 / detail 404 / archive 404 after restart (DB row exists, memory does not). Seeded artist `art_novakin`: archived pre-restart → post-restart list shows `archived`, detail shows `flagship` — **the same artist disagrees with itself across two views.**
 
 **Classification: CONFIRMED.** One canonical source of truth does not exist; there are two (`Artist` table and the mutable `mock/artistData.js` object graph) and routes pick whichever they were originally written against. The architectural origin is the hybrid prototype pattern, now cemented by the verbatim-move refactoring discipline.
 
@@ -143,7 +143,7 @@ Verified live across a restart. Contract proposal per state domain:
 
 ## 9. PM2/deployment finding — **CONFIRMED**
 
-`ecosystem.config.js:4` → `script: './mau5trap-production-api.js'`; that file is a pure module (`module.exports = app`, no listen — its own header says so). Verified live: `node mau5trap-production-api.js` exits **0 immediately**. PM2 would restart-loop it; and `instances:'max'` + `exec_mode:'cluster'` would additionally shard every in-memory store across workers (anrSubmissions, salesData, userIntegrations) making state incoherent *within* a single run — moot only because the process exits. **Correct now**, not later: it is a few-line file fix (script → `server.js`, `instances: 1`, env section), the deployment docs currently describe a path that cannot work, and deployment truth is part of the pre-pilot definition of done. Doing deployment work was out of scope; verifying it was not.
+`ecosystem.config.js:4` → `script: './production-api.js'`; that file is a pure module (`module.exports = app`, no listen — its own header says so). Verified live: `node production-api.js` exits **0 immediately**. PM2 would restart-loop it; and `instances:'max'` + `exec_mode:'cluster'` would additionally shard every in-memory store across workers (anrSubmissions, salesData, userIntegrations) making state incoherent *within* a single run — moot only because the process exits. **Correct now**, not later: it is a few-line file fix (script → `server.js`, `instances: 1`, env section), the deployment docs currently describe a path that cannot work, and deployment truth is part of the pre-pilot definition of done. Doing deployment work was out of scope; verifying it was not.
 
 ---
 
@@ -163,7 +163,7 @@ Verified live across a restart. Contract proposal per state domain:
 
 Credible and correct for this product. Each paying label gets: own process, own SQLite/Postgres, own label profile (env `LABEL_SLUG`), own users, own integration credentials, optional API access. Everything verified in this recheck composes with that model: the global in-memory stores, single cron, single cache, and one DB path are all *fine* for one dedicated instance; they are fatal only for shared tenancy. The dedicated model also makes the persist-or-demo contract (§7) the real line: on a dedicated instance, "process memory" only breaks across restarts, not across customers.
 
-**One prerequisite Kimi underweights:** DB selection must move from the hardcoded `storage:'mau5trap_v5.sqlite'` (`config/index.js:82`) to profile/env (the audit lists it in 4-LABEL scope; this recheck confirms there is NO `DB_STORAGE` env read today). Without it, two dedicated instances on one host silently share a database file when run from the same cwd — the deployment model's isolation assumption fails before tenancy is even attempted.
+**One prerequisite Kimi underweights:** DB selection must move from the hardcoded `storage:'pulsegrid_v5.sqlite'` (`config/index.js:82`) to profile/env (the audit lists it in 4-LABEL scope; this recheck confirms there is NO `DB_STORAGE` env read today). Without it, two dedicated instances on one host silently share a database file when run from the same cwd — the deployment model's isolation assumption fails before tenancy is even attempted.
 
 ---
 
@@ -213,15 +213,15 @@ No public developer platform is needed now. The three "YES" rows are the cheap-n
 
 ## 16. Backend label portability
 
-Verified coupling (all confirmed in source this session): AI system prompt (`prompts.js:37`), keyword-path hardcodes (`aiService.js:133`), KG search prefix (`integrations.js:69`), Fandom host (`entityAudit.js` — `deadmau5.fandom.com` hardcoded, all artists), report identity (`reports.js:149/175`, `monthlyReport.js:45/54/446`), email identity (`config` default + `auth.js:147` subject), root-admin email in an authorization rule (`auth.js:173`), seed accounts with mau5trap emails/weak passwords (`models/index.js:94-106`), chart accent hex, server banner, `ARTIST_MAPPINGS` (2/29 artists).
+Verified coupling (all confirmed in source this session): AI system prompt (`prompts.js:37`), keyword-path hardcodes (`aiService.js:133`), KG search prefix (`integrations.js:69`), Fandom host (`entityAudit.js` — `lumenveil.fandom.com` hardcoded, all artists), report identity (`reports.js:149/175`, `monthlyReport.js:45/54/446`), email identity (`config` default + `auth.js:147` subject), root-admin email in an authorization rule (`auth.js:173`), seed accounts with pulsegrid emails/weak passwords (`models/index.js:94-106`), chart accent hex, server banner, `ARTIST_MAPPINGS` (2/29 artists).
 
-**Timing answer: B — first bounded section of Phase 4D (or an immediately-preceding bounded phase), NOT after ordinary 4D.** The 4C handoff already names 4-LABEL as its Phase 4D item #2; this recheck confirms it must keep that position, and that no new backend feature should be written against literals in the meantime. Option A (before 4D) and B (first section of 4D) differ only in bookkeeping; the binding constraint is: the profile exists before any new persistence-heavy or customer-visible backend feature. The intended architecture — generic service reading an active Label Intelligence Profile with mau5trap as default data — is right; nothing mau5trap-specific should be removed, only externalized.
+**Timing answer: B — first bounded section of Phase 4D (or an immediately-preceding bounded phase), NOT after ordinary 4D.** The 4C handoff already names 4-LABEL as its Phase 4D item #2; this recheck confirms it must keep that position, and that no new backend feature should be written against literals in the meantime. Option A (before 4D) and B (first section of 4D) differ only in bookkeeping; the binding constraint is: the profile exists before any new persistence-heavy or customer-visible backend feature. The intended architecture — generic service reading an active Label Intelligence Profile with pulsegrid as default data — is right; nothing pulsegrid-specific should be removed, only externalized.
 
 ---
 
 ## 17. Label Intelligence Profile assessment
 
-**Boundary should exist now. Cost now LOW-MEDIUM, later VERY HIGH.** Beyond the frontend `BrandProfile` (identity/locale/assets), the backend profile must own: search context + query prefixes; known artists/aliases; knowledge sources + parser selection (the Fandom parser hardcodes the host and English section keywords — `'Current'`/`'Former'`/`'Previous'`/`'Artists'`, `entityAudit.js:546-590` — verified this session); benchmark/comparison artists; A&R assumptions + scouting fixtures; AI system context + fallback copy; social mappings; venue/location intelligence; integration metadata; report identity; email identity; fan-demographics fixtures; operations fixtures; root admin; **DB selection**; locale/currency/timezone. mau5trap values move in verbatim as the default profile. The frontend half of this discipline is already enforced by a self-testing static gate (23/23 re-run); the backend needs the same rule (grep-based lint is enough initially). This is the single highest-leverage item and it converts "provision a second label" from a ~20-file source edit into configuration.
+**Boundary should exist now. Cost now LOW-MEDIUM, later VERY HIGH.** Beyond the frontend `BrandProfile` (identity/locale/assets), the backend profile must own: search context + query prefixes; known artists/aliases; knowledge sources + parser selection (the Fandom parser hardcodes the host and English section keywords — `'Current'`/`'Former'`/`'Previous'`/`'Artists'`, `entityAudit.js:546-590` — verified this session); benchmark/comparison artists; A&R assumptions + scouting fixtures; AI system context + fallback copy; social mappings; venue/location intelligence; integration metadata; report identity; email identity; fan-demographics fixtures; operations fixtures; root admin; **DB selection**; locale/currency/timezone. pulsegrid values move in verbatim as the default profile. The frontend half of this discipline is already enforced by a self-testing static gate (23/23 re-run); the backend needs the same rule (grep-based lint is enough initially). This is the single highest-leverage item and it converts "provision a second label" from a ~20-file source edit into configuration.
 
 ---
 
@@ -229,7 +229,7 @@ Verified coupling (all confirmed in source this session): AI system prompt (`pro
 
 **Scenario A — independent label, 5 users, 50 artists, dedicated deployment.**
 - Works today: auth/RBAC basics, roster viewing, dashboards, exports, frontend re-skin (verified by prior phases; static gate re-run green).
-- Breaks: roster swap is a source edit (`mock/artistData.js` + DB); mau5trap leaks in PDFs/emails/AI/KG-prefix/banner; created artists 404 after restart (§6); A&R/sales vanish (§7); PM2 path dead (§9); seeds create mau5trap admin with published password on their first boot.
+- Breaks: roster swap is a source edit (`mock/artistData.js` + DB); pulsegrid leaks in PDFs/emails/AI/KG-prefix/banner; created artists 404 after restart (§6); A&R/sales vanish (§7); PM2 path dead (§9); seeds create pulsegrid admin with published password on their first boot.
 - Schema changes: none. API changes: none. Infra: DB file per instance, single-process pm2/systemd, seed-credential rotation.
 - Verdict: **feasible only after 4-LABEL + CRUD fixes + persist decision; then genuinely credible.**
 
@@ -255,7 +255,7 @@ Honestly: **none materially.** The two imprecisions (§2: "reuse the list's seam
 
 ## 20. Findings Kimi missed
 
-1. **Split-brain blast radius (MAJOR):** seeded artists' archive/restore/image state diverges across views after restart (list=DB, detail=memory). Kimi described F-3 as affecting API-created artists only. Live-probed: `art_rezz` archived → list `archived`, detail `flagship` post-restart.
+1. **Split-brain blast radius (MAJOR):** seeded artists' archive/restore/image state diverges across views after restart (list=DB, detail=memory). Kimi described F-3 as affecting API-created artists only. Live-probed: `art_novakin` archived → list `archived`, detail `flagship` post-restart.
 2. **`artistRepo.findAllHybrid()` is dead code (MODERATE):** the repository layer that was supposed to unify artist access has zero call sites on the list path; `GET /v3/artists` re-implements the union inline. The Phase 2 "repository" exists but is not yet the source of truth for the roster. (Kimi's remediation text implies it is.)
 3. **Audit-seam sequencing (MODERATE, advisory):** auditing in-memory stores before the persist-or-demo decision doubles the wiring work (§13).
 4. **Request logger runs pre-auth (MINOR):** the usage-attribution userId cannot be attached at the current log site without reordering or post-auth logging (§14).
@@ -293,9 +293,9 @@ Strong asymmetries (LOW/MEDIUM now → HIGH/VERY HIGH later), in priority order:
 
 All reproduced this session. Combined scope ≈ one focused day + tests.
 
-1. **F-1 artistAccess silent drop** — `src/routes/users.js:131-161` live PUT. Problem: admin edits Artist Access, gets success, nothing stored. Evidence: live probe (PUT `art_deadmau5` → read-back `art_rezz`); frontend `AdminPage.jsx:58` sends it. Consequence: the one artist-scoping permission is uneditable through the product, silently. Response: destructure + assign `artistAccess` (guard `!== undefined`) in the live handler; add round-trip snapshot test (pageAccess 4C pattern). Cost LOW / MEDIUM.
+1. **F-1 artistAccess silent drop** — `src/routes/users.js:131-161` live PUT. Problem: admin edits Artist Access, gets success, nothing stored. Evidence: live probe (PUT `art_lumenveil` → read-back `art_novakin`); frontend `AdminPage.jsx:58` sends it. Consequence: the one artist-scoping permission is uneditable through the product, silently. Response: destructure + assign `artistAccess` (guard `!== undefined`) in the live handler; add round-trip snapshot test (pageAccess 4C pattern). Cost LOW / MEDIUM.
 2. **F-2 unguarded user deletion** — live `DELETE /v3/users/:id` (`:164-168`). Problem: any admin deletes root admin or itself; no last-admin concept. Evidence: live probe (root id=1 deleted → root login 401; self-delete 200). Consequence: permanent lockout of the only superuser; offboarding doesn't cut access (§5). Response: self-delete block by `req.user.id`; root-admin block (email literal until profile owns it); keep JWT-revocation as documented debt pending §5. Cost LOW / MEDIUM-HIGH.
-3. **F-4 duplicate artist → 409** — `artists.js:90-117`. Problem: duplicate name returns 200 and pushes a memory twin (visible to `find()`). Evidence: live probe (second `deadmau5` create → 200). Response: pre-check by id, 409 on conflict, stop the memory-fallback write pattern (fall back to memory only for the SEED path, never for writes). Cost LOW / MEDIUM.
+3. **F-4 duplicate artist → 409** — `artists.js:90-117`. Problem: duplicate name returns 200 and pushes a memory twin (visible to `find()`). Evidence: live probe (second `lumenveil` create → 200). Response: pre-check by id, 409 on conflict, stop the memory-fallback write pattern (fall back to memory only for the SEED path, never for writes). Cost LOW / MEDIUM.
 4. **F-7 validation batch** — vote `direction` enum (`anr.js:80-110`; 'sideways' accepted, live-probed); sales artistId existence (`analytics.js:79-90`); change-password min length (`auth.js:209-230`; 1-char accepted, live-probed); malformed JSON → 400 (currently 500, live-probed). Response: extend the existing zod layer to these write routes. Cost LOW / MEDIUM.
 
 ---
@@ -304,7 +304,7 @@ All reproduced this session. Combined scope ≈ one focused day + tests.
 
 1. **Artist repository unification** (§6): single DB-first findById + list-through-`findAllHybrid`; memory demoted to seed/cache. DO NOT patch endpoints individually.
 2. **Persist-or-demo decision, then persistence** (§7): A&R submissions/votes + sales as small Sequelize models; campaigns marked DEMO or persisted; integration connections stay demo until real OAuth. The DECISION is the urgent part; it determines the schema work.
-3. **ActiveLabelProfile backend seam** (4-LABEL): env-selected profile owning datasets/intelligence/identity/rootAdmin/DB selection; mau5trap values verbatim as default. Plus the ownership rule for new code (grep-level enforcement initially).
+3. **ActiveLabelProfile backend seam** (4-LABEL): env-selected profile owning datasets/intelligence/identity/rootAdmin/DB selection; pulsegrid values verbatim as default. Plus the ownership rule for new code (grep-level enforcement initially).
 4. **Audit event table + emit points** — after #2's models exist (§13).
 5. **Usage attribution** — requestId + post-auth userId logging; `recordUsage` hook at AI completion and entity-audit refresh (§14).
 6. **Deployment truth** — `ecosystem.config.js` → `server.js`, `instances:1`; DB storage via env/profile; reconcile `.env.example`/`.env.prod.template` (verified: they disagree — prod omits `GROQ_API_KEY`, adds unread `OPENAI_API_KEY`/`SESSION_SECRET`); seeds-from-profile (§11, #14 above).
@@ -320,7 +320,7 @@ All reproduced this session. Combined scope ≈ one focused day + tests.
 4. Error-envelope normalization; malformed JSON → 400.
 5. API_INVENTORY → minimal OpenAPI reference; one-paragraph versioning/compatibility policy.
 6. DB-aware readiness check + backup/restore runbook for the SQLite file.
-7. Root admin + seeds sourced from the label profile (no mau5trap email in authz rules, no published default passwords on customer boots).
+7. Root admin + seeds sourced from the label profile (no pulsegrid email in authz rules, no published default passwords on customer boots).
 8. Read-back round-trip tests for every admin/roster write (extend the 4C pageAccess pattern to artistAccess, artists, delete guards).
 9. `resolvePrincipal` seam landed (§15) even if only user-JWTs flow through it.
 
@@ -428,5 +428,5 @@ Rationale: two reproduced defects sit on shipped 4C surfaces (Admin › Team edi
 
 - `git status --short`: identical to session start (27 modified, same untracked set). The ONLY new repository file created by this review is this one: `COMMERCIAL_FOUNDATION_RECHECK.md`.
 - `git diff --stat`: unchanged (27 files, +1340/−57).
-- Working database `mau5trap_v5.sqlite`: untouched (mtime 2026-09-17 01:39, size 167,936, verified at close).
+- Working database `pulsegrid_v5.sqlite`: untouched (mtime 2026-09-17 01:39, size 167,936, verified at close).
 - Throwaway probe environment (`/tmp/recheck-probe`, port 3100): removed; probe server stopped.

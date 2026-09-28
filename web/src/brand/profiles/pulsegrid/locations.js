@@ -1,15 +1,15 @@
 /**
- * mau5trap LOCATION DATA — brand/profile data, not platform code.
+ * pulsegrid LOCATION DATA — brand/profile data, not platform code.
  *
  * This is the legacy `FanHeatmap` region/city/venue centre table
- * (mau5trap-frontend-connected.html L988-1011) preserved VERBATIM, moved here rather than
+ * (legacy connected frontend L988-1011) preserved VERBATIM, moved here rather than
  * deleted (architecture §14.1 "externalize, never remove"; PHASE_4A_HANDOFF.md §17 map
  * portability). The generic `components/maps/GeoHeatmap.jsx` contains no coordinate of its
  * own: it resolves a region name through the ACTIVE profile's `map.centers`, or plots
  * coordinates supplied with the dataset.
  *
  * The venue entries are label-specific intelligence (the rooms this label's audience is
- * measured in). They stay with the mau5trap profile and travel with it.
+ * measured in). They stay with the pulsegrid profile and travel with it.
  */
 export const centers = {
   'North America': [40, -100], Europe: [52, 20], Asia: [30, 100],

@@ -1,6 +1,6 @@
 # BACKEND_ARCHITECTURE.md
 
-Current state of the mau5trap backend after the Phase 2 decomposition.
+Current state of the pulsegrid backend after the Phase 2 decomposition.
 Every claim here was verified against the source; line references point at the
 module that now owns the behavior.
 
@@ -14,7 +14,7 @@ It is deliberately thin and owns boot ORDER, which the original got wrong.
 ```
 server.js
   1. config.assertProductionSecrets()     // fail fast before any side effect
-  2. require('./mau5trap-production-api') // builds the Express app (no listen)
+  2. require('./production-api') // builds the Express app (no listen)
   3. await api.initializeDatabase()       // connect, sync, seed
   4. registerJobs()                       // cron registered explicitly
   5. app.listen(PORT)                     // only now accept traffic
@@ -26,12 +26,12 @@ Two ordering bugs from the original are fixed by this sequence:
 - **Cold-start race.** The monolith called `initDB()` at module scope and bound
   the listener immediately, so on a fresh database seeded users did not exist
   when the first request arrived. Measured: **1 of 6 cold starts returned 401
-  for `admin@mau5trap.com`**. Now init is awaited before `listen`; 6/6 return
+  for `admin@pulsegrid.fm`**. Now init is awaited before `listen`; 6/6 return
   200.
 - **Guard ran after the DB connection.** `JWT_SECRET` validation happened
   *after* `initDB()` was dispatched. It is now the first statement executed.
 
-`mau5trap-production-api.js` is no longer a monolith. It is a ~80-line
+`production-api.js` is no longer a monolith. It is a ~80-line
 assembler: middleware → routes → error handlers, plus
 `module.exports = { app, initializeDatabase, PORT }`.
 
@@ -41,7 +41,7 @@ assembler: middleware → routes → error handlers, plus
 
 ```
 server.js                     canonical entrypoint (boot order, listen, signals)
-mau5trap-production-api.js    app assembler (middleware -> routes -> handlers)
+production-api.js    app assembler (middleware -> routes -> handlers)
 
 src/
   config/
@@ -181,7 +181,7 @@ error`); the route maps it to the pre-existing bodies and status codes.
 ### Preserved AI defects
 
 - `POST /v3/ai/analyze` performs **no model call** — substring matching with a
-  hardcoded `confidence: 0.98` and the literal "Rezz is second at 6.5x". It is
+  hardcoded `confidence: 0.98` and the literal "Novakin is second at 6.5x". It is
   now named `analyzeByKeyword()` so the fake is explicit.
 - The **dev fallback fabricates analytics**: outside production a failed call
   returns `200 {success:true, answer:"[Dev Fallback] Growth is stable at
@@ -249,7 +249,7 @@ invoked** — the scout handler returns hardcoded mocks inside a `setTimeout`. T
 fixtures moved to `scoutService.js` and the fake-credential client is gone. No
 response changed.
 
-Preserved integration defects: only `art_deadmau5` and `art_rezz` have external
+Preserved integration defects: only `art_lumenveil` and `art_novakin` have external
 id mappings (27 of 29 artists are permanently mock); failures degrade silently
 to mock with no `source` flag on the response; the rate limiters are wired to a
 diagnostic endpoint only and throttle no real call; the registry lists four

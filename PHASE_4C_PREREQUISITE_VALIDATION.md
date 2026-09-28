@@ -5,7 +5,7 @@
 **PRE-4C CONTRACT ALIGNMENT VALIDATED — PHASE 4C READY: YES. Nothing committed; the working tree is
 left for operator review. Phase 4C NOT started.**
 
-- Repo: `/home/dino/mau5trap-repo`, HEAD `7efb44b4ac88f9a512a5370a3c76553dd5e21a72` (Phase 4A/4B committed).
+- Repo: `/home/dino/pulsegrid-repo`, HEAD `7efb44b4ac88f9a512a5370a3c76553dd5e21a72` (Phase 4A/4B committed).
 - Validation session: 2026-09-17, 00:10 → 00:20 EDT. Node v22.23.2. Chromium 153.0.8010.12 / Playwright 1.63.0 (as printed by the gate).
 - Inputs reviewed as hypotheses: the backend agent's report (`/tmp/pre4c_backend.md`, Decisions 1-backend and 4) and the
   frontend agent's report (`/tmp/pre4c_frontend.md`, Decisions 5, 1-frontend and 3); every changed file was `git diff`-read
@@ -27,11 +27,11 @@ The five operator-approved decisions, as validated:
 **Explicitly NOT done:** no Phase 4C screens, routes or components (`web/src/pages` = `DashboardPage`, `LoginPage`; `web/src/router.jsx`
 unchanged); no React Router upgrade; no auth/permissions redesign; no backend change beyond the `auth.js` diff already present
 (no defect found in it that required a fix); no edits to `PHASE_4B_HANDOFF.md`, `PHASE_4B_VALIDATION.md`, `PHASE_4B_STATIC_AUDIT.md`,
-`PHASE_4A_DESIGN_AUDIT.md`, `MAU5TRAP_VISUAL_DESIGN_CONTRACT.md`, `BRAND_PORTABILITY_*.md`; no commit.
+`PHASE_4A_DESIGN_AUDIT.md`, `PULSEGRID_VISUAL_DESIGN_CONTRACT.md`, `BRAND_PORTABILITY_*.md`; no commit.
 
 ## 2. Exact files changed
 
-`git status --short` at the end of this session (the operator's `mau5trap_v5.sqlite` is gitignored and restored; no stray DB,
+`git status --short` at the end of this session (the operator's `pulsegrid_v5.sqlite` is gitignored and restored; no stray DB,
 journal or probe-backup file exists — §8 item 13 / teardown):
 
 ```
@@ -96,19 +96,19 @@ L128 lists `GET /v3/auth/me` as having no frontend consumer) and does not descri
 `POST /v3/auth/login` (DB path)
 
 ```
-before: {"token":"<REDACTED>","user":{"id":1,"name":"Admin User","email":"admin@mau5trap.com","role":"admin","artistAccess":"all"}}
-after : {"token":"<REDACTED>","user":{"id":1,"name":"Admin User","email":"admin@mau5trap.com","role":"admin","artistAccess":"all","pageAccess":["all"]}}
-before: {"token":"<REDACTED>","user":{"id":2,"name":"Isabelle Rezazadeh","email":"tours@rezz.com","role":"artist","artistAccess":"art_rezz"}}
-after : {"token":"<REDACTED>","user":{"id":2,"name":"Isabelle Rezazadeh","email":"tours@rezz.com","role":"artist","artistAccess":"art_rezz","pageAccess":["overview","roster"]}}
+before: {"token":"<REDACTED>","user":{"id":1,"name":"Admin User","email":"admin@pulsegrid.fm","role":"admin","artistAccess":"all"}}
+after : {"token":"<REDACTED>","user":{"id":1,"name":"Admin User","email":"admin@pulsegrid.fm","role":"admin","artistAccess":"all","pageAccess":["all"]}}
+before: {"token":"<REDACTED>","user":{"id":2,"name":"Vera Kessler","email":"tours@novakin.band","role":"artist","artistAccess":"art_novakin"}}
+after : {"token":"<REDACTED>","user":{"id":2,"name":"Vera Kessler","email":"tours@novakin.band","role":"artist","artistAccess":"art_novakin","pageAccess":["overview","roster"]}}
 ```
 
 `GET /v3/auth/me`
 
 ```
-before: {"id":1,"email":"admin@mau5trap.com","name":"Admin User","role":"admin","artistAccess":"all"}
-after : {"id":1,"email":"admin@mau5trap.com","name":"Admin User","role":"admin","artistAccess":"all","pageAccess":["all"]}
-before: {"id":2,"email":"tours@rezz.com","name":"Isabelle Rezazadeh","role":"artist","artistAccess":"art_rezz"}
-after : {"id":2,"email":"tours@rezz.com","name":"Isabelle Rezazadeh","role":"artist","artistAccess":"art_rezz","pageAccess":["overview","roster"]}
+before: {"id":1,"email":"admin@pulsegrid.fm","name":"Admin User","role":"admin","artistAccess":"all"}
+after : {"id":1,"email":"admin@pulsegrid.fm","name":"Admin User","role":"admin","artistAccess":"all","pageAccess":["all"]}
+before: {"id":2,"email":"tours@novakin.band","name":"Vera Kessler","role":"artist","artistAccess":"art_novakin"}
+after : {"id":2,"email":"tours@novakin.band","name":"Vera Kessler","role":"artist","artistAccess":"art_novakin","pageAccess":["overview","roster"]}
 ```
 
 ("before" bodies are the HEAD shapes as recorded in `tests/snapshots/phase2_baseline.json` at HEAD and re-observed by the backend
@@ -183,10 +183,10 @@ line over `web/src/**/*.{js,jsx,css,html,json,svg,mjs}`):
 
 | Id | Scope | Pattern | Allowed boundary | Replaces §15 |
 |---|---|---|---|---|
-| S01 | `web/src` minus `brand/**` | `/mau5trap\|deadmau5\|rezz\|mau5/i` | only inside `/* */` comments of `styles/tokens.css` (comments blanked to spaces before matching, line numbers preserved); a tokens.css declaration/selector still fails | L497 first grep + L495 slug rule |
+| S01 | `web/src` minus `brand/**` | `/pulsegrid\|lumenveil\|novakin\/i` | only inside `/* */` comments of `styles/tokens.css` (comments blanked to spaces before matching, line numbers preserved); a tokens.css declaration/selector still fails | L497 first grep + L495 slug rule |
 | S02 | `brand/**` minus `profiles/**`, `themes/**` | same | `brand/registry.js` | L497 second grep |
-| S03 | `web/src` minus `brand/profiles/mau5trap/**` | `/INTELLIGENCE PLATFORM\|mau5trap Intelligence Platform\|mau5trap\.com/i` | tokens.css comments | L494 |
-| S04 | all | `/@(mau5trap\|rezz)\.com/i` | `brand/profiles/**` | L498 second grep |
+| S03 | `web/src` minus `brand/profiles/pulsegrid/**` | `/INTELLIGENCE PLATFORM\|pulsegrid Intelligence Platform\|pulsegrid\.com/i` | tokens.css comments | L494 |
+| S04 | all | `/@(pulsegrid\|novakin)\.com/i` | `brand/profiles/**` | L498 second grep |
 | S05 | `*.js/jsx/css/mjs` minus `tokens.css`, `global.css`, `**/chartDefaults.js`, `brand/themes/**`, `brand/profiles/**` | `#hex{3,4,6,8}\b`, `rgb(a)(`, `hsl(a)(` | those files | L482 |
 | S06 | all | import/from/require specifier containing a `profiles/` or `themes/` path segment | `brand/registry.js` | L506-507 |
 | S07 | all | `/ri-(headphone\|music\|disc)[\w-]*/` | the single `layout/nav.js` line matching both `id: 'anr'` and `icon: 'ri-headphone-line'` | L508 |
@@ -205,7 +205,7 @@ Evidence (all §8 item 11):
   the amendments must not soften: identity in a tokens.css **selector** (S01), disc glyph on a **non-A&R** `nav.js` entry (S07),
   label email in `brand/schema.js` (S04), theme import in `BrandContext.jsx` (S06). No `/tmp/brand-static-selftest-*` left behind.
 - Independent probe (this session, file not used by the frontend agent's self-test): appended
-  `export const PLATFORM_LABEL = 'mau5trap';` to `web/src/api/client.js` → `FAIL | S01 … | 1 hit(s): api/client.js:37 …`,
+  `export const PLATFORM_LABEL = 'pulsegrid';` to `web/src/api/client.js` → `FAIL | S01 … | 1 hit(s): api/client.js:37 …`,
   `GATE SUMMARY: 8 pass, 1 fail, 9 checks`, exit 1; restored from a byte copy → sha256 `86370023d006dc7f…` identical before/after,
   `git diff --stat -- web/src/api/client.js` empty; re-run → `9 pass, 0 fail`, exit 0.
 
@@ -214,18 +214,18 @@ Evidence (all §8 item 11):
 | File | Tracked | `__meta` | Read by a test? | What it is |
 |---|---|---|---|---|
 | `tests/snapshots/phase2_baseline.json` | yes | `entry: "server.js"`, `caseCount: 91` | **yes** — `snapshot.test.js` L31 `BASELINE`; L100-134 compare all 91 statuses + 77 deterministic bodies | the deterministic baseline, re-captured after the Phase 3 fixes (PHASE_3_VALIDATION §7 L141) |
-| `tests/snapshots/baseline.json` | yes | `entry: "mau5trap-production-api.js"`, 50 cases | **no** — zero references from `*.js/*.mjs/*.json`; `.md` only | Phase-1 capture of the pre-refactor monolith |
+| `tests/snapshots/baseline.json` | yes | `entry: "production-api.js"`, 50 cases | **no** — zero references from `*.js/*.mjs/*.json`; `.md` only | Phase-1 capture of the pre-refactor monolith |
 | `tests/snapshots/current.json` | no (gitignored) | `entry: "server.js"`, 50 cases | no | Phase-1 counterpart |
 | `tests/snapshots/.live.json` | no (gitignored) | 91 cases | written by `snapshot.test.js` on every `npm test` | latest live probe |
 
 Clean-seed observed values this session (fresh DB, `GET /v3/label/overview`, §8 item 7 block): artist token →
-`{"monthlyRevenue":8464217,"quarterlyProjection":25392651,"annualProjection":101570604,"activeArtists":1,"topArtists":[{"name":"REZZ","revenue":8464217,"roi":8.7}],…}`;
+`{"monthlyRevenue":8464217,"quarterlyProjection":25392651,"annualProjection":101570604,"activeArtists":1,"topArtists":[{"name":"NOVAKIN","revenue":8464217,"roi":8.7}],…}`;
 admin token → `3202870 / 134773080 / 539092320 / 29`. Gate `G04` printed the same artist numbers and `F10` rendered them as
 `$8.5M · $25.4M · $101.6M · 1` on both runs. `npm test` (123/123) passed its byte comparison against `phase2_baseline.json` on a
 fresh seed, i.e. the test-consumed baseline already holds these values.
 
 **Classification A — intentional repository change (Phase 3 HIGH-4), already reflected in the deterministic baseline.** Evidence:
-`src/auth/index.js` L69-97 `normalizeArtistAccess` ("HIGH-4 FIX (Phase 3)": the seeded scalar `'art_rezz'` previously fell through
+`src/auth/index.js` L69-97 `normalizeArtistAccess` ("HIGH-4 FIX (Phase 3)": the seeded scalar `'art_novakin'` previously fell through
 to `return false` and artists were denied their own data → zero accessible artists → the all-zeros body) and L99-105
 `hasArtistAccess`; `src/routes/label.js` L109-133 (overview filters `labelData.artists` by `hasArtistAccess`, non-admin
 `monthlyRevenue` = own total); PHASE_3_VALIDATION.md §3 row HIGH-4 (L53) and §4 rows 7-11 (L87-91, artist-role contract changes
@@ -287,8 +287,8 @@ in `state.from` but nothing navigates to it). **Review trigger:** re-evaluate be
 ## 8. Validation log (every command from this session; verbatim results — the two seed passwords are redacted as `<admin-seed-pw>` / `<artist-seed-pw>` wherever tool output printed them; JWTs as `<REDACTED>`)
 
 Server boots for items 2, 4-7, 9, 10 used a **fresh DB** by the repository's own rename procedure (`tests/support/probe.js` L140 /
-L185-186, `snapshot.test.js` L61-65 / L83-85, PHASE_3_VALIDATION §7): `mv mau5trap_v5.sqlite mau5trap_v5.sqlite.pre4c-val-backup`;
-boot; at the end `rm -f mau5trap_v5.sqlite` (the fresh file) and `mv mau5trap_v5.sqlite.pre4c-val-backup mau5trap_v5.sqlite`.
+L185-186, `snapshot.test.js` L61-65 / L83-85, PHASE_3_VALIDATION §7): `mv pulsegrid_v5.sqlite pulsegrid_v5.sqlite.pre4c-val-backup`;
+boot; at the end `rm -f pulsegrid_v5.sqlite` (the fresh file) and `mv pulsegrid_v5.sqlite.pre4c-val-backup pulsegrid_v5.sqlite`.
 Backend: `JWT_SECRET=pre4c-validation-secret-0123456789 SCHEDULE_JOBS=false npm start` (background, `/tmp/pre4c_val_backend.log`),
 `/health` 200 after 1 s, fresh DB 94 208 B. Frontend: `cd web && npm run dev -- --host 127.0.0.1` (Vite 6.4.3 on :5173).
 
@@ -338,11 +338,11 @@ PASS/FAIL-id columns of the two runs are identical (`diff` empty). Only textual 
 Final run (run 2), verbatim, JWTs would be redacted (none are printed):
 
 ```
-Phase 4B gate — static checks over /home/dino/mau5trap-repo/web/src
+Phase 4B gate — static checks over /home/dino/pulsegrid-repo/web/src
 PASS | S01 label identity in generic runtime code (web/src outside brand/; tokens.css comments stripped) | clean over 36 file(s) — allowed boundary: nowhere in generic code — including comments, class names and storage keys — except inside tokens.css /* */ comments (the byte-for-byte contract blocks)
 PASS | S02 label identity in brand core (brand/ outside profiles/ and themes/) → only registry.js | clean over 9 file(s) — allowed boundary: brand/registry.js only (composition root, architecture §14.3)
-PASS | S03 brand strings ("INTELLIGENCE PLATFORM", "mau5trap Intelligence Platform", mau5trap.com) outside brand/profiles/mau5trap/ (tokens.css comments stripped) | clean over 48 file(s) — allowed boundary: brand/profiles/mau5trap/** and tokens.css /* */ comments
-PASS | S04 label email domains (@mau5trap.com / @rezz.com) outside brand/profiles/ | clean over 52 file(s) — allowed boundary: brand/profiles/** only (profile contact/email data, architecture §14.2)
+PASS | S03 brand strings ("INTELLIGENCE PLATFORM", "pulsegrid Intelligence Platform", pulsegrid.fm) outside brand/profiles/pulsegrid/ (tokens.css comments stripped) | clean over 48 file(s) — allowed boundary: brand/profiles/pulsegrid/** and tokens.css /* */ comments
+PASS | S04 label email domains (@pulsegrid.fm / @novakin.band) outside brand/profiles/ | clean over 52 file(s) — allowed boundary: brand/profiles/** only (profile contact/email data, architecture §14.2)
 PASS | S05 raw colour literals (#hex / rgb() / hsl()) outside tokens.css, global.css, chartDefaults.js, brand/themes/, brand/profiles/ | clean over 43 file(s) — allowed boundary: styles/tokens.css, styles/global.css, **/chartDefaults.js, brand/themes/**, brand/profiles/**
 PASS | S06 profile / theme imports outside brand/registry.js | clean over 52 file(s) — allowed boundary: brand/registry.js only (architecture §14.6: marks and loaders are looked up in the registry, never imported)
 PASS | S07 Remixicon used as a brand mark (ri-headphone / ri-music / ri-disc) — allowed only as the A&R entry icon in layout/nav.js | clean over 52 file(s) — allowed boundary: layout/nav.js, the `{ id: 'anr', …, icon: 'ri-headphone-line', … }` entry only (architecture §5 A&R Room icon)
@@ -358,14 +358,14 @@ PASS | G05 login payloads carry pageAccess arrays (pre-4C Decision 1 contract: a
 INFO | expected (Node Intl) admin en-US/USD: $3.2M · $134.8M · $539.1M · 29 | admin en-GB/GBP: £3.2m · £134.8m · £539.1m · 29 | artist en-US/USD: $8.5M · $25.4M · $101.6M · 1 (values as served by the API — not a contractual constant)
 PASS | F01 unauthenticated / -> /login | http://127.0.0.1:5173/login
 PASS | F02 unauthenticated /dashboard -> /login | http://127.0.0.1:5173/login
-PASS | V01 mau5trap identity (title/favicon/theme) on /login | {"title":"mau5trap Intelligence Platform","favicon":"/brands/mau5trap/favicon.svg","bodyTheme":"mau5trap-console","htmlTheme":"mau5trap-console"}
+PASS | V01 pulsegrid identity (title/favicon/theme) on /login | {"title":"pulsegrid Intelligence Platform","favicon":"/brands/pulsegrid/favicon.svg","bodyTheme":"pulsegrid-console","htmlTheme":"pulsegrid-console"}
 PASS | V02 login card geometry (420/48/1px accent .35/4px/no shadow/centered) | width=420 padding=48px border=1px solid color(srgb 0 1 0.372549 / 0.35) radius=4px shadow=none centerOffset=(0.00,0.00) sidebar/header=false logo/img=0
-PASS | V03 login wordmark lowercase 32px/700 -1px Inter; tagline 12px mono muted (not green) | wordmark="mau5trap" 32px/700 ls=-1px Inter; tagline="INTELLIGENCE PLATFORM" 12px rgb(181, 181, 181) "JetBrains Mono"
+PASS | V03 login wordmark lowercase 32px/700 -1px Inter; tagline 12px mono muted (not green) | wordmark="pulsegrid" 32px/700 ls=-1px Inter; tagline="INTELLIGENCE PLATFORM" 12px rgb(181, 181, 181) "JetBrains Mono"
 PASS | V04 login button full-width 48px accent fill, black 14px/700 mono uppercase | w=322 (card inner 322) h=48 bg=rgb(0, 255, 95) color=rgb(0, 0, 0) 14px/700 "JetBrains Mono" uppercase
 PASS | F16 Forgot Password? present, disabled, 11px accent | text="Forgot Password?" disabled=true 11px rgb(0, 255, 95)
-PASS | V05 login labels 11px/700 mono muted; inputs 14px mono radius 2px bg rgba(0,0,0,.3); placeholder from profile | labels=ACCESS ID 11px/700 rgb(181, 181, 181); PASSPHRASE 11px/700 rgb(181, 181, 181) input=14px "JetBrains Mono" r=2px bg=rgba(0, 0, 0, 0.3) placeholder=user@mau5trap.com
-PASS | V06 login footer: hairline top, two 11px mono muted lines (mau5trap has no legal line); body bg #0A0A0A + decoration gradient; login radial gradient | footer=["RESTRICTED ACCESS. UNAUTHORIZED CONNECTIONS WILL BE TERMINATED.","Authorized personnel only."] borderTop=1px 11px rgb(181, 181, 181); bodyBg=rgb(10, 10, 10) bodyImg=linear-gradient(color(srgb 0 1 0.372549 … loginImg=radial-gradient(circle, color(srgb 0 1 0…
-PASS | V15 keyboard focus ring (2px accent outline) on login controls | access-id: 2px solid rgb(0, 255, 95) +glow; passphrase: 2px solid rgb(0, 255, 95) +glow; INITIALIZE SESSION: 2px solid rgb(0, 255, 95) +glow; mau5trapINTELLIGENCE: 3px none rgb(245, 245, 245)
+PASS | V05 login labels 11px/700 mono muted; inputs 14px mono radius 2px bg rgba(0,0,0,.3); placeholder from profile | labels=ACCESS ID 11px/700 rgb(181, 181, 181); PASSPHRASE 11px/700 rgb(181, 181, 181) input=14px "JetBrains Mono" r=2px bg=rgba(0, 0, 0, 0.3) placeholder=user@pulsegrid.fm
+PASS | V06 login footer: hairline top, two 11px mono muted lines (pulsegrid has no legal line); body bg #0A0A0A + decoration gradient; login radial gradient | footer=["RESTRICTED ACCESS. UNAUTHORIZED CONNECTIONS WILL BE TERMINATED.","Authorized personnel only."] borderTop=1px 11px rgb(181, 181, 181); bodyBg=rgb(10, 10, 10) bodyImg=linear-gradient(color(srgb 0 1 0.372549 … loginImg=radial-gradient(circle, color(srgb 0 1 0…
+PASS | V15 keyboard focus ring (2px accent outline) on login controls | access-id: 2px solid rgb(0, 255, 95) +glow; passphrase: 2px solid rgb(0, 255, 95) +glow; INITIALIZE SESSION: 2px solid rgb(0, 255, 95) +glow; pulsegridINTELLIGENCE: 3px none rgb(245, 245, 245)
 PASS | F03 wrong password -> inline server error, button restored, still /login | alert="Invalid credentials" submit="INITIALIZE SESSION" disabled=false path=/login
 PASS | V07 login error = panel variant (danger-dim bg, danger border, 4px, 12px pad, 13px centered) | bg=rgba(255, 50, 50, 0.1) border=1px solid rgba(255, 50, 50, 0.3) radius=4px pad=12px msg=13px center
 PASS | F04 seeded admin login -> /dashboard | http://127.0.0.1:5173/dashboard
@@ -376,17 +376,17 @@ PASS | V08 shell geometry: sidebar 224 / 24px 16px / hairline / blur(20px); main
 PASS | V09 header: h1 28px/700 "Dashboard", 14px subtitle, user chip; no input/select/a | h1="Dashboard" 28px/700; subtitle="Real-time label performance metrics" 14px; chip=["AU","Admin User"]; input/select/a=0
 PASS | V10 nav items 40px, 2px radius, 18px icon, 14px label; inactive muted; active text 600 on accent .1 | active "Dashboard" h=40 r=2px icon=18px label=14px bg=color(srgb 0 1 0.372549 / 0.1) color=rgb(245, 245, 245) w=600; inactive "Artists" color=rgb(181, 181, 181) w=400 bg=rgba(0, 0, 0, 0)
 PASS | V11 bottom group: Settings -> hairline -> Terminate Session (ri-logout-box-line, 14px muted, no fill) pinned bottom | "Terminate Session" icon=ri-logout-box-line 14px rgb(181, 181, 181) bg=rgba(0, 0, 0, 0) divider=1px gap-to-viewport-bottom=24px
-PASS | V12 brand block: Mau5Head SVG 40x40 (3 circle/2 ellipse/1 path, accent+text fills), wordmark 20px/800 lowercase, sublabel 11px mono accent uppercase; nothing else | svg 40x40 circles=3 ellipses=2 paths=1 d="M 30 70 Q 50 90 70 70 Q 50 82 30 70" fill=rgb(0, 255, 95) eyes=rgb(245, 245, 245) (rail copy width=0); wordmark="mau5trap" 20px/800; sub="INTELLIGENCE PLATFORM" 11px rgb(0, 255, 95) uppercase; block text=["mau5trap","INTELLIGENCE PLATFORM"]
+PASS | V12 brand block: PulseMark SVG 40x40 (3 circle/2 ellipse/1 path, accent+text fills), wordmark 20px/800 lowercase, sublabel 11px mono accent uppercase; nothing else | svg 40x40 circles=3 ellipses=2 paths=1 d="M 30 70 Q 50 90 70 70 Q 50 82 30 70" fill=rgb(0, 255, 95) eyes=rgb(245, 245, 245) (rail copy width=0); wordmark="pulsegrid" 20px/800; sub="INTELLIGENCE PLATFORM" 11px rgb(0, 255, 95) uppercase; block text=["pulsegrid","INTELLIGENCE PLATFORM"]
 PASS | V13 KPI row: 4 cards, 4 columns, gap 16, align start, 88-112px, pad 16, 4px, hairline, no shadow, no icons | cards=4 cols=4 gap=16px align=start; heights=[91.4,91.4,91.4,91.4] pad=16px r=4px border=1px solid rgba(255, 255, 255, 0.1) shadow=none
 PASS | V14 KPI anatomy: 2px accent left rule @.5 full height; .label 11px mono muted uppercase; .kpi 32px/700 mono text tabular-nums | rule=2px rgb(0, 255, 95) op=0.5 h=89.3906px (card inner 89px); label 11px rgb(181, 181, 181) uppercase; kpi 32px/700 "JetBrains Mono" rgb(245, 245, 245) tabular-nums
 PASS | V16 nothing below the KPI row (main = header + grid), no Vite error overlay | main children=[HEADER, DIV] overlay=false
-PASS | F08 persisted session survives reload; userData reconciled with /v3/auth/me | path=/dashboard token-unchanged=true userData={"id":1,"name":"Admin User","email":"admin@mau5trap.com","role":"admin","artistAccess":"all","pageAccess":["all"]}
+PASS | F08 persisted session survives reload; userData reconciled with /v3/auth/me | path=/dashboard token-unchanged=true userData={"id":1,"name":"Admin User","email":"admin@pulsegrid.fm","role":"admin","artistAccess":"all","pageAccess":["all"]}
 PASS | F18 reconciled userData carries the /me pageAccess array (pre-4C Decision 1 contract) | userData.pageAccess=["all"]
 PASS | F15 unbuilt routes redirect to /dashboard (nav click + direct) | Artists->/dashboard Settings->/dashboard /anr->/dashboard /does-not-exist->/dashboard 404text=false newErrors=0
 PASS | F17 localStorage keys ⊆ {authToken,userData,platform.brandProfile} | keys=[authToken, userData]
-PASS | V17 full-page loader is the mau5-head (80px ring + 2 ears, pulse) on #0A0A0A, no spinner text | fixed=true bg=rgb(10, 10, 10) ring=80x80 border=4px solid rgb(0, 255, 95) anim=pulse running=1 ears=2 (50pxx50px 4px rgb(0, 255, 95) top=-30px left=-25px; 50pxx50px right=-25px) text="" svg/img=0
+PASS | V17 full-page loader is the legacy mark (80px ring + 2 ears, pulse) on #0A0A0A, no spinner text | fixed=true bg=rgb(10, 10, 10) ring=80x80 border=4px solid rgb(0, 255, 95) anim=pulse running=1 ears=2 (50pxx50px 4px rgb(0, 255, 95) top=-30px left=-25px; 50pxx50px right=-25px) text="" svg/img=0
 PASS | F09 Terminate Session -> /login, authToken/userData cleared | path=/login authToken=null userData=null
-PASS | F10 seeded artist: primary nav === pageAccess-derived items (Decision 1), Settings+Terminate Session; KPI === live artist API en-US/USD; no NaN | primary=[Dashboard, Artists] (expected from pageAccess ["overview","roster"]: [Dashboard, Artists]) secondary=[Settings] bottom="Terminate Session" kpi=$8.5M · $25.4M · $101.6M · 1 (expected $8.5M · $25.4M · $101.6M · 1) header="Dashboard Real-time label performance metrics IR Isabelle Rezazadeh"
+PASS | F10 seeded artist: primary nav === pageAccess-derived items (Decision 1), Settings+Terminate Session; KPI === live artist API en-US/USD; no NaN | primary=[Dashboard, Artists] (expected from pageAccess ["overview","roster"]: [Dashboard, Artists]) secondary=[Settings] bottom="Terminate Session" kpi=$8.5M · $25.4M · $101.6M · 1 (expected $8.5M · $25.4M · $101.6M · 1) header="Dashboard Real-time label performance metrics IR Vera Kessler"
 PASS | F19 intercepted 404 on /v3/auth/me keeps the stored session (Decision 5): still /dashboard, authToken/userData intact | path=/dashboard token-unchanged=true userData-kept=true
 PASS | F11 garbage authToken + reload -> back to /login, session cleared (records backend status) | path=/login authToken=null userData=null backend=[/v3/label/overview:403, /v3/auth/me:403]
 PASS | F12 intercepted 401 on overview -> session cleared -> /login | path=/login authToken=null userData=null
@@ -401,26 +401,26 @@ PASS | P02 example login: wordmark/sublabel/placeholder/3rd footer line; platfor
 PASS | P03 example login: card border, button fill, Forgot link are magenta; card geometry unchanged | width=420 pad=48px border=color(srgb 1 0.176471 0.584314 / 0.35) button=rgb(255, 45, 149)/rgb(0, 0, 0) forgot=rgb(255, 45, 149)
 PASS | P04 example dashboard: admin KPI === live API formatted en-GB/GBP (lowercase m) | MONTHLY REVENUE £3.2m · QUARTERLY PROJECTION £134.8m · ANNUAL PROJECTION £539.1m · ACTIVE ARTISTS 29 (expected £3.2m · £134.8m · £539.1m · 29)
 PASS | P05 example shell: MonogramMark "E" 40x40 magenta mono (no svg), wordmark/sublabel from profile, sublabel magenta | glyph="E" bg=rgb(255, 45, 149) color=rgb(0, 0, 0) "JetBrains Mono" r=2px svgs=0; wordmark="Example Records" sub="LABEL OPERATIONS" rgb(255, 45, 149); block=["E","Example Records","LABEL OPERATIONS"]
-PASS | P06 example shell: nav/header/Terminate Session identical to mau5trap run; active tint + StatCard rules magenta | nav-identical=true header="Dashboard Real-time label performance metrics AU Admin User" activeBg=color(srgb 1 0.176471 0.584314 / 0.1) rules=[rgb(255, 45, 149)]
-PASS | P07 example: no "mau5trap" in body text (/login + /dashboard), no class containing "mau5", no green element colour | dashboard: mau5trap-in-text=false mau5-classes=0 green-elements=0; login: mau5trap-in-text=false mau5-classes=0 green-elements=0
+PASS | P06 example shell: nav/header/Terminate Session identical to pulsegrid run; active tint + StatCard rules magenta | nav-identical=true header="Dashboard Real-time label performance metrics AU Admin User" activeBg=color(srgb 1 0.176471 0.584314 / 0.1) rules=[rgb(255, 45, 149)]
+PASS | P07 example: no "pulsegrid" in body text (/login + /dashboard), no class containing "legacy", no green element colour | dashboard: pulsegrid-in-text=false legacy-classes=0 green-elements=0; login: pulsegrid-in-text=false legacy-classes=0 green-elements=0
 PASS | P08 example: full-page loader is the RingLoader (80px ring, pulse, no ears) | ring=80x80 border=4px solid rgb(255, 45, 149) anim=pulse running=1 ears=0 bg=rgb(10, 10, 10)
 PASS | P09 example: fullscreen ErrorState unchanged except hue (kicker/button copy identical, button magenta-free danger) | kicker="CONNECTION FAILURE" button="RETRY CONNECTION" btn=rgba(255, 50, 50, 0.1)/rgb(255, 68, 68) bg=rgb(10, 10, 10)
-PASS | P10 remove override -> mau5trap identity, accent, mark, wordmark and $ KPIs return with no edits | title="mau5trap Intelligence Platform" theme=mau5trap-console favicon=/brands/mau5trap/favicon.svg wordmark="mau5trap" sub="INTELLIGENCE PLATFORM" rgb(0, 255, 95) mark=40x40 circles=3 kpi=$3.2M · $134.8M · $539.1M · 29 keys=[authToken, userData]
+PASS | P10 remove override -> pulsegrid identity, accent, mark, wordmark and $ KPIs return with no edits | title="pulsegrid Intelligence Platform" theme=pulsegrid-console favicon=/brands/pulsegrid/favicon.svg wordmark="pulsegrid" sub="INTELLIGENCE PLATFORM" rgb(0, 255, 95) mark=40x40 circles=3 kpi=$3.2M · $134.8M · $539.1M · 29 keys=[authToken, userData]
 PASS | C01 no uncaught page errors during the run | none
 PASS | C02 no unexpected console.error during the run (resource errors during provoked 401/403/network phases are listed separately) | none; expected resource errors=10 [Failed to load resource: the server responded with a status of 401 (Unauthorized) | Failed to load resource: the server responded with a status of 404 (Not Found) | Failed to load resource: the server responded with a status of 403 (Forbidden) | Failed to load resource: net::ERR_CONNECTION_REFUSED]
 INFO | console warnings (26): ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` futur
-INFO | screenshots written to /home/dino/mau5trap-repo/web/validation: phase4b-mau5trap-login.png phase4b-mau5trap-dashboard.png phase4b-example-login.png phase4b-example-dashboard.png phase4b-error.png
+INFO | screenshots written to /home/dino/pulsegrid-repo/web/validation: phase4b-pulsegrid-login.png phase4b-pulsegrid-dashboard.png phase4b-example-login.png phase4b-example-dashboard.png phase4b-error.png
 GATE SUMMARY: 66 pass, 0 fail, 66 checks
 ```
 
 **(5) Login works — seeded admin and artist (fresh DB, tokens redacted) — PASS**
 
 ```
-POST /v3/auth/login {"email":"admin@mau5trap.com","password":<seed>}
-{"token":"<REDACTED>","user":{"id":1,"name":"Admin User","email":"admin@mau5trap.com","role":"admin","artistAccess":"all","pageAccess":["all"]}}
+POST /v3/auth/login {"email":"admin@pulsegrid.fm","password":<seed>}
+{"token":"<REDACTED>","user":{"id":1,"name":"Admin User","email":"admin@pulsegrid.fm","role":"admin","artistAccess":"all","pageAccess":["all"]}}
 HTTP 200
-POST /v3/auth/login {"email":"tours@rezz.com","password":<seed>}
-{"token":"<REDACTED>","user":{"id":2,"name":"Isabelle Rezazadeh","email":"tours@rezz.com","role":"artist","artistAccess":"art_rezz","pageAccess":["overview","roster"]}}
+POST /v3/auth/login {"email":"tours@novakin.band","password":<seed>}
+{"token":"<REDACTED>","user":{"id":2,"name":"Vera Kessler","email":"tours@novakin.band","role":"artist","artistAccess":"art_novakin","pageAccess":["overview","roster"]}}
 HTTP 200
 POST /v3/auth/login (wrong password)  → {"error":"Invalid credentials"} HTTP 401
 POST /v3/auth/login {}                → {"error":"Invalid credentials"} HTTP 401
@@ -430,10 +430,10 @@ POST /v3/auth/login {}                → {"error":"Invalid credentials"} HTTP 4
 
 ```
 GET /v3/auth/me  Authorization: Bearer <admin token>
-{"id":1,"email":"admin@mau5trap.com","name":"Admin User","role":"admin","artistAccess":"all","pageAccess":["all"]}
+{"id":1,"email":"admin@pulsegrid.fm","name":"Admin User","role":"admin","artistAccess":"all","pageAccess":["all"]}
 HTTP 200
 GET /v3/auth/me  Authorization: Bearer <artist token>
-{"id":2,"email":"tours@rezz.com","name":"Isabelle Rezazadeh","role":"artist","artistAccess":"art_rezz","pageAccess":["overview","roster"]}
+{"id":2,"email":"tours@novakin.band","name":"Vera Kessler","role":"artist","artistAccess":"art_novakin","pageAccess":["overview","roster"]}
 HTTP 200
 ```
 Gate `F08` additionally proved the browser flow: reload with a stored token → `/dashboard`, `userData` reconciled from `/me`
@@ -443,7 +443,7 @@ Gate `F08` additionally proved the browser flow: reload with a stored token → 
 gate `G05` `admin.pageAccess=["all"] artist.pageAccess=["overview","roster"]`; `F18` `userData.pageAccess=["all"]`). Decoded
 DB-login JWT claim keys: `id, email, role, artistAccess, integrationCount, iat, exp` — `pageAccess` is in the body, not the token
 (unchanged). Also captured on the same fresh seed for §6: `GET /v3/label/overview` artist →
-`{"monthlyRevenue":8464217,"quarterlyProjection":25392651,"annualProjection":101570604,"activeArtists":1,"topArtists":[{"name":"REZZ","revenue":8464217,"roi":8.7}],"timestamp":"2026-09-17T04:12:30.024Z"}` HTTP 200;
+`{"monthlyRevenue":8464217,"quarterlyProjection":25392651,"annualProjection":101570604,"activeArtists":1,"topArtists":[{"name":"NOVAKIN","revenue":8464217,"roi":8.7}],"timestamp":"2026-09-17T04:12:30.024Z"}` HTTP 200;
 admin → `{"monthlyRevenue":3202870,"quarterlyProjection":134773080,"annualProjection":539092320,"activeArtists":29}`.
 
 **(8) Frontend nav consumes backend `pageAccess`; backend authorization untouched — PASS**
@@ -485,10 +485,10 @@ with the same token → HTTP 200 (§4).
 
 `node web/validation/gate.mjs --static-only`:
 ```
-Phase 4B gate — static checks over /home/dino/mau5trap-repo/web/src (--static-only: browser checks skipped)
+Phase 4B gate — static checks over /home/dino/pulsegrid-repo/web/src (--static-only: browser checks skipped)
 PASS | S01 … | clean over 36 file(s) — allowed boundary: nowhere in generic code — including comments, class names and storage keys — except inside tokens.css /* */ comments (the byte-for-byte contract blocks)
 PASS | S02 … | clean over 9 file(s) — allowed boundary: brand/registry.js only (composition root, architecture §14.3)
-PASS | S03 … | clean over 48 file(s) — allowed boundary: brand/profiles/mau5trap/** and tokens.css /* */ comments
+PASS | S03 … | clean over 48 file(s) — allowed boundary: brand/profiles/pulsegrid/** and tokens.css /* */ comments
 PASS | S04 … | clean over 52 file(s) — allowed boundary: brand/profiles/** only (profile contact/email data, architecture §14.2)
 PASS | S05 … | clean over 43 file(s) — allowed boundary: styles/tokens.css, styles/global.css, **/chartDefaults.js, brand/themes/**, brand/profiles/**
 PASS | S06 … | clean over 52 file(s) — allowed boundary: brand/registry.js only (architecture §14.6: marks and loaders are looked up in the registry, never imported)
@@ -502,7 +502,7 @@ exit=0
 
 `node web/validation/static-checks.mjs --self-test`:
 ```
-static-checks self-test — real tree /home/dino/mau5trap-repo/web/src; synthetic leaks in a temp copy under /tmp
+static-checks self-test — real tree /home/dino/pulsegrid-repo/web/src; synthetic leaks in a temp copy under /tmp
 PASS | real-tree | S01 | clean (36 files)
 PASS | real-tree | S02 | clean (9 files)
 PASS | real-tree | S03 | clean (48 files)
@@ -512,19 +512,19 @@ PASS | real-tree | S06 | clean (52 files)
 PASS | real-tree | S07 | clean (52 files)
 PASS | real-tree | S08 | clean (52 files)
 PASS | real-tree | S09 | clean (52 files)
-PASS | fake-leak | S01 | components/primitives/StatCard.jsx (+"// leak: this is the mau5trap console") — identity in a comment in a generic component: FLAGGED at L13
-PASS | fake-leak | S01 | styles/tokens.css (+".mau5trap-console-badge { color: red; }") — identity in a tokens.css SELECTOR (not a comment) — the comment-strip must not hide it: FLAGGED at L157
-PASS | fake-leak | S02 | brand/BrandMark.jsx (+"const fallbackSlug = 'mau5trap';") — profile identity in brand core outside registry.js: FLAGGED at L11
+PASS | fake-leak | S01 | components/primitives/StatCard.jsx (+"// leak: this is the pulsegrid console") — identity in a comment in a generic component: FLAGGED at L13
+PASS | fake-leak | S01 | styles/tokens.css (+".pulsegrid-console-badge { color: red; }") — identity in a tokens.css SELECTOR (not a comment) — the comment-strip must not hide it: FLAGGED at L157
+PASS | fake-leak | S02 | brand/BrandMark.jsx (+"const fallbackSlug = 'pulsegrid';") — profile identity in brand core outside registry.js: FLAGGED at L11
 PASS | fake-leak | S03 | layout/Header.jsx (+"const subtitle = 'INTELLIGENCE PLATFORM';") — brand tagline in a platform component: FLAGGED at L36
-PASS | fake-leak | S04 | pages/LoginPage/LoginPage.jsx (+"const devLogin = 'admin@mau5trap.com';") — label email in generic code (a prefilled login): FLAGGED at L58
-PASS | fake-leak | S04 | brand/schema.js (+"export const DEFAULT_SUPPORT = 'admin@mau5trap.com';") — label email in brand core (outside profiles/): FLAGGED at L47
+PASS | fake-leak | S04 | pages/LoginPage/LoginPage.jsx (+"const devLogin = 'admin@pulsegrid.fm';") — label email in generic code (a prefilled login): FLAGGED at L58
+PASS | fake-leak | S04 | brand/schema.js (+"export const DEFAULT_SUPPORT = 'admin@pulsegrid.fm';") — label email in brand core (outside profiles/): FLAGGED at L47
 PASS | fake-leak | S05 | layout/Sidebar.module.css (+".leak { color: #00FF5F; }") — raw brand hex in a component stylesheet: FLAGGED at L58
 PASS | fake-leak | S05 | components/primitives/Panel.jsx (+"const tint = 'rgba(0, 255, 95, 0.1)';") — raw brand rgba in a component: FLAGGED at L5
-PASS | fake-leak | S06 | layout/Sidebar.jsx (+"import { Mau5Head } from '../brand/profiles/mau5trap/Mau5Hea") — profile component imported outside registry.js: FLAGGED at L65
-PASS | fake-leak | S06 | brand/BrandContext.jsx (+"import './themes/mau5trap-console.css';") — theme imported outside registry.js: FLAGGED at L36
+PASS | fake-leak | S06 | layout/Sidebar.jsx (+"import { PulseMark } from '../brand/profiles/pulsegrid/LegacyHea") — profile component imported outside registry.js: FLAGGED at L65
+PASS | fake-leak | S06 | brand/BrandContext.jsx (+"import './themes/pulsegrid-console.css';") — theme imported outside registry.js: FLAGGED at L36
 PASS | fake-leak | S07 | layout/Sidebar.jsx (+"const brandGlyph = <i className=\"ri-headphone-line\" />;") — headphone glyph in the sidebar (brand block) instead of BrandMark: FLAGGED at L65
 PASS | fake-leak | S07 | layout/nav.js (+"export const NAV_EXTRA = [{ id: 'catalog', label: 'Catalog',") — a disc glyph on a NON-A&R nav entry in nav.js — the allowance is that one entry, not the file: FLAGGED at L18
-PASS | fake-leak | S08 | hooks/useApiQuery.js (+"const DEFAULT_ARTIST = 'art_rezz';") — fixture artist id as a default: FLAGGED at L22
+PASS | fake-leak | S08 | hooks/useApiQuery.js (+"const DEFAULT_ARTIST = 'art_novakin';") — fixture artist id as a default: FLAGGED at L22
 PASS | fake-leak | S09 | pages/LoginPage/LoginPage.jsx (+"const devPassword = '<admin-seed-pw>';") — seed password as a dev shortcut: FLAGGED at L58
 SELF-TEST SUMMARY: 23 pass, 0 fail, 23 assertions (9 rules × real tree + 14 synthetic leaks); temp copy removed=true
 exit=0
@@ -534,9 +534,9 @@ exit=0
 Independent fake-leak probe (this session):
 ```
 $ F=web/src/api/client.js; sha256sum $F → 86370023d006dc7f…; git diff --stat -- $F → (empty)
-$ cp $F /tmp/pre4c_probe_client.js.bak; printf '\nexport const PLATFORM_LABEL = %s;\n' "'mau5trap'" >> $F
+$ cp $F /tmp/pre4c_probe_client.js.bak; printf '\nexport const PLATFORM_LABEL = %s;\n' "'pulsegrid'" >> $F
 $ node web/validation/gate.mjs --static-only
-FAIL | S01 label identity in generic runtime code (web/src outside brand/; tokens.css comments stripped) | 1 hit(s): api/client.js:37 export const PLATFORM_LABEL = 'mau5trap';
+FAIL | S01 label identity in generic runtime code (web/src outside brand/; tokens.css comments stripped) | 1 hit(s): api/client.js:37 export const PLATFORM_LABEL = 'pulsegrid';
 GATE SUMMARY: 8 pass, 1 fail, 9 checks
 exit=1
 $ cp /tmp/pre4c_probe_client.js.bak $F; rm -f /tmp/pre4c_probe_client.js.bak
@@ -565,7 +565,7 @@ $ git status --short web/src ; git ls-files --others --exclude-standard web/src
 and `web/package-lock.json` are unchanged (no React Router upgrade).
 
 **Teardown:** backend (`npm start`, two boots) and Vite killed via the process tool; `ss -ltnp | grep -E ':3000|:5173'` → nothing;
-no `node server.js` / `vite` process; fresh DB `rm -f`'d; operator DB restored by rename — `mau5trap_v5.sqlite` 167 936 B, mtime
+no `node server.js` / `vite` process; fresh DB `rm -f`'d; operator DB restored by rename — `pulsegrid_v5.sqlite` 167 936 B, mtime
 `Sep 16 23:41` (identical to session start); `test.sqlite` 16 384 B untouched; no `*-journal`, `*.probe-backup`, `*.test-backup`,
 `*.pre4c-*` files; no `/tmp/brand-static-selftest-*`. Logs left in `/tmp/pre4c_val_*.log` only (outside the repo).
 

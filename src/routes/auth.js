@@ -213,7 +213,7 @@ function register(app, ctx) {
             const delivered = await sendEmail({
                 to: email,
                 // PHASE 4CF: reset-email identity from the Label Intelligence
-                // Profile (values byte-identical for mau5trap).
+                // Profile (values byte-identical for pulsegrid).
                 subject: profile.email.resetSubject,
                 html: `
                     <div style="font-family: monospace; background: #000; color: #fff; padding: 20px;">

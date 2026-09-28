@@ -1,12 +1,12 @@
 const entityAudit = require('./modules/entityAudit');
 
 async function verifyLabelAudit() {
-    console.log('Verifying Label (Mau5trap) Audit...');
+    console.log('Verifying Label (Pulsegrid) Audit...');
 
     try {
         const result = await entityAudit.auditLabel();
 
-        console.log('\n--- Mau5trap Label Audit Results ---');
+        console.log('\n--- Pulsegrid Label Audit Results ---');
         console.log(`Label Name: ${result.labelName}`);
         console.log(`Health Score: ${result.healthScore}/100`);
 

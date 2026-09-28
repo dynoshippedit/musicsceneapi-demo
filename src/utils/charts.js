@@ -1,7 +1,7 @@
 /**
  * src/utils/charts.js
  *
- * Chart rendering extracted verbatim from mau5trap-production-api.js L27-125.
+ * Chart rendering extracted verbatim from production-api.js L27-125.
  *
  * The four ChartJSNodeCanvas instances are module-level singletons in the
  * original ("Global Chart Instantiation (Performance Optimization)", L27) and
@@ -12,7 +12,7 @@
 'use strict';
 
 const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
-// PHASE 4CF: chart colors from the Label Intelligence Profile (mau5trap
+// PHASE 4CF: chart colors from the Label Intelligence Profile (pulsegrid
 // values byte-identical).
 const profile = require('../profile');
 const colors = profile.charts;

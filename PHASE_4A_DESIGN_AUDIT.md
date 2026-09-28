@@ -5,9 +5,9 @@ Auditor: independent pass against the live frontend as source of truth.
 No Phase 4A source documents were modified. No code was written.
 
 Source of truth for identity:
-- Primary: `mau5trap-frontend-connected.html` (the shipping workstation)
-- Secondary: `mau5trap-terminal-dashboard.html` (executive companion)
-- Spec under audit: `MAU5TRAP_VISUAL_DESIGN_CONTRACT.md` (authoritative visual file),
+- Primary: `pulsegrid-frontend-connected.html` (the shipping workstation)
+- Secondary: `pulsegrid-terminal-dashboard.html` (executive companion)
+- Spec under audit: `PULSEGRID_VISUAL_DESIGN_CONTRACT.md` (authoritative visual file),
   `PHASE_4A_HANDOFF.md` §14–§16 (gate + file order), `FRONTEND_ARCHITECTURE.md` §1/§4
 - Screenshots in repo (`final.jpeg`, `unreal.jpeg`, `G6lxjgsWYAA_9GA.jpeg`, `nope.jpeg`)
   are marketing/prototype captures, not the live app. They were inspected and then
@@ -15,13 +15,13 @@ Source of truth for identity:
 
 Question this audit answers: could a cheaper implementation model follow the
 Phase 4A documents literally and still ship a generic dark SaaS / crypto-admin
-dashboard instead of the mau5trap Label Intelligence operations console?
+dashboard instead of the pulsegrid Label Intelligence operations console?
 
 ---
 
 ## 0. Screenshot vs HTML (do not mix them)
 
-The four JPEGs are not screenshots of `mau5trap-frontend-connected.html`:
+The four JPEGs are not screenshots of `pulsegrid-frontend-connected.html`:
 
 | File | What it actually is | Conflict with live HTML |
 |---|---|---|
@@ -50,7 +50,7 @@ Deficiency: The live login is the strongest identity surface in the product.
 Its words, not its colors, are what stop it looking like "Sign in to continue":
 
 ```
-mau5trap                         (32px Inter 700, letter-spacing -1px, lowercase)
+pulsegrid                         (32px Inter 700, letter-spacing -1px, lowercase)
 INTELLIGENCE PLATFORM            (12px, tracking 2px)
 ACCESS ID                        (not "Email")
 PASSPHRASE                       (not "Password")
@@ -60,7 +60,7 @@ RESTRICTED ACCESS. UNAUTHORIZED CONNECTIONS WILL BE TERMINATED.
 Authorized personnel only.
 ```
 
-Evidence: `mau5trap-frontend-connected.html` L3034–3128.
+Evidence: `pulsegrid-frontend-connected.html` L3034–3128.
 
 The contract locks only `INITIALIZE SESSION` (in the button-verb list) and
 "login card 420px / mono inputs / black-on-green". `.label` is prescribed as
@@ -84,8 +84,8 @@ Forbid `Email`, `Password`, `Sign in`, `Log in`, `Continue`.
 
 ### B2 — BLOCKER — Brand mark is described, not specified
 
-Affected: contract §2 (`.mau5-head` CSS loader), §3.7 ("mau5-head SVG logo
-(green fill)"), §3.17; handoff §15 "sidebar ≤240px with mau5-head logo";
+Affected: contract §2 (`.legacy-mark` CSS loader), §3.7 ("legacy mark SVG logo
+(green fill)"), §3.17; handoff §15 "sidebar ≤240px with legacy mark logo";
 no SVG appears in any Phase 4A file (confirmed by search).
 
 Deficiency: There are **two different marks** in the live file, and only one
@@ -98,16 +98,16 @@ is specified.
    actual brand mark the authenticated app shows on every screen. **The SVG
    markup is not in the spec.**
 
-The gate says "mau5-head logo" without defining which mark, viewBox, fills,
-or file path. Remixicon has no mau5-head. The implementation model will
+The gate says "legacy mark logo" without defining which mark, viewBox, fills,
+or file path. Remixicon has no legacy mark. The implementation model will
 substitute `ri-headphone-line`, a green circle, or an inline "M".
 
 Misinterpretation: "logo" → generic icon in the accent color.
 
 Smallest correction: paste the live SVG (night-mode fills only: ears/head
 `#00FF5F` or `var(--color-accent)`, eyes/mouth `#fff`) into the contract as
-the canonical `Mau5Head` mark, state it is a committed asset
-(`web/src/assets/mau5head.svg` or a 15-line component), and add a gate
+the canonical `PulseMark` mark, state it is a committed asset
+(`web/src/assets/pulsemark.svg` or a 15-line component), and add a gate
 checkbox: sidebar contains that SVG, not a Remixicon placeholder.
 
 ---
@@ -115,7 +115,7 @@ checkbox: sidebar contains that SVG, not a Remixicon placeholder.
 ### B3 — BLOCKER — Phase 4B slice can pass as a 4-KPI crypto-admin template
 
 Affected: handoff §15 scope ("ONE real widget: 4 StatCards") and visual gate
-last checkbox ("logo-cropped screenshot still reads as the mau5trap console");
+last checkbox ("logo-cropped screenshot still reads as the pulsegrid console");
 architecture §4 (full dashboard = StatCards + chart + map + table + console);
 contract §3.4 / §3.10.
 
@@ -207,7 +207,7 @@ Deficiency: Live strings that carry identity, currently only partly locked:
 | `INITIALIZING NEURAL LINK...` (L3411) | **no** |
 | Header subtitle `Real-time label performance metrics` (L3526) | **no** |
 | Console title live: `Groq Intelligence` (L3729) | correctly retired (vendor-neutral). Replacement title **not given**. §3.21 says `"Intelligence"` — too generic; live-without-vendor would be `COMMAND CENTER` / `AI CONSOLE`. Unspecified. |
-| Wordmark `mau5trap` (all lowercase, never "Mau5trap" / "MAU5TRAP") | implied, not FAIL-listed |
+| Wordmark `pulsegrid` (all lowercase, never "Pulsegrid" / "PULSEGRID") | implied, not FAIL-listed |
 
 Misinterpretation: "Dashboard" / "Overview of your workspace" / "Sign out" /
 "Email" / console titled "Assistant".
@@ -278,7 +278,7 @@ ErrorState with RETRY"; visual: "danger-tinted panel").
 Evidence: live dashboard fetch failure is a **full viewport**
 `.loading-screen` with 48px `ri-error-warning-line`, title
 "Connection Failure", solid `#ff3333` `RETRY CONNECTION` (L3394–3408).
-Live loading is the full-viewport mau5-head (L3388–3391).
+Live loading is the full-viewport legacy mark (L3388–3391).
 
 Contract §3.18 describes an in-place panel. The gate says "danger-tinted
 panel". Slice fetch of `/v3/label/overview` is the equivalent of the live
@@ -380,8 +380,8 @@ the intended tightening. Mention in the deviation sentence, no extra work.
 
 ### N5 — MINOR — Gate lists seeded passwords
 
-Affected: handoff §15 functional checkbox (`admin@mau5trap.com / admin123`,
-`tours@rezz.com / rezz123`).
+Affected: handoff §15 functional checkbox (`admin@pulsegrid.fm / admin123`,
+`tours@novakin.band / novakin123`).
 
 These are already in `src/models/index.js`. Not a visual defect. No
 correction required for identity. Do not spread them further.
@@ -445,7 +445,7 @@ They will **not** stop:
 - dark analytics template — same
 - consumer AI settings page — later, M4
 
-The `[judge]` "logo-cropped, is this mau5trap?" line is the right
+The `[judge]` "logo-cropped, is this pulsegrid?" line is the right
 question and the wrong gate: it is not mechanical, and it is the only
 thing standing in front of those three lookalikes.
 
@@ -471,12 +471,12 @@ accent.
 
 ## MINIMUM REQUIRED PATCHES
 
-Fable patches `MAU5TRAP_VISUAL_DESIGN_CONTRACT.md` and the §15 gate in
+Fable patches `PULSEGRID_VISUAL_DESIGN_CONTRACT.md` and the §15 gate in
 `PHASE_4A_HANDOFF.md` only. No new palette, type scale, routes, or
 component architecture. No HTML edits.
 
 1. **COPY CANON** (new contract appendix, ~20 lines). Verbatim:
-   - Wordmark: `mau5trap` (all lowercase). Sublabel: `INTELLIGENCE PLATFORM`.
+   - Wordmark: `pulsegrid` (all lowercase). Sublabel: `INTELLIGENCE PLATFORM`.
    - Login labels: `ACCESS ID`, `PASSPHRASE`. Submit: `INITIALIZE SESSION`.
      Loading: `AUTHENTICATING...`. Footer: `RESTRICTED ACCESS. UNAUTHORIZED CONNECTIONS WILL BE TERMINATED.`
    - Logout: `Terminate Session`.
@@ -486,7 +486,7 @@ component architecture. No HTML edits.
    - Grep FAIL: `Sign in|Log in|Email|Password|Sign out|Welcome back`.
 
 2. **Paste the live sidebar SVG** into the contract (L3429–3443, night
-   fills only) as `Mau5Head`. Gate: sidebar uses that mark, not Remixicon.
+   fills only) as `PulseMark`. Gate: sidebar uses that mark, not Remixicon.
 
 3. **Login exception** in §3.1/§4: 420px card, 48px padding, accent
    hairline, optional centered radial `rgba(0,255,95,0.05)`; exempt from

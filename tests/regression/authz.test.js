@@ -31,7 +31,7 @@ const PORT = process.env.TEST_PORT || '3996';
 const BASE = `http://127.0.0.1:${PORT}`;
 
 let child;
-const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'mau5-authz-'));
+const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'pulsegrid-authz-'));
 
 const ENV = {
     ...process.env,
@@ -108,8 +108,8 @@ let adminToken, artistToken;
 
 describe('PHASE 1A authorization policy', () => {
     test('fixture logins work', async () => {
-        adminToken = await login('admin@mau5trap.com', 'admin123');
-        artistToken = await login('tours@rezz.com', 'rezz123');
+        adminToken = await login('admin@pulsegrid.fm', 'admin123');
+        artistToken = await login('tours@novakin.band', 'novakin123');
     });
 
     // ---- label-wide operational endpoints: admin-only ----
@@ -161,7 +161,7 @@ describe('PHASE 1A authorization policy', () => {
         assert.ok(Array.isArray(json.artists));
         assert.ok(json.artists.length >= 1, 'artist should see at least their own record');
         for (const a of json.artists) {
-            assert.strictEqual(a.id, 'art_rezz', `artist saw another artist's record: ${a.id}`);
+            assert.strictEqual(a.id, 'art_novakin', `artist saw another artist's record: ${a.id}`);
         }
         const admin = await api('GET', '/v3/artists?limit=50', adminToken);
         assert.strictEqual(admin.status, 200);
@@ -169,9 +169,9 @@ describe('PHASE 1A authorization policy', () => {
     });
 
     test('artist cannot read another artist detail', async () => {
-        const { status } = await api('GET', '/v3/artists/art_deadmau5', artistToken);
+        const { status } = await api('GET', '/v3/artists/art_lumenveil', artistToken);
         assert.strictEqual(status, 403);
-        const own = await api('GET', '/v3/artists/art_rezz', artistToken);
+        const own = await api('GET', '/v3/artists/art_novakin', artistToken);
         assert.strictEqual(own.status, 200);
     });
 
@@ -181,10 +181,10 @@ describe('PHASE 1A authorization policy', () => {
         assert.strictEqual(overview.status, 200);
         assert.strictEqual(overview.json.activeArtists, 1);
 
-        const report = await api('GET', '/v3/reports/monthly/art_rezz/2026-01', artistToken);
+        const report = await api('GET', '/v3/reports/monthly/art_novakin/2026-01', artistToken);
         assert.strictEqual(report.status, 200);
 
-        const deniedReport = await api('GET', '/v3/reports/monthly/art_deadmau5/2026-01', artistToken);
+        const deniedReport = await api('GET', '/v3/reports/monthly/art_lumenveil/2026-01', artistToken);
         assert.strictEqual(deniedReport.status, 403);
 
         const me = await api('GET', '/v3/auth/me', artistToken);

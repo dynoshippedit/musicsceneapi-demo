@@ -4,7 +4,7 @@ async function verify() {
     try {
         console.log("Logging in...");
         const login = await axios.post('http://localhost:3000/v3/auth/login', {
-            email: 'admin@mau5trap.com',
+            email: 'admin@pulsegrid.fm',
             password: 'admin123'
         });
         const token = login.data.token;

@@ -8,7 +8,7 @@ Two separate integration systems exist that do not know about each other:
   route handlers, **not** gated by `USE_REAL_DATA`.
 
 Plus a third, rogue Spotify client with hardcoded placeholder credentials at
-`mau5trap-production-api.js:2692`.
+`production-api.js:2692`.
 
 ---
 
@@ -34,7 +34,7 @@ calls; they use vendor SDKs rather than `axios`, which is why an `axios` grep mi
 ### Artist coverage is 2 of 29
 
 `ARTIST_MAPPINGS` (`integrations/index.js:12-30`) maps external IDs for exactly two
-artists: `art_deadmau5` and `art_rezz`. The mock roster has 29. For the other 27,
+artists: `art_lumenveil` and `art_novakin`. The mock roster has 29. For the other 27,
 `fetchArtistData` hits L41-44:
 
 ```js
@@ -90,7 +90,7 @@ Called directly from route handlers, bypassing `USE_REAL_DATA` entirely.
 | Wikipedia | `en.wikipedia.org`, `upload.wikimedia.org` | `auditWikipedia` (L166) | none/optional |
 | Discogs | `api.discogs.com` | `auditDiscogs` (L268) | `DISCOGS_API_KEY`/`SECRET` |
 | Genius | `api.genius.com` | `auditGenius` (L329) | `GENIUS_API_TOKEN` |
-| Fandom | `deadmau5.fandom.com` | `auditFandom` (L681), `getFandomRoster` (L544) | none |
+| Fandom | `lumenveil.fandom.com` | `auditFandom` (L681), `getFandomRoster` (L544) | none |
 
 Exposed via: `GET /v3/artists/:id/entity-audit` (L1037, calls 5 providers +
 Groq in one request), `GET /v3/integrations/google-kg` (L967),

@@ -1,7 +1,5 @@
-// mau5trap-production-api.js (Concept)
-// Unofficial Fan Project - Educational Purpose Only
-//
-// ============================================================================
+// production-api.js - application assembler (white-label build).
+// Fictional demo label: Pulsegrid. All artist names and figures are invented.
 // APPLICATION ASSEMBLER
 // ============================================================================
 // After Phase 2 this file no longer contains business logic, data access,
@@ -70,7 +68,7 @@ applyErrorHandlers(app);
 //    Exposed rather than executed: server.js awaits this BEFORE binding the
 //    listener. The original called initDB() at module scope and bound the
 //    listener immediately, which made seeded logins fail on a cold database
-//    (measured: 1 of 6 cold starts returned 401 for admin@mau5trap.com).
+//    (measured: 1 of 6 cold starts returned 401 for admin@pulsegrid.fm).
 // ---------------------------------------------------------------------------
 function initializeDatabase() {
     return initDB({ logger, labelData: artistRepo.labelData });

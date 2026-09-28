@@ -5,7 +5,7 @@ const axios = require('axios');
 
 // PHASE 4CF: label-specific knowledge-source configuration (hosts, pages,
 // parser keywords, user agents, fallbacks) moved to the Label Intelligence
-// Profile. Values for mau5trap are byte-identical to the previous literals.
+// Profile. Values for pulsegrid are byte-identical to the previous literals.
 const profile = require('../src/profile');
 
 /**
@@ -143,7 +143,7 @@ function findBestMatch(items, targetName, isRelaxed = false) {
     if (fuzzyMusicMatch) return fuzzyMusicMatch;
 
     // Priority 3: Relaxed Match (Fallback contextual search)
-    // If we are searching for "mau5trap artist [Name]", we trust the search engine's relevance
+    // If we are searching for "pulsegrid artist [Name]", we trust the search engine's relevance
     // and just want an entity that likely represents the person/act, preferably with an image.
     if (isRelaxed) {
         // Try to find ANY item that has an image and matches the name somewhat

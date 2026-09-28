@@ -121,7 +121,7 @@ after(async () => {
 test('artist, A&R, sales and audit state survive a full process restart', async () => {
     // ---------------- PHASE A: first boot, write everything ----------------
     await boot();
-    const admin = await login('admin@mau5trap.com', 'admin123');
+    const admin = await login('admin@pulsegrid.fm', 'admin123');
     assert.ok(admin, 'seeded admin logs in on the disposable DB');
 
     // Artist: create → detail → archive.
@@ -150,7 +150,7 @@ test('artist, A&R, sales and audit state survive a full process restart', async 
 
     // Sales: three months for a seeded artist.
     for (const [month, revenue] of [['2026-01', 1000], ['2026-02', 2000], ['2026-03', 3000]]) {
-        const sale = await api(admin, 'POST', '/v3/analytics/sales', { artistId: 'art_deadmau5', month, revenue });
+        const sale = await api(admin, 'POST', '/v3/analytics/sales', { artistId: 'art_lumenveil', month, revenue });
         assert.strictEqual(sale.status, 200, `sale ${month} logged`);
     }
 
@@ -176,7 +176,7 @@ test('artist, A&R, sales and audit state survive a full process restart', async 
     await shutdown();
     await boot();
 
-    const admin2 = await login('admin@mau5trap.com', 'admin123');
+    const admin2 = await login('admin@pulsegrid.fm', 'admin123');
     assert.ok(admin2, 'seeded admin logs in after restart (users durable)');
 
     // Artist: detail resolves from the DB, showing the ARCHIVED state.
@@ -204,7 +204,7 @@ test('artist, A&R, sales and audit state survive a full process restart', async 
     assert.strictEqual(persistedSub.votes, 1, 'vote survives restart');
 
     // Sales drive projections after restart (no synthetic reversion).
-    const proj = await api(admin2, 'GET', '/v3/analytics/projections?artistId=art_deadmau5');
+    const proj = await api(admin2, 'GET', '/v3/analytics/projections?artistId=art_lumenveil');
     assert.strictEqual(proj.status, 200);
     assert.deepStrictEqual(proj.body.chartData.datasets[0].data.slice(0, 3), [1000, 2000, 3000],
         'logged sales drive projections after restart');
@@ -240,7 +240,7 @@ test('artist, A&R, sales and audit state survive a full process restart', async 
         assert.ok(actions.includes(expected), `audit row for ${expected} exists (got: ${actions.join(', ')})`);
     }
     const artistCreate = rows.find((r) => r.action === 'artist.create');
-    assert.strictEqual(artistCreate.labelSlug, 'mau5trap', 'audit rows carry the active label slug');
+    assert.strictEqual(artistCreate.labelSlug, 'pulsegrid', 'audit rows carry the active label slug');
     assert.strictEqual(artistCreate.resourceId, 'art_durabilityprobe');
     assert.strictEqual(typeof artistCreate.actorId, 'number', 'audit rows carry the acting user id');
     assert.ok(artistCreate.requestId, 'audit rows correlate to a request id');

@@ -2,7 +2,7 @@
  * src/services/cacheService.js
  *
  * Single owner of the NodeCache instance that was created at the top of
- * mau5trap-production-api.js (Phase 1 L42, originally L25).
+ * production-api.js (Phase 1 L42, originally L25).
  *
  * WHY THIS EXISTS: the cache was a module-scope singleton reached directly from
  * 12 call sites across artist lookup, entity audit, AI query and report

@@ -18,7 +18,7 @@ Date of this note: 2026-09-18.
 - Do **not** restart D0 discovery, Steps 1–13, Phase 4D, or another full-tree “is it perfect” audit as if the ledger does not exist.
 - Do **not** treat `npm test` 143/143 or `verify:hermetic` 54/54 as “the product works.”
 - Do **not** treat Phase 4C / 4CF / EXECUTION_GUIDE completion claims as certified.
-- Do **not** mutate operator DB `mau5trap_v5.sqlite` (see hash below). Probes use throwaway SQLite + isolated ports.
+- Do **not** mutate operator DB `pulsegrid_v5.sqlite` (see hash below). Probes use throwaway SQLite + isolated ports.
 - Do **not** regenerate snapshots merely because they fail; if a pin was a **lie**, change product first, then recapture with evidence.
 - Do **not** weaken assertions (`200 || 400`).
 - Do **not** “fix” A&R split-brain by deleting a store without an explicit product decision — Room vs Scouting are two different APIs on purpose in legacy, but Room **Submit** writing the other store is a defect (`API-003`).
@@ -30,23 +30,23 @@ Date of this note: 2026-09-18.
 
 | | |
 |---|---|
-| Path | `/home/dino/mau5trap-repo` |
+| Path | `/home/dino/pulsegrid-repo` |
 | HEAD | `9101746` — *Close crash, vote-corruption, and stale-UI bugs from the full-tree re-read* |
 | Branch | `master` **ahead of origin by 11**. Not pushed. |
 | Dirty | **Untracked (must keep):** `AI_HANDOFF.md`, `ERROR_LEDGER.md`, `FULL_SYSTEM_FORENSIC_AUDIT.md`, `API_CONNECTION_MATRIX.md`, `execution-validation/forensic-2026-09-18/` |
-| Operator API | `http://localhost:3000` — `node server.js` from repo root (gitignored `.env` `JWT_SECRET`). Confirm with `curl -sS http://127.0.0.1:3000/health`. If down: `cd /home/dino/mau5trap-repo && node server.js`. |
+| Operator API | `http://localhost:3000` — `node server.js` from repo root (gitignored `.env` `JWT_SECRET`). Confirm with `curl -sS http://127.0.0.1:3000/health`. If down: `cd /home/dino/pulsegrid-repo && node server.js`. |
 | Operator UI | `http://127.0.0.1:5173` → `VITE_API_BASE_URL=http://localhost:3000`. Confirm `ss -ltn \| grep 5173`. |
-| Login | `admin@mau5trap.com` / `admin123` · `tours@rezz.com` / `rezz123` |
+| Login | `admin@pulsegrid.fm` / `admin123` · `tours@novakin.band` / `novakin123` |
 
 Operator DB (do not write in tests):
 
 ```
-mau5trap_v5.sqlite
+pulsegrid_v5.sqlite
 size     196608
 sha256   a71f9ec104d5bbcf66a471dbd03a1dac477403aac86aa2cf592c9f5a93aa919a
 ```
 
-**Note:** this hash is **not** the older freeze `46afbd4aca…` / 184320. A “make it run” boot used the default sqlite path and grew the file **before** the forensic pass. Forensic probes used `/tmp/mau5-forensic.sqlite` and did not change the operator file. Treat **current** hash as the new do-not-touch baseline unless the operator says otherwise.
+**Note:** this hash is **not** the older freeze `46afbd4aca…` / 184320. A “make it run” boot used the default sqlite path and grew the file **before** the forensic pass. Forensic probes used `/tmp/legacy-forensic.sqlite` and did not change the operator file. Treat **current** hash as the new do-not-touch baseline unless the operator says otherwise.
 
 `.env` exists, gitignored, contains a generated `JWT_SECRET` (required to boot). `npm start` without it exits 1.
 
@@ -132,9 +132,9 @@ http://localhost:3000/health
 Disposable (required for writes):
 
 ```bash
-cd /home/dino/mau5trap-repo
+cd /home/dino/pulsegrid-repo
 JWT_SECRET=forensic-audit-secret-32chars PORT=4010 \
-  DB_STORAGE=/tmp/mau5-repair.sqlite SCHEDULE_JOBS=false GROQ_API_KEY= \
+  DB_STORAGE=/tmp/legacy-repair.sqlite SCHEDULE_JOBS=false GROQ_API_KEY= \
   NODE_ENV=development USE_REAL_DATA=false node server.js
 
 cd web && VITE_API_BASE_URL=http://127.0.0.1:4010 npx vite --host 127.0.0.1 --port 4173

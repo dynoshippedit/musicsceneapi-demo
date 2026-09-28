@@ -43,7 +43,7 @@ const User = sequelize.define('User', {
 
 // api L158-163
 const Artist = sequelize.define('Artist', {
-    id: { type: DataTypes.STRING, primaryKey: true }, // e.g., 'art_deadmau5'
+    id: { type: DataTypes.STRING, primaryKey: true }, // e.g., 'art_lumenveil'
     name: { type: DataTypes.STRING, allowNull: false },
     status: { type: DataTypes.STRING, defaultValue: 'active' }, // active, archived, developing
     data: { type: DataTypes.JSON, allowNull: false } // Stores the entire complex object
@@ -156,8 +156,8 @@ async function initDB({ logger, labelData } = {}) {
 
         // SEED USERS IF EMPTY — api L182-190
         // PHASE 4CF: seed identities moved to the Label Intelligence Profile
-        // (profile.seedUsers). Values for the mau5trap profile are verbatim
-        // (admin@mau5trap.com / tours@rezz.com with their original grants).
+        // (profile.seedUsers). Values for the pulsegrid profile are verbatim
+        // (admin@pulsegrid.fm / tours@novakin.band with their original grants).
         const userCount = await User.count();
         if (userCount === 0) {
             if (logger) logger.info('Seeding initial users...');
@@ -191,7 +191,7 @@ async function initDB({ logger, labelData } = {}) {
         }
 
         // PHASE 4CF: seed A&R submissions from the active profile when empty
-        // (mirrors artist seeding; values for mau5trap are the two original
+        // (mirrors artist seeding; values for pulsegrid are the two original
         // seeds — sub_1 votes:15, sub_2 votes:42).
         const anrCount = await AnrSubmission.count();
         if (anrCount === 0 && profile.datasets.anr && Array.isArray(profile.datasets.anr.anrSubmissions)) {

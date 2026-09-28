@@ -4,14 +4,14 @@ Four HTML files exist. Only two are applications; two are static documentation.
 
 | File | Lines | Type | API base | Live calls |
 |---|---|---|---|---|
-| `mau5trap-frontend-connected.html` | 3826 | React app (inline, no build) | `http://localhost:3000` (L~) | 37 distinct paths, 47 occurrences |
-| `mau5trap-terminal-dashboard.html` | 587 | Vanilla JS dashboard | `http://localhost:3000/v3` | **3** endpoints |
-| `deadmau5-api-docs.html` | 47453 B | static docs, zero `fetch` | — | 0 |
+| `pulsegrid-frontend-connected.html` | 3826 | React app (inline, no build) | `http://localhost:3000` (L~) | 37 distinct paths, 47 occurrences |
+| `pulsegrid-terminal-dashboard.html` | 587 | Vanilla JS dashboard | `http://localhost:3000/v3` | **3** endpoints |
+| `lumenveil-api-docs.html` | 47453 B | static docs, zero `fetch` | — | 0 |
 | `artist-analytics-api-docs.html` | 22266 B | static docs, zero `fetch` | — | 0 |
 
 Both apps hardcode `localhost`. Neither has a build step, module system, or environment
 injection — `API_BASE` is a literal in a `<script>` block, so neither can be deployed to
-`dashboard.mau5trap.com` as `PRODUCTION_DEPLOYMENT.md` describes without editing source.
+`dashboard.pulsegrid.fm` as `PRODUCTION_DEPLOYMENT.md` describes without editing source.
 
 Note the two apps use **different base conventions**: the workstation's `API_BASE` omits
 `/v3` and each call re-adds it; the terminal's `API_BASE` includes `/v3`. Any shared
@@ -19,7 +19,7 @@ config refactor must reconcile this.
 
 ---
 
-## 1. Workstation — `mau5trap-frontend-connected.html`
+## 1. Workstation — `pulsegrid-frontend-connected.html`
 
 Role per `README.md:13-16`: "Full Operational Control", managers & A&R.
 
@@ -78,9 +78,9 @@ sets with incompatible vote semantics.
 
 ---
 
-## 2. Command Center — `mau5trap-terminal-dashboard.html`
+## 2. Command Center — `pulsegrid-terminal-dashboard.html`
 
-Role per `README.md:18-21`: "Executive Overview", executives & Joel. Advertised features:
+Role per `README.md:18-21`: "Executive Overview", executives & LUMEN VEIL. Advertised features:
 "Hoarde Terminal aesthetic, High-level KPI monitoring, AI Query Terminal, One-click PDF
 Reports."
 
@@ -94,7 +94,7 @@ It consumes **three** endpoints:
 
 So the "AI Query Terminal" — the headline feature of the executive dashboard — is
 answered by hardcoded string templates including the literal
-`"Rezz is second at 6.5x"` (L901) and a fixed `confidence: 0.98` (L916).
+`"Novakin is second at 6.5x"` (L901) and a fixed `confidence: 0.98` (L916).
 
 FE L358 carries its own admission: `listeners: '--', // API doesn't return this in
 overview yet`.

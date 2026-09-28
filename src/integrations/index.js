@@ -35,7 +35,7 @@ function createIntegrationFacade({
         fetchArtistData: (artistId, mockData) => integrations.fetchArtistData(artistId, mockData),
         /** Which providers have usable credentials. */
         getIntegrationStatus: () => integrations.getIntegrationStatus(),
-        /** Internal id -> external ids. Profile-owned (mau5trap: art_deadmau5 + art_rezz). */
+        /** Internal id -> external ids. Profile-owned (pulsegrid: art_lumenveil + art_novakin). */
         artistMappings: profile.socialMappings,
 
         // ---- entity / metadata audit (modules/entityAudit.js) ----

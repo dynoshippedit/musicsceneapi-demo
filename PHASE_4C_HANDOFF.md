@@ -4,7 +4,7 @@
 
 **PHASE 4C COMPLETE. Nothing committed; the working tree is left for operator review. Phase 4D NOT started.**
 
-- Repo: `/home/dino/mau5trap-repo`, HEAD `7efb44b` (Phase 4A/4B committed). The Pre-4C Contract Alignment work was
+- Repo: `/home/dino/pulsegrid-repo`, HEAD `7efb44b` (Phase 4A/4B committed). The Pre-4C Contract Alignment work was
   found uncommitted in the tree, independently verified (§2), and carried forward untouched.
 - Session: 2026-09-17. Node v22.23.2, Vite 6.4.3, Chromium 153.0.8010.12 / Playwright 1.63.0.
 - Results at a glance: backend `npm test` **127 pass / 0 fail / 27 suites**; `npm run verify` **54/54**;
@@ -208,7 +208,7 @@ No second API client, session store, router, token set or formatting layer was c
 **The map rule is satisfied, and `BRAND_PORTABILITY_AUDIT` W04 is closed.**
 
 - The legacy 44-entry region/city/venue coordinate table was **moved verbatim**, not deleted, to
-  `web/src/brand/profiles/mau5trap/locations.js`, and is referenced through `profile.map.centers`. The venue
+  `web/src/brand/profiles/pulsegrid/locations.js`, and is referenced through `profile.map.centers`. The venue
   rows — the rooms this label's audience is measured in — travel with the profile.
 - `components/maps/GeoHeatmap.jsx` contains **no coordinate of its own**. It resolves a point from, in order:
   coordinates on the dataset row, then the ACTIVE profile's `centers`. Rows resolving to neither are counted and
@@ -221,24 +221,24 @@ No second API client, session store, router, token set or formatting layer was c
 
 With `VITE_BRAND_PROFILE=example-records` (dev override) and **zero edits to any file outside
 `web/src/brand/`**: magenta accent throughout nav, chart projection, console chip and KPI rules; `£3.2m /
-£134.8m / £539.1m` en-GB compact from the same numeric API response; monogram "E" in place of the mau5-head;
+£134.8m / £539.1m` en-GB compact from the same numeric API response; monogram "E" in place of the legacy mark;
 document title and favicon from the profile.
 
 The map acceptance test (gate box **P11**): the dashboard map plots **1** marker — `Example Arena, Leeds`, a
 location that exists only in the Example Records profile — and reports **42** unmapped locations, because the
-mau5trap venue names the live API returns are not resolvable by that profile's lookup. That asymmetry is the
+pulsegrid venue names the live API returns are not resolvable by that profile's lookup. That asymmetry is the
 proof: the coordinates cannot be coming from generic source.
 
-`P07` confirms no "mau5trap" text, no `mau5*` class and no green element anywhere in the Example Records render;
+`P07` confirms no "pulsegrid" text, no `legacy*` class and no green element anywhere in the Example Records render;
 `P10` confirms the default profile returns intact.
 
-**Scope honesty:** this is frontend presentation portability. The backend is still mau5trap-flavoured — AI label
-context, `mau5trap ${query}` Google-KG prefix (`src/routes/integrations.js` L68), PDF titles, reset emails, A&R
+**Scope honesty:** this is frontend presentation portability. The backend is still pulsegrid-flavoured — AI label
+context, `pulsegrid ${query}` Google-KG prefix (`src/routes/integrations.js` L68), PDF titles, reset emails, A&R
 benchmarks. That is Phase 4-LABEL and was deliberately not touched. Do **not** claim end-to-end second-label
 deployment readiness.
 
-**Specialization preserved:** under the default profile nothing mau5trap-specific was removed or diluted — the
-mau5-head, neon console, wordmark, tagline, venue table, search context and backend intelligence all remain
+**Specialization preserved:** under the default profile nothing pulsegrid-specific was removed or diluted — the
+legacy mark, neon console, wordmark, tagline, venue table, search context and backend intelligence all remain
 active. Every portability move in this phase was an externalization.
 
 ---
@@ -258,7 +258,7 @@ Recorded, not hidden.
 | Roster revenue column | **Correctness fix** | `GET /v3/artists` serves a `revenue` OBJECT and no `totalRevenue`; the legacy roster read `artist.totalRevenue` and rendered `$NaNk` on every row. `utils/artist.js` mirrors the server's own `calculateTotalRevenue` so the roster agrees with `/v3/artists/:id` and `label/overview.topArtists`. |
 | Header sub-line on every page | **Documented default** | 4A §20 Q10 is still unanswered and states 4C defaults to legacy behaviour, which repeats the same sub-line under every title. Implemented as specified; still a product question. |
 | Basemap watermark | **External dependency** | The legacy tile provider now watermarks unkeyed tiles "API KEY REQUIRED". Markers and data are unaffected. A keyed URL can be supplied via `profile.map.tileUrl` or `VITE_MAP_TILE_URL` with no code change. |
-| `npm run verify` is not idempotent | **Pre-existing, not a 4C regression** | It creates a `Verify Artist <ts>` row per run (`verify_phase2.js` L123) and never removes it, so its `total === 29` assertion fails on any second run against a persistent DB. A clean single run passes 54/54. Its artifacts were removed from `mau5trap_v5.sqlite`, which is back to 29 artists. |
+| `npm run verify` is not idempotent | **Pre-existing, not a 4C regression** | It creates a `Verify Artist <ts>` row per run (`verify_phase2.js` L123) and never removes it, so its `total === 29` assertion fails on any second run against a persistent DB. A clean single run passes 54/54. Its artifacts were removed from `pulsegrid_v5.sqlite`, which is back to 29 artists. |
 
 ---
 
@@ -288,7 +288,7 @@ All commands run from a clean process against the live backend and Vite dev serv
 | `node validation/gate.mjs --static-only` | **9 pass, 0 fail** |
 | `node validation/static-checks.mjs --self-test` | **23 pass, 0 fail** (9 rules × real tree + 14 synthetic leaks) |
 | `npm audit --omit=dev --audit-level=moderate` | **2 moderate**, both React Router 6 (§11) |
-| Legacy HTML integrity | `md5sum` of `mau5trap-frontend-connected.html` **matches `git show HEAD:`**; `git diff` empty for both legacy files |
+| Legacy HTML integrity | `md5sum` of `pulsegrid-frontend-connected.html` **matches `git show HEAD:`**; `git diff` empty for both legacy files |
 | Snapshot baseline | `phase2_baseline.json` diff still **+14 / −0** (Pre-4C only); **not** re-baselined for 4C |
 
 ### Gate boxes added or amended for 4C
@@ -353,7 +353,7 @@ tree is not clean.**
 2. **Two shadowed duplicate handlers each** for `POST /v3/users`, `PUT` and `DELETE /v3/users/:id` — preserved
    for parity. The reachable `DELETE` (L130) also lacks the self-delete guard its shadowed twin has; the UI does
    not offer self-deletion, and the server stays authoritative. **MINOR**, untouched.
-3. **Backend label coupling** — AI label context, `mau5trap ${query}` KG prefix, PDF/report titles, reset-email
+3. **Backend label coupling** — AI label context, `pulsegrid ${query}` KG prefix, PDF/report titles, reset-email
    identity, A&R benchmarks, and the accent hex in `analytics/projections` datasets. All Phase 4-LABEL.
 4. **React Router 6 advisories** (§11).
 5. **`useApiQuery` memoization discipline** (E-3) — every call site uses `useCallback`; a future contributor who
@@ -381,13 +381,13 @@ Recommended order:
    with no rewrite the moment that route exists.
 4. **Code splitting** for the 617 kB chunk, and a React Router 7 evaluation as its own bounded change.
 5. Only after the legacy replacements have passed their own acceptance gate should
-   `mau5trap-frontend-connected.html` be retired. It is untouched and remains the parity reference.
+   `pulsegrid-frontend-connected.html` be retired. It is untouched and remains the parity reference.
 
 ---
 
 ## 14. Repository state
 
 Nothing committed. `git status --short` shows the Pre-4C files carried forward, this phase's modifications, and
-the new `web/src` surfaces. `mau5trap-frontend-connected.html` and `mau5trap-terminal-dashboard.html` are
-byte-identical to HEAD. `mau5trap_v5.sqlite` (gitignored) was left with its original 29 artists and 2 seeded
+the new `web/src` surfaces. `pulsegrid-frontend-connected.html` and `pulsegrid-terminal-dashboard.html` are
+byte-identical to HEAD. `pulsegrid_v5.sqlite` (gitignored) was left with its original 29 artists and 2 seeded
 users after test artifacts were removed. No Phase 4D work was started.

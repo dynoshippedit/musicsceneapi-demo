@@ -33,7 +33,7 @@ const BASELINE = path.join(ROOT, 'tests', 'snapshots', 'phase2_baseline.json');
 const expectedSnapshot = () => ({ ...JSON.parse(fs.readFileSync(BASELINE, 'utf8')), ...JSON.parse(fs.readFileSync(path.join(ROOT, 'tests/snapshots/repaired_contracts.json'), 'utf8')) });
 
 let child;
-const scratch = fs.mkdtempSync(path.join(require('os').tmpdir(), 'mau5-snapshot-'));
+const scratch = fs.mkdtempSync(path.join(require('os').tmpdir(), 'pulsegrid-snapshot-'));
 
 const ENV = {
     ...process.env,
@@ -142,7 +142,7 @@ describe('behavioral equivalence with the pre-refactor baseline', () => {
     });
 
     test('nondeterministic endpoints still return the right status and shape', async () => {
-        const token = await login('admin@mau5trap.com', 'admin123');
+        const token = await login('admin@pulsegrid.fm', 'admin123');
         assert.ok(token, 'admin login must succeed');
 
         const proj = await fetch(`${BASE}/v3/analytics/projections`, {
@@ -190,8 +190,8 @@ describe('canonical entrypoint', () => {
     });
 
     test('seeded logins work deterministically after boot (cold-start race fixed)', async () => {
-        const admin = await login('admin@mau5trap.com', 'admin123');
-        const artist = await login('tours@rezz.com', 'rezz123');
+        const admin = await login('admin@pulsegrid.fm', 'admin123');
+        const artist = await login('tours@novakin.band', 'novakin123');
         assert.ok(admin, 'seeded admin must be able to log in');
         assert.ok(artist, 'seeded artist must be able to log in');
     });
@@ -212,11 +212,11 @@ describe('canonical entrypoint', () => {
     }
 
     test('POST /v3/auth/login returns pageAccess as the seeded array (Decision 1)', async () => {
-        const admin = await loginBody('admin@mau5trap.com', 'admin123');
+        const admin = await loginBody('admin@pulsegrid.fm', 'admin123');
         assert.ok(Array.isArray(admin.user.pageAccess), 'admin login user.pageAccess must be an array');
         assert.deepStrictEqual(admin.user.pageAccess, ['all']);
 
-        const artist = await loginBody('tours@rezz.com', 'rezz123');
+        const artist = await loginBody('tours@novakin.band', 'novakin123');
         assert.ok(Array.isArray(artist.user.pageAccess), 'artist login user.pageAccess must be an array');
         assert.deepStrictEqual(artist.user.pageAccess, ['overview', 'roster']);
 
@@ -231,8 +231,8 @@ describe('canonical entrypoint', () => {
 
     test('GET /v3/auth/me returns pageAccess as the seeded array (Decision 1)', async () => {
         const cases = [
-            ['admin@mau5trap.com', 'admin123', ['all']],
-            ['tours@rezz.com', 'rezz123', ['overview', 'roster']]
+            ['admin@pulsegrid.fm', 'admin123', ['all']],
+            ['tours@novakin.band', 'novakin123', ['overview', 'roster']]
         ];
         for (const [email, password, expected] of cases) {
             const token = await login(email, password);
@@ -254,19 +254,19 @@ describe('canonical entrypoint', () => {
     });
 
     test('database reads work through the repository layer', async () => {
-        const token = await login('admin@mau5trap.com', 'admin123');
+        const token = await login('admin@pulsegrid.fm', 'admin123');
         const res = await fetch(`${BASE}/v3/artists?limit=5`, {
             headers: { Authorization: `Bearer ${token}` }
         });
         assert.strictEqual(res.status, 200);
         const body = await res.json();
-        assert.strictEqual(body.total, 29, 'all 29 artists resolve via DB + mock union');
+        assert.strictEqual(body.total, 8, 'all 8 fictional artists resolve via DB + mock union');
         assert.strictEqual(body.artists.length, 5, 'limit is honoured');
     });
 
     test('CSV export works end to end (exercises flattenData/filterMetrics)', async () => {
-        const token = await login('admin@mau5trap.com', 'admin123');
-        const res = await fetch(`${BASE}/v3/exports?format=csv&artistId=art_deadmau5`, {
+        const token = await login('admin@pulsegrid.fm', 'admin123');
+        const res = await fetch(`${BASE}/v3/exports?format=csv&artistId=art_lumenveil`, {
             headers: { Authorization: `Bearer ${token}` }
         });
         assert.strictEqual(res.status, 200);
@@ -284,7 +284,7 @@ describe('canonical entrypoint', () => {
         const probe = { email: 'phase4c-probe@example.test', password: 'probe-pass-123', name: 'Phase 4C Probe', role: 'viewer' };
 
         async function adminToken() {
-            const token = await login('admin@mau5trap.com', 'admin123');
+            const token = await login('admin@pulsegrid.fm', 'admin123');
             assert.ok(token, 'admin login must succeed');
             return token;
         }
@@ -369,7 +369,7 @@ describe('Phase 4CF — user CRUD truth and session safety', () => {
     const probe = { email: 'phase4cf-probe@example.test', password: 'probe-pass-456', name: 'Phase 4CF Probe', role: 'viewer' };
 
     async function adminToken() {
-        const token = await login('admin@mau5trap.com', 'admin123');
+        const token = await login('admin@pulsegrid.fm', 'admin123');
         assert.ok(token, 'admin login must succeed');
         return token;
     }
@@ -400,14 +400,14 @@ describe('Phase 4CF — user CRUD truth and session safety', () => {
         assert.ok(created, 'probe user listed');
         assert.strictEqual(created.artistAccess, 'none');
 
-        const update = await api(token, 'PUT', `/v3/users/${created.id}`, { name: probe.name, role: 'artist', artistAccess: 'art_rezz' });
+        const update = await api(token, 'PUT', `/v3/users/${created.id}`, { name: probe.name, role: 'artist', artistAccess: 'art_novakin' });
         assert.strictEqual(update.status, 200, 'PUT must succeed');
 
         const health = await fetch(`${BASE}/health`);
         assert.strictEqual(health.status, 200, 'server alive after artistAccess edit');
 
         const stored = await listUser(token, probe.email);
-        assert.strictEqual(stored.artistAccess, 'art_rezz', 'artistAccess grant survives the round trip');
+        assert.strictEqual(stored.artistAccess, 'art_novakin', 'artistAccess grant survives the round trip');
         assert.strictEqual(stored.role, 'artist');
     });
 
@@ -416,7 +416,7 @@ describe('Phase 4CF — user CRUD truth and session safety', () => {
         assert.ok(token, 'probe user logs in after edit');
         const meRes = await fetch(`${BASE}/v3/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
         assert.strictEqual(meRes.status, 200);
-        assert.strictEqual((await meRes.json()).artistAccess, 'art_rezz');
+        assert.strictEqual((await meRes.json()).artistAccess, 'art_novakin');
     });
 
     test('DELETE /v3/users/:id has real guards (F-2)', async () => {
@@ -429,7 +429,7 @@ describe('Phase 4CF — user CRUD truth and session safety', () => {
 
         // Root admin → 403.
         const users = await (await api(token, 'GET', '/v3/users')).json();
-        const root = users.find((u) => u.email === 'admin@mau5trap.com');
+        const root = users.find((u) => u.email === 'admin@pulsegrid.fm');
         assert.ok(root, 'root admin present in list');
         const rootDel = await api(token, 'DELETE', `/v3/users/${root.id}`);
         assert.strictEqual(rootDel.status, 403, 'root admin cannot be deleted via the admin route');

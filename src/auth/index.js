@@ -2,7 +2,7 @@
  * src/auth/index.js
  *
  * Authentication and authorization primitives extracted verbatim from
- * mau5trap-production-api.js L411-470 and L2536-2554.
+ * production-api.js L411-470 and L2536-2554.
  *
  * ALL BEHAVIOR PRESERVED EXACTLY, including two audit findings that are
  * deliberately NOT fixed in Phase 1 (each is pinned by a regression test so a
@@ -10,7 +10,7 @@
  *
  *   HIGH-4  hasArtistAccess() checks Array.isArray(user.artistAccess), but the
  *           User model stores artistAccess as a STRING (models L151) and the
- *           seeded artist gets the scalar 'art_rezz' (models L189). A string is
+ *           seeded artist gets the scalar 'art_novakin' (models L189). A string is
  *           never an array, so the function falls through to `return false` and
  *           the seeded artist cannot read its own record. FAIL-CLOSED — safe to
  *           leave, dangerous to "fix" carelessly.
@@ -70,20 +70,20 @@ function authenticateToken(req, res, next) {
  * HIGH-4 FIX (Phase 3).
  *
  * The User model stores artistAccess as a STRING (models L151) and the seeded
- * artist receives the scalar 'art_rezz' (models seed). The previous version
+ * artist receives the scalar 'art_novakin' (models seed). The previous version
  * only handled 'all' or an ARRAY, so a scalar string fell through to
  * `return false` and artists were denied their own data.
  *
  * Normalization: a scalar string is now treated as a single allowed artist id,
  * equivalent to a one-element array. This is fail-CLOSED: an artist whose
- * artistAccess is 'art_rezz' can access 'art_rezz' and nothing else.
+ * artistAccess is 'art_novakin' can access 'art_novakin' and nothing else.
  */
 function normalizeArtistAccess(artistAccess) {
     if (artistAccess === null || artistAccess === undefined) return [];
     if (Array.isArray(artistAccess)) return artistAccess;
     if (typeof artistAccess === 'string') {
         // A stored stringified JSON array (e.g. "[\"art_a\",\"art_b\"]") is
-        // parsed; a bare scalar ("art_rezz") is wrapped. Empty/whitespace
+        // parsed; a bare scalar ("art_novakin") is wrapped. Empty/whitespace
         // yields nothing.
         const trimmed = artistAccess.trim();
         if (trimmed === '' || trimmed === 'none') return [];

@@ -3,7 +3,7 @@ const entityAudit = require('./modules/entityAudit');
 async function verifyIntegration() {
     console.log('Verifying Entity Audit Integration...');
     try {
-        const artistName = "Deadmau5"; // Known to have data
+        const artistName = "Lumen Veil"; // Known to have data
 
         console.log(`Auditing: ${artistName}`);
 

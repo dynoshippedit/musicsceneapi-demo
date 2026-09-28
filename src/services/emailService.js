@@ -1,7 +1,7 @@
 /**
  * src/services/emailService.js
  *
- * Extracted verbatim from mau5trap-production-api.js (Phase 1 L257-299).
+ * Extracted verbatim from production-api.js (Phase 1 L257-299).
  *
  * STEP 7 (D7, 2026-09-28) — delivery acknowledgement contract:
  * sendEmail() returns true ONLY on real delivery acknowledgement: the
@@ -96,7 +96,7 @@ function createEmailService({ transport, emailConfig, log: logFn } = {}) {
         return sendEmail({
             to,
             // PHASE 4CF: reset-email identity from the profile. Values for
-            // mau5trap are byte-identical to the previous literals.
+            // pulsegrid are byte-identical to the previous literals.
             subject: profile.email.resetSubject,
             html: `
                 <div style="font-family: monospace; background: #000; color: #fff; padding: 20px;">

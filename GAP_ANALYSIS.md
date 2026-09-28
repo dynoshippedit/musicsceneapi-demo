@@ -1,12 +1,12 @@
-# Gap Analysis — "API that tells mau5trap artists what is going on at the label"
+# Gap Analysis — "API that tells pulsegrid artists what is going on at the label"
 
-Read against commit as cloned. 65 routes in `mau5trap-production-api.js` (~3150 lines).
+Read against commit as cloned. 65 routes in `production-api.js` (~3150 lines).
 
 ## A. Blockers — it does not run as shipped
 
 | # | Gap | Evidence |
 |---|-----|----------|
-| A1 | `npm start` points at a file that does not exist | `package.json` → `"start": "node server.js"`; no `server.js` in repo (entry is `mau5trap-production-api.js`) |
+| A1 | `npm start` points at a file that does not exist | `package.json` → `"start": "node server.js"`; no `server.js` in repo (entry is `production-api.js`) |
 | A2 | No `.env` | only `.env.example` / `.env.prod.template`. `ADMIN_EMAIL`/`ADMIN_PASS` unset → the admin-override branch at L482 compares `undefined === undefined` |
 | A3 | Four competing manifests | `package.json`, `package1.json`, `package-production.json`, `package-lock.json` — unclear which is authoritative |
 | A4 | No test script | `scripts` has only `start`; 20+ `test_*.js` / `verify_*.js` files are orphan runners, nothing invokes them |
@@ -46,7 +46,7 @@ admin-outbound. Concretely:
 ## D. Persistence is only one-third wired
 
 Sequelize models defined: **`User`, `Artist`, `Stats`** (L145/158/165) on sqlite
-(`mau5trap_v5.sqlite`).
+(`pulsegrid_v5.sqlite`).
 
 Everything else is module-scope memory and dies on restart:
 - A&R submissions, votes, whiteboard, listening sessions, demos (L1422-1974)
@@ -58,7 +58,7 @@ Everything else is module-scope memory and dies on restart:
 
 `sync/masterLoop.js` exports `masterSyncLoop(db, spotifyClient)` and is the intended
 live-data path. `node-cron` is imported at L9 but the loop is not registered anywhere in
-`mau5trap-production-api.js`. So `Stats` is never populated → no history → the
+`production-api.js`. So `Stats` is never populated → no history → the
 `GET /v3/analytics/projections` regression (L3058) has nothing real to regress on.
 
 ## F. To make it do the stated job — minimum build

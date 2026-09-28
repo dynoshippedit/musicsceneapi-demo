@@ -15,7 +15,7 @@ class TikTokIntegration {
     /**
      * Fetch TikTok user profile data
      * @param {string} username - TikTok username (with or without @)
-     * @returns {Object} TikTok metrics mapped to mau5trap schema
+     * @returns {Object} TikTok metrics mapped to pulsegrid schema
      */
     async getUserData(username) {
         try {

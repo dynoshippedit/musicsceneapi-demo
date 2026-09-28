@@ -132,7 +132,7 @@ async function run() {
         process.exit(2);
     }
 
-    const scratch = fs.mkdtempSync(path.join(require('os').tmpdir(), 'mau5-probe-'));
+    const scratch = fs.mkdtempSync(path.join(require('os').tmpdir(), 'pulsegrid-probe-'));
     const child = spawn(process.execPath, [path.resolve(ENTRY)], {
         env: { ...ENV, DB_STORAGE: path.join(scratch, 'test.sqlite') }, cwd: scratch, stdio: ['ignore', 'pipe', 'pipe']
     });
@@ -154,8 +154,8 @@ async function run() {
 
     // Acquire tokens up front so ordering of stateful cases is preserved.
     const tokens = {
-        admin: await login('admin@mau5trap.com', 'admin123'),
-        artist: await login('tours@rezz.com', 'rezz123')
+        admin: await login('admin@pulsegrid.fm', 'admin123'),
+        artist: await login('tours@novakin.band', 'novakin123')
     };
 
     const results = {};

@@ -1,7 +1,7 @@
 /**
  * src/repositories/operationsRepository.js
  *
- * Static operations fixtures extracted from mau5trap-production-api.js
+ * Static operations fixtures extracted from production-api.js
  * (Phase 1 L2487-2567). Served by:
  *   GET /v3/operations/logistics
  *   GET /v3/operations/assets

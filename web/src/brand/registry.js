@@ -1,17 +1,16 @@
-import mau5trapProfile from './profiles/mau5trap/profile.js';
+import pulsegridProfile from './profiles/pulsegrid/profile.js';
 import exampleProfile from './profiles/example-records/profile.js';
-import { Mau5Head } from './profiles/mau5trap/Mau5Head.jsx';
-import { Mau5HeadLoader } from './profiles/mau5trap/Mau5HeadLoader.jsx';
-import './themes/mau5trap-console.css';
+import './themes/pulsegrid-console.css';
 import './themes/example-records-magenta.css';
 
 export const registry = {
-  defaultSlug: 'mau5trap',
+  defaultSlug: 'pulsegrid',
   profiles: {
-    mau5trap: mau5trapProfile,
+    pulsegrid: pulsegridProfile,
     'example-records': exampleProfile,
   },
   marks: {
-    mau5head: { Mark: Mau5Head, Loader: Mau5HeadLoader },
+    // No label-specific marks: BrandMark/BrandLoader fall back to the neutral
+    // MonogramMark / RingLoader in brand/defaults/.
   },
 };

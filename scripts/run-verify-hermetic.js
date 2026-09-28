@@ -58,7 +58,7 @@ async function main() {
     }
     await assertPortFree(PORT);
 
-    const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'mau5-verify-hermetic-'));
+    const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'pulsegrid-verify-hermetic-'));
     const dbFile = path.join(scratch, 'verify.sqlite');
     const env = {
         PATH: process.env.PATH,
@@ -68,7 +68,7 @@ async function main() {
         DB_DIALECT: 'sqlite',
         DB_STORAGE: dbFile,
         DATABASE_URL: '',
-        LABEL_SLUG: 'mau5trap',
+        LABEL_SLUG: 'pulsegrid',
         ACTIVE_LABEL: '',
         JWT_SECRET: crypto.randomBytes(32).toString('hex'),
         ADMIN_EMAIL: '',

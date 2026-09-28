@@ -2,7 +2,7 @@
 
 **2026-09-18 review correction:** This is the earlier audit record. [APPLICATION_REVIEW_2026-09-18.md](APPLICATION_REVIEW_2026-09-18.md) contains newer browser, source and database-schema evidence. Its sales-schema and authorization findings take priority. The AI-004 timeout-crash claims below were disproved by a late-rejection reproduction and must not be treated as a confirmed live blocker. No repairs were made in the review pass.
 
-**Repository:** `/home/dino/mau5trap-repo`  
+**Repository:** `/home/dino/pulsegrid-repo`  
 **HEAD:** `9101746dee32f7dade6a0814ddfe19d1c76e15c1` (`Close crash, vote-corruption, and stale-UI bugs from the full-tree re-read`)  
 **Dirty tree:** clean (audit docs added after fingerprint)  
 **Role of this pass:** authoritative error ledger. **No product repairs. No D0 commit. No Steps 1–13.**
@@ -20,10 +20,10 @@ Companion files: [ERROR_LEDGER.md](ERROR_LEDGER.md), [API_CONNECTION_MATRIX.md](
 | Branch | `master` (ahead of `origin/master` by 11) |
 | HEAD | `9101746` |
 | `git status` at pre-flight | clean |
-| Operator DB at audit start/end | `mau5trap_v5.sqlite` size **196608** sha256 **`a71f9ec104d5bbcf66a471dbd03a1dac477403aac86aa2cf592c9f5a93aa919a`** mtime_ns `1789703513835023313` — **unchanged during this pass** |
+| Operator DB at audit start/end | `pulsegrid_v5.sqlite` size **196608** sha256 **`a71f9ec104d5bbcf66a471dbd03a1dac477403aac86aa2cf592c9f5a93aa919a`** mtime_ns `1789703513835023313` — **unchanged during this pass** |
 | Prior contamination | A previous “make it run” session booted `node server.js` against the default file. Hash had already moved off the earlier `46afbd4aca…` / 184320 freeze. This audit **did not** write that file. |
 | Live operator processes (untouched) | API `:3000`, Vite `:5173` |
-| Disposable forensic | API `:4010` + Vite `:4173` + `/tmp/mau5-forensic.sqlite` |
+| Disposable forensic | API `:4010` + Vite `:4173` + `/tmp/legacy-forensic.sqlite` |
 
 ## 2. Historical architecture reviewed
 
@@ -31,13 +31,13 @@ Read as **historical claims**: ARCHITECTURE_AUDIT, API_INVENTORY, FRONTEND_API_M
 
 Phase 4C/4CF “connected / commercial” language is **not** treated as certified. Several 4C known gaps (player, generate-all, reset) remain open.
 
-Reference implementations inspected: `mau5trap-frontend-connected.html`, `mau5trap-production-api.js`, `Server v5.js`.
+Reference implementations inspected: `pulsegrid-frontend-connected.html`, `production-api.js`, `Server v5.js`.
 
 ## 3. Exact validation environment
 
-- Disposable API: `JWT_SECRET=forensic-audit-secret-32chars PORT=4010 DB_STORAGE=/tmp/mau5-forensic.sqlite SCHEDULE_JOBS=false GROQ_API_KEY= NODE_ENV=development USE_REAL_DATA=false`
+- Disposable API: `JWT_SECRET=forensic-audit-secret-32chars PORT=4010 DB_STORAGE=/tmp/legacy-forensic.sqlite SCHEDULE_JOBS=false GROQ_API_KEY= NODE_ENV=development USE_REAL_DATA=false`
 - Disposable UI: `VITE_API_BASE_URL=http://127.0.0.1:4010` Vite 6.4.3 `:4173`
-- Probe: `/tmp/mau5-forensic-probe.js` → **43/43 scripted API checks executed** (many are *positive detections of mock/lie*, not product-pass)
+- Probe: `/tmp/legacy-forensic-probe.js` → **43/43 scripted API checks executed** (many are *positive detections of mock/lie*, not product-pass)
 - Playwright Chromium crawl: login admin + artist role, all primary routes, log-sale intercept, screenshots
 - Existing gates **not** used as conclusion: `npm test` 143 and `verify:hermetic` 54 were already green at HEAD; this pass explains why that is insufficient
 
@@ -48,13 +48,13 @@ Reference implementations inspected: `mau5trap-frontend-connected.html`, `mau5tr
 | Before forensic probes | `a71f9ec104d5bbcf66a471dbd03a1dac477403aac86aa2cf592c9f5a93aa919a` | 196608 |
 | After | **identical** | 196608 |
 
-All destructive writes targeted `/tmp/mau5-forensic.sqlite`. Disposable DB confirmed: 29 artists, sales rows including Playwright `art_attlas/2026-03/50`, `sub_1` votes=16 after directed vote.
+All destructive writes targeted `/tmp/legacy-forensic.sqlite`. Disposable DB confirmed: 29 artists, sales rows including Playwright `art_echoharbor/2026-03/50`, `sub_1` votes=16 after directed vote.
 
 ## 5. Routes / pages tested
 
-Crawled as admin (no React `pageerror`): `/login`, `/dashboard`, `/artists`, `/artists/art_deadmau5`, `/artists/art_rezz`, `/anr`, `/anr/scouting`, `/intelligence`, `/marketing`, `/fans`, `/operations`, `/settings/integrations`, `/settings/ai`, `/admin`.
+Crawled as admin (no React `pageerror`): `/login`, `/dashboard`, `/artists`, `/artists/art_lumenveil`, `/artists/art_novakin`, `/anr`, `/anr/scouting`, `/intelligence`, `/marketing`, `/fans`, `/operations`, `/settings/integrations`, `/settings/ai`, `/admin`.
 
-As `tours@rezz.com`: `/admin` → ACCESS DENIED; `/artists/art_deadmau5` → ACCESS DENIED.
+As `tours@novakin.band`: `/admin` → ACCESS DENIED; `/artists/art_lumenveil` → ACCESS DENIED.
 
 Every CommandConsole mount requested `GET /v3/ai/providers` → **404**.
 
@@ -159,7 +159,7 @@ Never built in either UI: finance, generate-all, monthly PDF, RevenueBarChart.
 
 Default `USE_REAL_DATA=false` → social stack mock. Scout always mock. Connect always mock token.
 
-Potentially real with keys: Groq, Google KG, Wikipedia (public), Discogs, Genius, Fandom (public `deadmau5.fandom.com`), Spotify/IG/TM/YT/Twitter/TikTok **if** USE_REAL_DATA and mapping (2 artists). **UNTESTABLE** here without paid keys.
+Potentially real with keys: Groq, Google KG, Wikipedia (public), Discogs, Genius, Fandom (public `lumenveil.fandom.com`), Spotify/IG/TM/YT/Twitter/TikTok **if** USE_REAL_DATA and mapping (2 artists). **UNTESTABLE** here without paid keys.
 
 ## 16. Reports / exports assessment
 
@@ -183,9 +183,9 @@ CSV/PDF export **CONNECTED** from Dashboard/Admin (timeframe fixed 30d). Generat
 
 ## 18. Portability assessment
 
-Generic `src/routes` / `src/ai` / `src/services` had **no** mau5trap/deadmau5/Rezz string hits in this grep. Intelligence lives in `src/profile/labels/mau5trap.js` — correct direction.
+Generic `src/routes` / `src/ai` / `src/services` had **no** pulsegrid/lumenveil/Novakin string hits in this grep. Intelligence lives in `src/profile/labels/pulsegrid.js` — correct direction.
 
-Residual: Fandom host and AI systemContext are profile data (OK). Frontend default brand `mau5trap`. Fandom URL is still mau5trap-wiki shaped in profile.
+Residual: Fandom host and AI systemContext are profile data (OK). Frontend default brand `pulsegrid`. Fandom URL is still pulsegrid-wiki shaped in profile.
 
 ## 19. Error-handling / process-stability
 

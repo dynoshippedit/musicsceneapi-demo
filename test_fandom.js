@@ -2,13 +2,13 @@ const axios = require('axios');
 
 async function testFandom() {
     try {
-        console.log("Fetching Mau5trap page from Fandom...");
+        console.log("Fetching Pulsegrid page from Fandom...");
         // Use MediaWiki API to get page content
-        // https://deadmau5.fandom.com/api.php?action=parse&page=Mau5trap&format=json
-        const response = await axios.get('https://deadmau5.fandom.com/api.php', {
+        // https://lumenveil.fandom.com/api.php?action=parse&page=Pulsegrid&format=json
+        const response = await axios.get('https://lumenveil.fandom.com/api.php', {
             params: {
                 action: 'parse',
-                page: 'Mau5trap',
+                page: 'Pulsegrid',
                 format: 'json',
                 prop: 'text' // Get HTML content to parse lists
             }
@@ -31,10 +31,10 @@ async function testFandom() {
         // Let's assume standard <ul> or <li> lists under headers like "Artists" or "Former Artists"
 
         // Let's also try fetching wikitext
-        const responseWiki = await axios.get('https://deadmau5.fandom.com/api.php', {
+        const responseWiki = await axios.get('https://lumenveil.fandom.com/api.php', {
             params: {
                 action: 'parse',
-                page: 'Mau5trap',
+                page: 'Pulsegrid',
                 format: 'json',
                 prop: 'wikitext'
             }

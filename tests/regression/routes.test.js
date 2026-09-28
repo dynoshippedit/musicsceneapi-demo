@@ -31,7 +31,7 @@ if (process.env.GROQ_API_KEY === undefined) process.env.GROQ_API_KEY = '';
 // secret so requiring the app (which reads config.jwtSecret) never yields ''.
 if (!process.env.JWT_SECRET) process.env.JWT_SECRET = 'test-jwt-secret-1234567890';
 
-const api = require('../../mau5trap-production-api');
+const api = require('../../production-api');
 const app = api.app || api;
 
 /** Extract [{method, path}] from the Express 4 router stack, in bind order. */
@@ -195,7 +195,7 @@ describe('route table — registration invariants', () => {
         // why this suite no longer depends on --test-force-exit to terminate.
         const fs = require('fs');
         const src = fs.readFileSync(
-            path.resolve(__dirname, '..', '..', 'mau5trap-production-api.js'), 'utf8'
+            path.resolve(__dirname, '..', '..', 'production-api.js'), 'utf8'
         );
         assert.ok(!src.includes('cron.schedule'),
             'the app assembler must not schedule jobs at require time');

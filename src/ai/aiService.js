@@ -15,7 +15,7 @@ const usage = require('../services/usageService');
 /**
  * Exact dev-fallback sentence from the original. Do not reword.
  * PHASE 4CF: value now lives in the Label Intelligence Profile (single
- * source shared with src/routes/ai.js); mau5trap value is byte-identical.
+ * source shared with src/routes/ai.js); pulsegrid value is byte-identical.
  */
 const DEV_FALLBACK_ANSWER = profile.ai.devFallback;
 
@@ -113,7 +113,7 @@ function createAiService({ client = groqClient, cacheService = cache, repo = art
 
     /**
      * Legacy offline helper (not exposed by /v3/ai/analyze). Retained for old consumers from
-     * the original handler including the hardcoded "Rezz is second at 6.5x"
+     * the original handler including the hardcoded "Novakin is second at 6.5x"
      * and confidence 0.98.
      *
      * @returns {{response:string}}
@@ -123,7 +123,7 @@ function createAiService({ client = groqClient, cacheService = cache, repo = art
         let response = "I'm analyzing your request...";
 
         // PHASE 4CF: keyword-path canned copy is label intelligence, now
-        // sourced from the profile. mau5trap strings and the roster-order
+        // sourced from the profile. pulsegrid strings and the roster-order
         // dependent {artist} read compose byte-identically to the originals.
         if (lowerQuery.includes('roi')) {
             const bestRoi = repo.topByRoi();

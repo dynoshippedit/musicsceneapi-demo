@@ -5,7 +5,7 @@
  * (anrSubmissions with a scalar vote counter, anrState.demos with ratings[]).
  * The workstation UI writes to both. See src/repositories/inMemoryStores.js.
  *
- * Handler bodies were moved VERBATIM from mau5trap-production-api.js. They are
+ * Handler bodies were moved VERBATIM from production-api.js. They are
  * registered in their original relative order, which matters because Express
  * binds the first matching route. Cross-domain shadowing was checked and does
  * not exist: all duplicate registrations fall within a single domain.
@@ -257,7 +257,7 @@ function register(app, ctx) {
         if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
         const { prospectId } = req.body;
         // PHASE 4CF: evaluation copy and benchmark are label intelligence,
-        // now sourced from the profile (mau5trap values byte-identical).
+        // now sourced from the profile (pulsegrid values byte-identical).
         const prospectName = prospectId === 'p1'
             ? profile.anr.evaluate.prospectNames.p1
             : profile.anr.evaluate.unknownProspectName;

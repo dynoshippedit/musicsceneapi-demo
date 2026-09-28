@@ -15,7 +15,7 @@ async function freePort() {
     const port = socket.address().port; await new Promise(r => socket.close(r)); return port;
 }
 async function main() {
-    const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'mau5-browser-'));
+    const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'pulsegrid-browser-'));
     const children = [];
     try {
         const apiPort = await freePort(), uiPort = await freePort();

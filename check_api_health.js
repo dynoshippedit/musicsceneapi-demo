@@ -6,7 +6,7 @@ async function checkHealth() {
         console.log('1. Checking Admin Login (Env override)...');
         // This relies on the HARDCODED env override in the code, not the DB
         const res = await axios.post(`${API_URL}/auth/login`, {
-            email: 'admin@mau5trap.com',
+            email: 'admin@pulsegrid.fm',
             password: 'admin123'
         });
 
@@ -18,15 +18,15 @@ async function checkHealth() {
             process.exit(1);
         }
 
-        console.log('2. Checking Rezz Login (DB Seed)...');
+        console.log('2. Checking Novakin Login (DB Seed)...');
         try {
-            const resRezz = await axios.post(`${API_URL}/auth/login`, {
-                email: 'tours@rezz.com',
-                password: 'rezz123'
+            const resNovakin = await axios.post(`${API_URL}/auth/login`, {
+                email: 'tours@novakin.band',
+                password: 'novakin123'
             });
-            console.log('SUCCESS: Rezz Login works (DB is seeded).');
+            console.log('SUCCESS: Novakin Login works (DB is seeded).');
         } catch (e) {
-            console.warn('WARNING: Rezz Login failed (DB might be empty due to SQLite mismatch issue).');
+            console.warn('WARNING: Novakin Login failed (DB might be empty due to SQLite mismatch issue).');
         }
 
     } catch (e) {

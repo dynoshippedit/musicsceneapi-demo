@@ -153,10 +153,10 @@ describe('entity audit (no free link-accuracy points)', () => {
         const { detectInconsistencies } = require('../../modules/entityAudit');
         const found = detectInconsistencies(
             {
-                googleKG: { exists: true, schemaValid: true, name: 'deadmau5' },
-                wikipedia: { exists: true, title: 'deadmau5' },
-                discogs: { name: 'deadmau5' },
-                genius: { name: 'deadmau5' },
+                googleKG: { exists: true, schemaValid: true, name: 'lumenveil' },
+                wikipedia: { exists: true, title: 'lumenveil' },
+                discogs: { name: 'lumenveil' },
+                genius: { name: 'lumenveil' },
                 linksVerified: false
             }, {}
         );

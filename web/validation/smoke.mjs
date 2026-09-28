@@ -4,8 +4,8 @@
 import { chromium } from 'playwright';
 
 const BASE = (process.env.BASE_URL || 'http://127.0.0.1:5173').replace(/\/$/, '');
-const ADMIN = { email: 'admin@mau5trap.com', password: 'admin123' };
-const ARTIST = { email: 'tours@rezz.com', password: 'rezz123' };
+const ADMIN = { email: 'admin@pulsegrid.fm', password: 'admin123' };
+const ARTIST = { email: 'tours@novakin.band', password: 'novakin123' };
 const T = 20000;
 
 const routes = process.argv.slice(2).filter((a) => a.startsWith('/'));

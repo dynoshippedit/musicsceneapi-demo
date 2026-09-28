@@ -34,29 +34,29 @@ describe('src/auth — hasArtistAccess', () => {
     });
 
     test('array artistAccess grants only listed ids', () => {
-        const u = { role: 'artist', artistAccess: ['art_rezz', 'art_feedme'] };
-        assert.strictEqual(auth.hasArtistAccess(u, 'art_rezz'), true);
-        assert.strictEqual(auth.hasArtistAccess(u, 'art_deadmau5'), false);
+        const u = { role: 'artist', artistAccess: ['art_novakin', 'art_feedme'] };
+        assert.strictEqual(auth.hasArtistAccess(u, 'art_novakin'), true);
+        assert.strictEqual(auth.hasArtistAccess(u, 'art_lumenveil'), false);
     });
 
     test('FIXED HIGH-4: scalar-string artistAccess grants its OWN id, denies others', () => {
         // The User model stores artistAccess as STRING (src/models L151) and the
-        // seeded artist receives the scalar 'art_rezz'. Phase 3 normalizes the
+        // seeded artist receives the scalar 'art_novakin'. Phase 3 normalizes the
         // scalar to a one-element array, so the artist can now read their own
         // record — but STILL nothing else (fail-closed preserved).
-        const seededArtist = { role: 'artist', artistAccess: 'art_rezz' };
+        const seededArtist = { role: 'artist', artistAccess: 'art_novakin' };
         assert.strictEqual(
-            auth.hasArtistAccess(seededArtist, 'art_rezz'), true,
+            auth.hasArtistAccess(seededArtist, 'art_novakin'), true,
             'artist can access their own record'
         );
-        assert.strictEqual(auth.hasArtistAccess(seededArtist, 'art_deadmau5'), false);
+        assert.strictEqual(auth.hasArtistAccess(seededArtist, 'art_lumenveil'), false);
     });
 
     test('FIXED HIGH-4: stringified JSON array artistAccess is parsed', () => {
-        const u = { role: 'artist', artistAccess: '["art_rezz","art_feedme"]' };
-        assert.strictEqual(auth.hasArtistAccess(u, 'art_rezz'), true);
+        const u = { role: 'artist', artistAccess: '["art_novakin","art_feedme"]' };
+        assert.strictEqual(auth.hasArtistAccess(u, 'art_novakin'), true);
         assert.strictEqual(auth.hasArtistAccess(u, 'art_feedme'), true);
-        assert.strictEqual(auth.hasArtistAccess(u, 'art_deadmau5'), false);
+        assert.strictEqual(auth.hasArtistAccess(u, 'art_lumenveil'), false);
     });
 
     test('artistAccess "none" grants nothing', () => {
@@ -179,23 +179,23 @@ describe('src/auth — checkExportAccess', () => {
     });
 
     test('non-admin label-wide export -> 403 exact message', () => {
-        const { res, nexted } = run({ role: 'artist', artistAccess: 'art_rezz' }, {});
+        const { res, nexted } = run({ role: 'artist', artistAccess: 'art_novakin' }, {});
         assert.strictEqual(nexted, false);
         assert.strictEqual(res.code, 403);
         assert.deepStrictEqual(res.payload, { error: 'Only admins can export label-wide data' });
     });
 
     test('non-admin with array access to that artist passes', () => {
-        assert.strictEqual(run({ role: 'artist', artistAccess: ['art_rezz'] }, { artistId: 'art_rezz' }).nexted, true);
+        assert.strictEqual(run({ role: 'artist', artistAccess: ['art_novakin'] }, { artistId: 'art_novakin' }).nexted, true);
     });
 
     test('FIXED HIGH-4: scalar-string access to own artist now passes', () => {
-        const { nexted } = run({ role: 'artist', artistAccess: 'art_rezz' }, { artistId: 'art_rezz' });
+        const { nexted } = run({ role: 'artist', artistAccess: 'art_novakin' }, { artistId: 'art_novakin' });
         assert.strictEqual(nexted, true);
     });
 
     test('non-admin scalar-string access to a DIFFERENT artist still denied', () => {
-        const { res, nexted } = run({ role: 'artist', artistAccess: 'art_rezz' }, { artistId: 'art_deadmau5' });
+        const { res, nexted } = run({ role: 'artist', artistAccess: 'art_novakin' }, { artistId: 'art_lumenveil' });
         assert.strictEqual(nexted, false);
         assert.strictEqual(res.code, 403);
         assert.deepStrictEqual(res.payload, { error: 'Access denied for this artist' });
@@ -366,37 +366,48 @@ describe('src/models — shape without connecting', () => {
 describe('src/profile — Label Intelligence Profile', () => {
     const profile = require('../../src/profile');
 
-    test('mau5trap is the active reference profile with its values intact', () => {
-        assert.strictEqual(profile.slug, 'mau5trap');
-        assert.strictEqual(profile.rootAdminEmail, 'admin@mau5trap.com');
+    test('pulsegrid is the active reference profile with its values intact', () => {
+        assert.strictEqual(profile.slug, 'pulsegrid');
+        assert.strictEqual(profile.rootAdminEmail, 'admin@pulsegrid.fm');
         assert.strictEqual(profile.seedUsers.length, 2);
-        assert.strictEqual(profile.seedUsers[0].email, 'admin@mau5trap.com');
-        assert.strictEqual(profile.seedUsers[1].email, 'tours@rezz.com');
+        assert.strictEqual(profile.seedUsers[0].email, 'admin@pulsegrid.fm');
+        assert.strictEqual(profile.seedUsers[1].email, 'tours@novakin.band');
     });
 
-    test('mau5trap intelligence survived externalization byte-for-byte', () => {
-        assert.strictEqual(profile.ai.systemContext, 'AI analyst for mau5trap. Concise, data-driven insights.');
-        assert.strictEqual(profile.ai.keywordInsights.roiSecondPlace, 'Rezz is second at 6.5x.');
-        assert.strictEqual(profile.searchContext.artistQueryPrefix, 'mau5trap ');
-        assert.strictEqual(profile.knowledgeSources.fandom.host, 'https://deadmau5.fandom.com');
-        assert.deepStrictEqual(Object.keys(profile.socialMappings).sort(), ['art_deadmau5', 'art_rezz']);
+    test('pulsegrid intelligence survived externalization byte-for-byte', () => {
+        assert.strictEqual(profile.ai.systemContext, 'AI analyst for Pulsegrid. Concise, data-driven insights.');
+        assert.strictEqual(profile.ai.keywordInsights.roiSecondPlace, 'NOVAKIN is second at 8.7x.');
+        assert.strictEqual(profile.searchContext.artistQueryPrefix, 'pulsegrid ');
+        assert.strictEqual(profile.knowledgeSources.fandom.host, 'https://pulsegrid.fandom.com');
+        assert.deepStrictEqual(Object.keys(profile.socialMappings).sort(), ['art_lumenveil', 'art_novakin']);
         assert.strictEqual(profile.reports.accentColor, '#00FF00');
-        assert.strictEqual(profile.reports.confidentialLine, 'MAU5TRAP INTELLIGENCE • CONFIDENTIAL');
+        assert.strictEqual(profile.reports.confidentialLine, 'PULSEGRID INTELLIGENCE • CONFIDENTIAL');
     });
 
-    test('the roster dataset is the shared object graph (29 artists)', () => {
-        assert.strictEqual(profile.datasets.roster.artists.length, 29);
+    test('the roster dataset is the shared object graph (8 fictional artists)', () => {
+        assert.strictEqual(profile.datasets.roster.artists.length, 8);
         assert.match(profile.datasets.roster.artists[0].id, /^art_/, 'artist ids use the art_ prefix');
         assert.ok(profile.datasets.anr.anrSubmissions.length >= 2, 'A&R seeds present');
         assert.ok(profile.datasets.operations.logistics.length === 3, 'operations fixtures present');
     });
 
-    test('unknown LABEL_SLUG falls back to mau5trap rather than crashing', () => {
+    test('unknown LABEL_SLUG falls back to pulsegrid rather than crashing', () => {
         process.env.LABEL_SLUG = 'definitely-not-a-label';
         delete require.cache[require.resolve('../../src/profile')];
         const resolved = require('../../src/profile');
         delete process.env.LABEL_SLUG;
-        assert.strictEqual(resolved.slug, 'mau5trap');
+        assert.strictEqual(resolved.slug, 'pulsegrid');
+        // Restore the module for any later test that requires it.
+        delete require.cache[require.resolve('../../src/profile')];
+        require('../../src/profile');
+    });
+
+    test('LABEL_PROFILE selects the profile (falls back to pulsegrid when unset)', () => {
+        process.env.LABEL_PROFILE = 'pulsegrid';
+        delete require.cache[require.resolve('../../src/profile')];
+        const resolved = require('../../src/profile');
+        delete process.env.LABEL_PROFILE;
+        assert.strictEqual(resolved.slug, 'pulsegrid');
         // Restore the module for any later test that requires it.
         delete require.cache[require.resolve('../../src/profile')];
         require('../../src/profile');

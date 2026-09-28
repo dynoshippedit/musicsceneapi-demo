@@ -11,7 +11,7 @@
  *   2. database initialization      (was api L212, called before its deps existed)
  *   3. binding the HTTP listener    (was api L3180-3205)
  *
- * The Express app itself still lives in mau5trap-production-api.js, which is
+ * The Express app itself still lives in production-api.js, which is
  * now a pure module (`module.exports = app`) and binds no port. That keeps
  * Phase 1 a move, not a rewrite.
  *
@@ -31,7 +31,7 @@ config.assertSecrets();
 
 const logger = require('./src/config/logger');
 const profile = require('./src/profile');
-const api = require('./mau5trap-production-api');
+const api = require('./production-api');
 const { registerJobs } = require('./src/jobs');
 
 const app = api.app || api;
@@ -48,8 +48,8 @@ async function start() {
     registerJobs({ enabled: process.env.SCHEDULE_JOBS !== 'false' });
 
     // 3. Bind listener. Banner text sourced from the active Label Intelligence
-    //    Profile (PHASE 4CF); mau5trap values are verbatim, minus the stale
-    //    joel@deadmau5.com line (that account was never seeded — see the 4CF
+    //    Profile (PHASE 4CF); pulsegrid values are verbatim, minus the stale
+    //    legacy artist email line (that account was never seeded — see the 4CF
     //    phase doc). Account lines derive from profile.seedUsers. Box lines
     //    are padded programmatically so the box stays rectangular for any
     //    profile (the original byte-counted padding was ragged on two lines).

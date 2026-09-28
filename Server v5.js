@@ -1,4 +1,4 @@
-// mau5trap Authority Server v5.0
+// pulsegrid Authority Server v5.0
 // Features: Multi-User, A&R Voting, Asset AI, Persistent DB
 
 const express = require('express');
@@ -11,8 +11,8 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'mau5-secure-secret';
-const DB_FILE = path.join(__dirname, 'mau5_db.json');
+const JWT_SECRET = process.env.JWT_SECRET || 'pulsegrid-secure-secret';
+const DB_FILE = path.join(__dirname, 'pulsegrid_db.json');
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -22,8 +22,8 @@ app.use('/api/', rateLimit({ windowMs: 15 * 60 * 1000, max: 300 })); // Rate lim
 // --- PERSISTENT DATABASE ---
 let db = {
     users: [
-        { id: 'u1', email: 'admin@mau5trap.com', password: 'admin', role: 'admin', name: 'Joel' },
-        { id: 'u2', email: 'a_and_r@mau5trap.com', password: 'demo', role: 'scout', name: 'Scout' }
+        { id: 'u1', email: 'admin@pulsegrid.fm', password: 'admin', role: 'admin', name: 'Ari' },
+        { id: 'u2', email: 'a_and_r@pulsegrid.fm', password: 'demo', role: 'scout', name: 'Scout' }
     ],
     demos: [
         { id: 1, artist: "Neon Rat", track: "Cheese Trap", genre: "Electro", bpm: 128, status: "Inbox", votes: 2, hype: 35 },
@@ -87,7 +87,7 @@ app.post('/api/analyze', auth, async (req, res) => {
     
     let analysis = `### 🤖 SYSTEM ANALYSIS: ${fileName}\n`;
     if (context === 'demo') {
-        analysis += `**Sonic Profile:** Tech House / Minimal\n**BPM:** 126\n**Key:** A Minor\n\n**Commercial Viability:** HIGH (88%)\n**Similar Artists:** Getter, Rezz.\n**Recommendation:** Shortlist for 'We Are Friends' Vol. 12.`;
+        analysis += `**Sonic Profile:** Tech House / Minimal\n**BPM:** 126\n**Key:** A Minor\n\n**Commercial Viability:** HIGH (88%)\n**Similar Artists:** Getter, Novakin.\n**Recommendation:** Shortlist for 'We Are Friends' Vol. 12.`;
     } else {
         analysis += `**Doc Type:** Contract\n**Risk:** MEDIUM\n**Flags:** Clause 4.2 (Perpetuity) detected.\n**Action:** Flag for legal review before signing.`;
     }
@@ -97,4 +97,4 @@ app.post('/api/analyze', auth, async (req, res) => {
 // SPA Fallback
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-app.listen(PORT, () => console.log(`mau5trap OS online on port ${PORT}`));
+app.listen(PORT, () => console.log(`pulsegrid OS online on port ${PORT}`));

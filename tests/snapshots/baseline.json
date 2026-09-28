@@ -65,7 +65,7 @@
       "token": "<JWT>",
       "user": {
         "artistAccess": "all",
-        "email": "admin@mau5trap.com",
+        "email": "admin@pulsegrid.fm",
         "name": "Admin User",
         "role": "admin"
       }
@@ -77,9 +77,9 @@
     "body": {
       "token": "<JWT>",
       "user": {
-        "artistAccess": "art_rezz",
-        "email": "tours@rezz.com",
-        "name": "Isabelle Rezazadeh",
+        "artistAccess": "art_novakin",
+        "email": "tours@novakin.band",
+        "name": "Vera Kessler",
         "role": "artist"
       }
     }
@@ -97,7 +97,7 @@
             "presaleSignups": 42610,
             "smsCount": 15420
           },
-          "displayName": "ATTLAS (Core)",
+          "displayName": "ECHO HARBOR (Core)",
           "forecast": {
             "nextMonth": 88408,
             "threeMonth": 265226,
@@ -105,9 +105,9 @@
           },
           "genreHybrids": "Techno/Progressive",
           "growthRate": 20.7,
-          "id": "art_attlas",
+          "id": "art_echoharbor",
           "influences": [
-            "Mau5trap Sound",
+            "Pulsegrid Sound",
             "Techno",
             "Prog House"
           ],
@@ -126,7 +126,7 @@
             "lastUpdated": "<VOLATILE>"
           },
           "monthlyListeners": 558138,
-          "name": "ATTLAS",
+          "name": "ECHO HARBOR",
           "priority": 2,
           "revenue": {
             "branding": 143741,
@@ -226,7 +226,7 @@
             "presaleSignups": 36420,
             "smsCount": 21130
           },
-          "displayName": "BlackGummy (Core)",
+          "displayName": "GLASSWOLFE (Core)",
           "forecast": {
             "nextMonth": 100894,
             "threeMonth": 302684,
@@ -234,9 +234,9 @@
           },
           "genreHybrids": "Techno/Progressive",
           "growthRate": 9.7,
-          "id": "art_blackgummy",
+          "id": "art_glasswolfe",
           "influences": [
-            "Mau5trap Sound",
+            "Pulsegrid Sound",
             "Techno",
             "Prog House"
           ],
@@ -255,7 +255,7 @@
             "lastUpdated": "<VOLATILE>"
           },
           "monthlyListeners": 113289,
-          "name": "BlackGummy",
+          "name": "GLASSWOLFE",
           "priority": 2,
           "revenue": {
             "branding": 163646,
@@ -345,7 +345,7 @@
             "presaleSignups": 7344,
             "smsCount": 426
           },
-          "displayName": "Blue Mora (Developing)",
+          "displayName": "Azure Mora (Developing)",
           "forecast": {
             "nextMonth": 8000,
             "threeMonth": 24002,
@@ -355,7 +355,7 @@
           "growthRate": 20.7,
           "id": "art_bluemora",
           "influences": [
-            "Mau5trap Sound",
+            "Pulsegrid Sound",
             "Techno",
             "Prog House"
           ],
@@ -374,7 +374,7 @@
             "lastUpdated": "<VOLATILE>"
           },
           "monthlyListeners": 99777,
-          "name": "Blue Mora",
+          "name": "Azure Mora",
           "priority": 3,
           "revenue": {
             "branding": 7141,
@@ -463,7 +463,7 @@
         "presaleSignups": 139800,
         "smsCount": 25700
       },
-      "displayName": "deadmau5 (Flagship)",
+      "displayName": "lumenveil (Flagship)",
       "forecast": {
         "nextMonth": 881096,
         "threeMonth": 2643289,
@@ -471,9 +471,9 @@
       },
       "genreHybrids": "Electro House",
       "growthRate": 0.8,
-      "id": "art_deadmau5",
+      "id": "art_lumenveil",
       "influences": [
-        "Mau5trap Sound",
+        "Pulsegrid Sound",
         "Techno",
         "Prog House"
       ],
@@ -492,7 +492,7 @@
         "lastUpdated": "<VOLATILE>"
       },
       "monthlyListeners": 2842204,
-      "name": "deadmau5",
+      "name": "lumenveil",
       "priority": 1,
       "projectedAnnual": 150368760,
       "revenue": {
@@ -671,9 +671,9 @@
         "upcomingShows": 9
       },
       "wikipedia": {
-        "summary": "Joel Thomas Zimmerman, known professionally as Deadmau5, is a Canadian electronic music producer and DJ. His musical style mostly includes progressive house and electro house genres, though he also produces and DJs other genres of electronic music, including techno under the alias Testpilot. Zimmerman mostly appears and performs with a custom helmet called the \"mau5head\". He has received seven Grammy Award nominations and won four Juno Awards for his songs.",
-        "thumbnail": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/Deadmau5_Belknap_Park_2023_%28cropped%29.jpg/330px-Deadmau5_Belknap_Park_2023_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
-        "wikiUrl": "https://en.wikipedia.org/wiki/Deadmau5"
+        "summary": "LUMEN VEIL is a fictional electronic music act on the Pulsegrid roster. The act\u2019s style spans progressive house and electro house, with techno releases under the alias Neon Relay. LUMEN VEIL performs in a custom LED veil-mask stage rig.",
+        "thumbnail": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/Lumen Veil_Belknap_Park_2023_%28cropped%29.jpg/330px-Lumen Veil_Belknap_Park_2023_%28cropped%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+        "wikiUrl": "https://en.wikipedia.org/wiki/Lumen Veil"
       }
     }
   },
@@ -695,27 +695,27 @@
       "timestamp": "<VOLATILE>",
       "topArtists": [
         {
-          "name": "Feed Me",
+          "name": "STATIC BLOOM",
           "revenue": 16384705,
           "roi": 2.7
         },
         {
-          "name": "deadmau5",
+          "name": "lumenveil",
           "revenue": 12530730,
           "roi": 6.5
         },
         {
-          "name": "REZZ",
+          "name": "NOVAKIN",
           "revenue": 8464217,
           "roi": 8.7
         },
         {
-          "name": "BlackGummy",
+          "name": "GLASSWOLFE",
           "revenue": 1413625,
           "roi": 8.8
         },
         {
-          "name": "ATTLAS",
+          "name": "ECHO HARBOR",
           "revenue": 1246764,
           "roi": 7.4
         }
@@ -733,8 +733,8 @@
     "status": 200,
     "contentType": "application/json",
     "body": {
-      "artistId": "art_deadmau5",
-      "artistName": "deadmau5",
+      "artistId": "art_lumenveil",
+      "artistName": "lumenveil",
       "tourRevenue": []
     }
   },
@@ -826,31 +826,31 @@
           "engagement": 2.2,
           "growth": 24.3,
           "id": "art_mattlange",
-          "name": "Matt Lange"
+          "name": "Matt Langford"
         },
         {
           "engagement": 7.4,
           "growth": 23.8,
           "id": "art_tommylee",
-          "name": "Tommy Lee"
+          "name": "Tommy Leigh"
         },
         {
           "engagement": 5.9,
           "growth": 23.5,
           "id": "art_shottyhorroh",
-          "name": "Shotty Horroh"
+          "name": "Sloppy Horror"
         },
         {
           "engagement": 4,
           "growth": 21.6,
-          "id": "art_fehrplay",
-          "name": "Fehrplay"
+          "id": "art_fernplay",
+          "name": "Fernplay"
         },
         {
           "engagement": 7.6,
           "growth": 20.7,
-          "id": "art_attlas",
-          "name": "ATTLAS"
+          "id": "art_echoharbor",
+          "name": "ECHO HARBOR"
         }
       ]
     }
@@ -985,7 +985,7 @@
           "votes": 15
         },
         {
-          "artist": "Testpilot",
+          "artist": "Neon Relay",
           "genre": "Techno",
           "id": "sub_2",
           "status": "shortlisted",
@@ -1015,7 +1015,7 @@
           "hasVoted": false,
           "id": "demo2",
           "status": "high-priority",
-          "submittedBy": "rezz",
+          "submittedBy": "novakin",
           "title": "Cyberpunk Bass"
         },
         {
@@ -1029,8 +1029,8 @@
       ],
       "nowListening": {
         "timestamp": "<VOLATILE>",
-        "updatedBy": "deadmau5",
-        "url": "https://soundcloud.com/mau5trap/example-demo"
+        "updatedBy": "lumenveil",
+        "url": "https://soundcloud.com/pulsegrid/example-demo"
       },
       "whiteboard": "Currently Reviewing: Q1 2026 Compilation Submissions.\nFocus: Tech House / Minimal."
     }
@@ -1043,7 +1043,7 @@
         {
           "eta": "2025-12-18",
           "id": 1,
-          "item": "Mau5head Replica (Gen 4)",
+          "item": "Pulsegrid Helmet Replica (Gen 4)",
           "location": "Los Angeles Warehouse",
           "quantity": 150,
           "status": "In Transit",
@@ -1053,7 +1053,7 @@
         {
           "eta": null,
           "id": 2,
-          "item": "Tour Tee (BlackGummy)",
+          "item": "Tour Tee (GLASSWOLFE)",
           "location": "EU Fulfillment Center",
           "quantity": 800,
           "status": "Stocked",
@@ -1063,7 +1063,7 @@
         {
           "eta": null,
           "id": 3,
-          "item": "REZZ Goggles Replica",
+          "item": "NOVAKIN Goggles Replica",
           "location": "Toronto Warehouse",
           "quantity": 45,
           "status": "Low Stock",
@@ -1079,29 +1079,29 @@
     "body": {
       "assets": [
         {
-          "artist": "deadmau5",
+          "artist": "lumenveil",
           "id": 1,
           "size": "248 MB",
           "status": "Approved",
-          "title": "deadmau5 - Strobe (Master WAV)",
+          "title": "lumenveil - Strobe (Master WAV)",
           "type": "Audio Master",
           "uploaded": "2024-03-15"
         },
         {
-          "artist": "REZZ",
+          "artist": "NOVAKIN",
           "id": 2,
           "size": "1.8 GB",
           "status": "Processing",
-          "title": "REZZ - Edge (Official Video)",
+          "title": "NOVAKIN - Edge (Official Video)",
           "type": "Video",
           "uploaded": "2025-01-10"
         },
         {
-          "artist": "BlackGummy",
+          "artist": "GLASSWOLFE",
           "id": 3,
           "size": "89 MB",
           "status": "Approved",
-          "title": "BlackGummy - Album Artwork Pack",
+          "title": "GLASSWOLFE - Album Artwork Pack",
           "type": "Artwork",
           "uploaded": "2025-02-20"
         }
@@ -1115,7 +1115,7 @@
       "contracts": [
         {
           "advance": "$0",
-          "artist": "deadmau5",
+          "artist": "lumenveil",
           "id": 1,
           "nextMilestone": null,
           "recoupable": null,
@@ -1127,7 +1127,7 @@
         },
         {
           "advance": "$150k",
-          "artist": "REZZ",
+          "artist": "NOVAKIN",
           "id": 2,
           "nextMilestone": "Album 3 Q2 2026",
           "recoupable": "$120k remaining",
@@ -1139,7 +1139,7 @@
         },
         {
           "advance": "$40k",
-          "artist": "BlackGummy",
+          "artist": "GLASSWOLFE",
           "id": 3,
           "nextMilestone": "Option Mar 2026",
           "recoupable": "Fully Recouped",
@@ -1156,8 +1156,8 @@
     "status": 200,
     "contentType": "application/json",
     "body": {
-      "downloadUrl": "/v3/reports/contracts/art_deadmau5.pdf",
-      "message": "Contract generated for deadmau5",
+      "downloadUrl": "/v3/reports/contracts/art_lumenveil.pdf",
+      "message": "Contract generated for lumenveil",
       "status": "draft",
       "success": true,
       "terms": {
@@ -1181,7 +1181,7 @@
       {
         "artistAccess": "all",
         "createdAt": "<VOLATILE>",
-        "email": "admin@mau5trap.com",
+        "email": "admin@pulsegrid.fm",
         "id": 1,
         "integrationCount": 10,
         "name": "Admin User",
@@ -1192,12 +1192,12 @@
         "updatedAt": "<VOLATILE>"
       },
       {
-        "artistAccess": "art_rezz",
+        "artistAccess": "art_novakin",
         "createdAt": "<VOLATILE>",
-        "email": "tours@rezz.com",
+        "email": "tours@novakin.band",
         "id": 2,
         "integrationCount": 5,
-        "name": "Isabelle Rezazadeh",
+        "name": "Vera Kessler",
         "pageAccess": [
           "overview",
           "roster"
@@ -1213,7 +1213,7 @@
     "body": {
       "confidence": 0.98,
       "query": "who has the best roi",
-      "response": "Based on current data, HolyU has the highest ROI at 8.9x. Rezz is second at 6.5x.",
+      "response": "Based on current data, Holo U has the highest ROI at 8.9x. Novakin is second at 6.5x.",
       "timestamp": "<VOLATILE>"
     }
   },
@@ -1223,7 +1223,7 @@
     "body": {
       "confidence": 0.98,
       "query": "tour revenue",
-      "response": "Feed Me is leading touring revenue with $9,801,091. Suggest increasing ticket prices for deadmau5 to match demand.",
+      "response": "STATIC BLOOM is leading touring revenue with $9,801,091. Suggest increasing ticket prices for lumenveil to match demand.",
       "timestamp": "<VOLATILE>"
     }
   },
@@ -1233,7 +1233,7 @@
     "body": {
       "confidence": 0.98,
       "query": "growth trend",
-      "response": "Matt Lange is the fastest growing artist (24.3%). This aligns with the viral TikTok trend observed last week.",
+      "response": "Matt Langford is the fastest growing artist (24.3%). This aligns with the viral TikTok trend observed last week.",
       "timestamp": "<VOLATILE>"
     }
   },
@@ -1258,7 +1258,7 @@
     "status": 200,
     "contentType": "application/json",
     "body": {
-      "artistName": "deadmau5",
+      "artistName": "lumenveil",
       "breakdown": {
         "merch": 428693,
         "streaming": 1426368,
@@ -1279,14 +1279,14 @@
     "status": 200,
     "contentType": "application/json",
     "body": {
-      "artist": "deadmau5",
+      "artist": "lumenveil",
       "focusAreas": [
         "TikTok Content",
         "LATAM Tour",
         "Limited Merch"
       ],
       "insights": [
-        "deadmau5's streaming growth is outpacing the genre average by 15%.",
+        "lumenveil's streaming growth is outpacing the genre average by 15%.",
         "Strong engagement in South America suggests potential for a Q3 tour leg.",
         "Merch sales per listener are lower than expected; strictly limit supply for next drop."
       ],
@@ -1724,6 +1724,6 @@
   "__meta": {
     "adminTokenObtained": true,
     "artistTokenObtained": true,
-    "entry": "mau5trap-production-api.js"
+    "entry": "production-api.js"
   }
 }

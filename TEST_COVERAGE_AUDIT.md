@@ -82,8 +82,8 @@ assertion-bearing ones do not reliably signal failure to a CI runner.
 |---|---|---|
 | `/health` | L14 | yes (L3149) |
 | `/v3/artists?limit=5` | L20 | yes (L729) |
-| `/v3/artists/art_deadmau5` | L26 | yes (L921) |
-| `/v3/artists/art_deadmau5/revenue?timeframe=30d` | L32 | **no such route** |
+| `/v3/artists/art_lumenveil` | L26 | yes (L921) |
+| `/v3/artists/art_lumenveil/revenue?timeframe=30d` | L32 | **no such route** |
 | `/v3/label/overview` | L38 | yes (L2895) |
 | `/v3/rotation/status` | L44 | **no such route** |
 | `/v3/analytics/compare?artist_ids=...&metrics=...` | L~50 | **no such route** |
@@ -114,8 +114,8 @@ Only two areas have real assertions against real logic:
 validates the `.strict()` behaviour. Blocked only by the missing `zod` install.
 
 **`verify_anr_rating.js` (69 lines)** — asserts A&R vote weighting for two roles
-(comments at L24-25 indicate admin weight 10, rezz weight 5). Requires a live server and
-logs in with `admin123` / `rezz123` hardcoded at L24-25.
+(comments at L24-25 indicate admin weight 10, novakin weight 5). Requires a live server and
+logs in with `admin123` / `novakin123` hardcoded at L24-25.
 
 Both test code paths that are **not** the production risk surface.
 
@@ -179,7 +179,7 @@ declared dependencies.
 ## Recommended test order (for later — not part of this audit)
 
 1. `POST /v3/auth/login` with `{}` → must be 401. (Pins CRITICAL-1.)
-2. `hasArtistAccess({role:'artist',artistAccess:'art_rezz'}, 'art_rezz')` → must be true.
+2. `hasArtistAccess({role:'artist',artistAccess:'art_novakin'}, 'art_novakin')` → must be true.
    (Pins HIGH-4 and guards against a fail-open fix.)
 3. Route-table snapshot: assert 58 unique method+path pairs, zero duplicates.
    (Pins the 5 shadowed routes and prevents new ones.)

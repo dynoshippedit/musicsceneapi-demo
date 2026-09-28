@@ -2,7 +2,7 @@
  * src/reports/monthlyReport.js
  *
  * Monthly PDF report generation, extracted verbatim (379 lines) from
- * generateMonthlyReport() in mau5trap-production-api.js.
+ * generateMonthlyReport() in production-api.js.
  *
  * The function body below was copied PROGRAMMATICALLY from the source so that
  * every pdfkit call, colour, coordinate, font size and table definition is
@@ -43,9 +43,9 @@ async function generateMonthlyReport(artist, month) {
 
         // --- STYLES ---
         // PHASE 4CF: label identity/colors from the Label Intelligence
-        // Profile (mau5trap values byte-identical).
+        // Profile (pulsegrid values byte-identical).
         const colors = {
-            primary: profile.reports.accentColor, // was the hardcoded mau5trap green
+            primary: profile.reports.accentColor, // was the hardcoded pulsegrid green
             dark: '#1a1a1a',
             text: '#000000',
             grey: '#666666',
@@ -173,7 +173,7 @@ async function generateMonthlyReport(artist, month) {
             // returning 500.
             //
             // VERIFIED PRE-EXISTING: unmodified git HEAD (c0281d8) fails
-            // identically at mau5trap-production-api.js:2212 with the same
+            // identically at production-api.js:2212 with the same
             // stack. NOT introduced by the refactor.
             //
             // Left UNCHANGED in Phase 2 because fixing it alters PDF output

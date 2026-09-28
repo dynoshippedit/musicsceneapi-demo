@@ -5,7 +5,7 @@
  * calls go through the src/integrations facade. PRESERVED: connection state is
  * keyed by req.user.id, which is always undefined, so all users share one entry.
  *
- * Handler bodies were moved VERBATIM from mau5trap-production-api.js. They are
+ * Handler bodies were moved VERBATIM from production-api.js. They are
  * registered in their original relative order, which matters because Express
  * binds the first matching route. Cross-domain shadowing was checked and does
  * not exist: all duplicate registrations fall within a single domain.
@@ -64,7 +64,7 @@ function register(app, ctx) {
 
             // 2. Fallback: Contextual Search (Google KG with label prefix)
             // PHASE 4CF: the prefix is label intelligence — profile-owned
-            // (was the literal `mau5trap ${query}`).
+            // (was the literal `pulsegrid ${query}`).
             if (!result.image) {
                 try {
                     const contextualQuery = `${profile.searchContext.artistQueryPrefix}${query}`;

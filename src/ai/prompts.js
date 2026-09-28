@@ -15,7 +15,7 @@ const { calculateTotalRevenue } = require('../utils/dataShape');
 
 /**
  * Compressed artist context for the AI query endpoint.
- * Original: mau5trap-production-api.js (Phase 1 L~980-990).
+ * Original: production-api.js (Phase 1 L~980-990).
  * The comment in the original read "Compressed context to save tokens".
  */
 function buildArtistContext(artist) {
@@ -35,7 +35,7 @@ function buildQueryMessages({ userPrompt, contextData }) {
         {
             role: 'system',
             // PHASE 4CF: system prompt from the Label Intelligence Profile
-            // (pinned byte-for-byte by services.test.js for mau5trap).
+            // (pinned byte-for-byte by services.test.js for pulsegrid).
             content: require('../profile').ai.systemContext
         },
         {

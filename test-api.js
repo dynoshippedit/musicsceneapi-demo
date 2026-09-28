@@ -5,7 +5,7 @@ const API_BASE = 'http://localhost:3000';
 const API_KEY = 'your_api_key_here'; // Replace with your actual key
 
 async function testAPI() {
-    console.log('ðŸ§ª Testing mau5trap API...\n');
+    console.log('ðŸ§ª Testing pulsegrid API...\n');
 
     const tests = [
         {
@@ -21,15 +21,15 @@ async function testAPI() {
             requiresAuth: true
         },
         {
-            name: 'Get deadmau5 Details',
+            name: 'Get lumenveil Details',
             method: 'GET',
-            endpoint: '/v3/artists/art_deadmau5',
+            endpoint: '/v3/artists/art_lumenveil',
             requiresAuth: true
         },
         {
-            name: 'Get deadmau5 Revenue',
+            name: 'Get lumenveil Revenue',
             method: 'GET',
-            endpoint: '/v3/artists/art_deadmau5/revenue?timeframe=30d',
+            endpoint: '/v3/artists/art_lumenveil/revenue?timeframe=30d',
             requiresAuth: true
         },
         {
@@ -47,7 +47,7 @@ async function testAPI() {
         {
             name: 'Compare Artists',
             method: 'GET',
-            endpoint: '/v3/analytics/compare?artist_ids=art_deadmau5,art_rezz&metrics=revenue,roi',
+            endpoint: '/v3/analytics/compare?artist_ids=art_lumenveil,art_novakin&metrics=revenue,roi',
             requiresAuth: true
         }
     ];

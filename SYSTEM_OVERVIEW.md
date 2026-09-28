@@ -1,4 +1,4 @@
-# ðŸŽ§ mau5trap Intelligence Platform - Complete System
+# ðŸŽ§ pulsegrid Intelligence Platform - Complete System
 
 ## What You've Got
 
@@ -15,7 +15,7 @@ A **complete, production-ready** label operations platform with:
 ## File Overview
 
 ### Backend Files
-1. **mau5trap-api-server.js** - Main API server (Node.js/Express)
+1. **pulsegrid-api-server.js** - Main API server (Node.js/Express)
 2. **package.json** - Dependencies and scripts
 3. **.env.example** - Environment configuration template
 4. **test-api.js** - API testing script
@@ -26,8 +26,8 @@ A **complete, production-ready** label operations platform with:
 7. **This file** - System overview
 
 ### Frontend
-8. **mau5trap-intelligence-platform.html** - Original frontend (mock data)
-9. **mau5trap-frontend-connected.html** - Frontend connected to backend API
+8. **pulsegrid-intelligence-platform.html** - Original frontend (mock data)
+9. **pulsegrid-frontend-connected.html** - Frontend connected to backend API
 
 ## Architecture
 
@@ -103,7 +103,7 @@ A **complete, production-ready** label operations platform with:
 
 ### 5. Artist Rotation System
 **Quarterly Focus Rotation:**
-deadmau5 â†’ REZZ â†’ BlackGummy â†’ ATTLAS â†’ repeat
+lumenveil â†’ NOVAKIN â†’ GLASSWOLFE â†’ ECHO HARBOR â†’ repeat
 
 **What it does:**
 - Rotates priority artist each quarter
@@ -122,7 +122,7 @@ Ask natural language questions:
 - "Which artist should we invest in?"
 - "Analyze tour profitability"
 - "What are our top revenue opportunities?"
-- "Compare deadmau5 vs REZZ performance"
+- "Compare lumenveil vs NOVAKIN performance"
 
 Gets data-driven answers with:
 - Key findings
@@ -200,7 +200,7 @@ DELETE /v3/auth/me                  - Delete user account
 - Tracks existing deal value
 - Suggests partnership opportunities
 
-## Your Pitch to mau5trap
+## Your Pitch to pulsegrid
 
 **"I built a complete label operations intelligence platform that:**
 
@@ -283,7 +283,7 @@ DELETE /v3/auth/me                  - Delete user account
    ```
 
 5. **Open the frontend:**
-   - Open mau5trap-frontend-connected.html
+   - Open pulsegrid-frontend-connected.html
    - Shows live data from API
    - Interactive AI queries
 
@@ -291,19 +291,19 @@ DELETE /v3/auth/me                  - Delete user account
 
 **1. Merch Per Head Tracking**
 This metric alone is worth gold. Shows which artists' fans actually buy merch.
-- deadmau5: $20/head
-- REZZ: $25/head (!)
+- lumenveil: $20/head
+- NOVAKIN: $25/head (!)
 - Optimize accordingly
 
 **2. ROI Rankings**
 Not just revenue - shows return on investment:
-- BlackGummy: 8.7x ROI (invest more here!)
-- deadmau5: 5.0x ROI (established, steady)
+- GLASSWOLFE: 8.7x ROI (invest more here!)
+- lumenveil: 5.0x ROI (established, steady)
 
 **3. Growth Rate**
-- BlackGummy: 16% growth (rising star)
-- REZZ: 9% growth (hot momentum)
-- deadmau5: 2.5% (plateau, still profitable)
+- GLASSWOLFE: 16% growth (rising star)
+- NOVAKIN: 9% growth (hot momentum)
+- lumenveil: 2.5% (plateau, still profitable)
 
 **4. Artist Rotation**
 Genius way to keep everyone in the spotlight without neglecting anyone.
