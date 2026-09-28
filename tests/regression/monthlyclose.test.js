@@ -393,6 +393,19 @@ describe('monthly close: spawned server', () => {
             'unmatched deposit returns to the unresolved list');
     });
 
+    test('POST /v3/financials/matches rejects invalid IDs with 400/404, never 500', async () => {
+        // 2026-09-28: NaN findByPk on missing/non-integer IDs produced HTTP 500.
+        // Invalid input is now a clean 400; well-formed but absent IDs are 404.
+        const bad = await srv.api('POST', '/v3/financials/matches', admin, {
+            payoutId: 'not-a-number', depositId: null
+        });
+        assert.strictEqual(bad.status, 400, JSON.stringify(bad.json));
+        const missing = await srv.api('POST', '/v3/financials/matches', admin, {
+            payoutId: 999999, depositId: 999999
+        });
+        assert.strictEqual(missing.status, 404, JSON.stringify(missing.json));
+    });
+
     // ---- 11. cash never increases income ----
     test('cash never increases income: no double counting', async () => {
         const before = await srv.api('GET', '/v3/financials/reconciliation?period=2026-08', admin);

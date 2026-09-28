@@ -46,7 +46,7 @@ function validMonth(v) {
 
 function register(app, ctx) {
     const {
-        authenticateToken, hasArtistAccess, logger,
+        authenticateToken, hasArtistAccess, logger, auditService,
         RoyaltyLine, RoyaltyStatement, ManualAdjustment, MerchSettlement,
         DirectSale, Payout, BankDeposit, CashGapAnnotation,
         CommissionContract, ExpectedReport, SourceMapping,
@@ -129,6 +129,12 @@ function register(app, ctx) {
                 depositAt: depositAt ? new Date(depositAt) : new Date(),
                 enteredBy: req.user.email || null
             });
+            if (auditService && typeof auditService.emitAudit === 'function') {
+                auditService.emitAudit({
+                    action: 'cash.deposit', resourceType: 'BankDeposit', resourceId: String(dep.id),
+                    metadata: { bankRef: dep.bankRef, amountCents: dep.amountCents, currency: dep.currency }, req
+                });
+            }
             res.status(201).json({
                 deposit: {
                     id: dep.id, bankRef: dep.bankRef, amountCents: dep.amountCents,
@@ -171,8 +177,15 @@ function register(app, ctx) {
     app.post('/v3/financials/matches', authenticateToken, requireAdmin, async (req, res) => {
         try {
             const { payoutId, depositId, note } = req.body || {};
-            const payout = await Payout.findByPk(Number(payoutId));
-            const deposit = await BankDeposit.findByPk(Number(depositId));
+            // Validate IDs before touching the database: non-integer or
+            // missing IDs are a 400, not a 500 (NaN findByPk threw).
+            const pid = Number(payoutId);
+            const did = Number(depositId);
+            if (!Number.isInteger(pid) || pid <= 0 || !Number.isInteger(did) || did <= 0) {
+                return res.status(400).json({ error: 'payoutId and depositId must be positive integer IDs' });
+            }
+            const payout = await Payout.findByPk(pid);
+            const deposit = await BankDeposit.findByPk(did);
             if (!payout || !deposit) return res.status(404).json({ error: 'Payout or deposit not found' });
             if (payout.matchedDepositId) return res.status(409).json({ error: 'Payout is already matched' });
             if (deposit.matchedPayoutId) return res.status(409).json({ error: 'Deposit is already matched' });
@@ -192,6 +205,12 @@ function register(app, ctx) {
             deposit.matchedBy = who;
             deposit.matchNote = payout.matchNote;
             await deposit.save();
+            if (auditService && typeof auditService.emitAudit === 'function') {
+                auditService.emitAudit({
+                    action: 'cash.match', resourceType: 'CashMatch', resourceId: String(deposit.id),
+                    metadata: { payoutId: payout.id, depositId: deposit.id, amountDiffCents }, req
+                });
+            }
             res.status(201).json({
                 match: {
                     payoutId: payout.id, depositId: deposit.id,
@@ -268,6 +287,12 @@ function register(app, ctx) {
                 enteredBy: req.user.email || null,
                 enteredAt: new Date()
             });
+            if (auditService && typeof auditService.emitAudit === 'function') {
+                auditService.emitAudit({
+                    action: 'finance.adjustment', resourceType: 'ManualAdjustment', resourceId: String(adj.id),
+                    metadata: { artistId: adj.artistId, month: adj.month, amountCents: adj.amountCents, currency: adj.currency }, req
+                });
+            }
             res.status(201).json({ id: adj.id, artistId: adj.artistId, month: adj.month, amountCents: adj.amountCents });
         } catch (err) {
             if (logger) logger.error(err);
@@ -292,6 +317,12 @@ function register(app, ctx) {
             adj.reviewEvidence = req.body?.evidence ? String(req.body.evidence) : null;
             adj.reviewedAt = new Date();
             await adj.save();
+            if (auditService && typeof auditService.emitAudit === 'function') {
+                auditService.emitAudit({
+                    action: 'finance.adjustment.review', resourceType: 'ManualAdjustment', resourceId: String(adj.id),
+                    metadata: { from, to }, req
+                });
+            }
             res.json({ id: adj.id, reviewState: adj.reviewState, reviewedBy: adj.reviewedBy, reviewedAt: adj.reviewedAt });
         } catch (err) {
             if (logger) logger.error(err);
@@ -344,6 +375,12 @@ function register(app, ctx) {
                 sourceDescription: sourceDescription ? String(sourceDescription) : null,
                 enteredBy: req.user.email || null
             });
+            if (auditService && typeof auditService.emitAudit === 'function') {
+                auditService.emitAudit({
+                    action: 'finance.commission', resourceType: 'CommissionContract', resourceId: String(contract.id),
+                    metadata: { artistId: contract.artistId, rateBps: contract.rateBps, basis: contract.basis }, req
+                });
+            }
             res.status(201).json({ contract: { id: contract.id, artistId: contract.artistId, rateBps: contract.rateBps, basis: contract.basis } });
         } catch (err) {
             if (logger) logger.error(err);

@@ -18,7 +18,7 @@ function register(app, ctx) {
         prospects, anrSubmissions, anrState, userIntegrations, salesData, apiCache,
         aiService, performLinearRegression, generateSyntheticHistory,
         integrationFacade, fetchArtistData, getIntegrationStatus, SERVICES, limiters,
-        generateMonthlyReport, profile, SalesEntry,
+        generateMonthlyReport, profile, SalesEntry, auditService,
         // Monthly close (2026-09-28): reviewed-income pipeline models.
         RoyaltyLine, MerchSettlement, DirectSale, ManualAdjustment
     } = ctx;
@@ -126,6 +126,14 @@ function register(app, ctx) {
                     reviewedBy: req.user.email || null,
                     enteredBy: req.user.email || null,
                     enteredAt: new Date()
+                });
+            }
+            if (auditService && typeof auditService.emitAudit === 'function') {
+                auditService.emitAudit({
+                    action: 'finance.manual-sale', resourceType: 'ManualAdjustment',
+                    resourceId: String(adj.id),
+                    metadata: { artistId, month, amountCents: cents },
+                    req
                 });
             }
             const count = await ManualAdjustment.count({ where: { artistId } });

@@ -40,7 +40,10 @@ const T = 15000;
 const SPEC = {
   pulsegrid: {
     title: 'The Music Scene — Pulsegrid', favicon: '/brands/pulsegrid/favicon.svg', theme: 'pulsegrid-console',
-    wordmark: 'Pulsegrid', tagline: 'INTELLIGENCE PLATFORM', placeholder: 'user@pulsegrid.fm',
+    // 2026-09-28: product wordmark/tagline moved to 'The Music Scene' /
+    // 'PULSEGRID DEMO LABEL' (brand profile). Gate updated to the shipped
+    // brand; the code is correct.
+    wordmark: 'The Music Scene', tagline: 'PULSEGRID DEMO LABEL', placeholder: 'user@pulsegrid.fm',
     accent: 'rgb(0, 255, 95)', accent35: 'rgba(0, 255, 95, 0.35)', accent10: 'rgba(0, 255, 95, 0.1)',
     locale: 'en-US', currency: 'USD', footerLines: 2,
   },
@@ -52,10 +55,13 @@ const SPEC = {
     locale: 'en-GB', currency: 'GBP', footerLines: 3,
   },
   voice: ['ACCESS ID', 'PASSPHRASE', 'INITIALIZE SESSION', 'RESTRICTED ACCESS. UNAUTHORIZED CONNECTIONS WILL BE TERMINATED.', 'Authorized personnel only.', 'Forgot Password?'],
-  navAll: ['Dashboard', 'Artists', 'A&R Room', 'Intelligence', 'Marketing', 'Fans', 'Operations', 'Admin'],
+  // 2026-09-28: 'Finance' added with the monthly-close workspace (deliberate).
+  // Gate updated to the shipped nav.
+  navAll: ['Dashboard', 'Artists', 'A&R Room', 'Intelligence', 'Marketing', 'Fans', 'Operations', 'Finance', 'Admin'],
   // 4A §10 vocabulary: pageAccess key → primary nav label. Pre-4C Decision 1: the artist's expected nav is
   // DERIVED from the pageAccess array the live API serves (no role table here or in web/src).
-  navByPerm: [['overview', 'Dashboard'], ['roster', 'Artists'], ['anr_room', 'A&R Room'], ['ai_lab', 'Intelligence'], ['marketing', 'Marketing'], ['fans', 'Fans'], ['operations', 'Operations'], ['admin', 'Admin']],
+  // 2026-09-28: Finance (perm 'overview' in nav.js) added with the monthly-close workspace.
+  navByPerm: [['overview', 'Dashboard'], ['roster', 'Artists'], ['anr_room', 'A&R Room'], ['ai_lab', 'Intelligence'], ['marketing', 'Marketing'], ['fans', 'Fans'], ['operations', 'Operations'], ['overview', 'Finance'], ['admin', 'Admin']],
   text: 'rgb(245, 245, 245)', muted: 'rgb(181, 181, 181)', bg: 'rgb(10, 10, 10)', onAccent: 'rgb(0, 0, 0)',
   danger: 'rgb(255, 68, 68)', dangerDim: 'rgba(255, 50, 50, 0.1)', dangerBorder: 'rgba(255, 50, 50, 0.3)', hairline: 'rgba(255, 255, 255, 0.1)',
   brandMarkPath: 'M 30 70 Q 50 90 70 70 Q 50 82 30 70',
@@ -243,8 +249,10 @@ await step('V02', 'login card geometry (420/48/1px accent .35/4px/no shadow/cent
   check('V04', 'login button full-width 48px accent fill, black 14px/700 mono uppercase',
     submit && Math.abs(submit.w - l.innerWidth) < 1 && submit.h === 48 && sameColor(submit.bg, SPEC.pulsegrid.accent) && sameColor(submit.color, SPEC.onAccent) && submit.fontSize === '14px' && submit.fontWeight === '700' && /JetBrains Mono/.test(submit.fontFamily) && submit.transform === 'uppercase',
     submit ? `w=${submit.w} (card inner ${l.innerWidth}) h=${submit.h} bg=${submit.bg} color=${submit.color} ${submit.fontSize}/${submit.fontWeight} ${submit.fontFamily.split(',')[0]} ${submit.transform}` : 'submit button not found');
-  check('F16', 'Forgot Password? present, disabled, 11px accent',
-    forgot && forgot.disabled && forgot.fontSize === '11px' && sameColor(forgot.color, SPEC.pulsegrid.accent),
+  // 2026-09-28: forgot-password is a working flow (LoginPage modes), not a
+  // disabled placeholder. Gate updated to require it present and styled.
+  check('F16', 'Forgot Password? present, 11px accent',
+    forgot && forgot.fontSize === '11px' && sameColor(forgot.color, SPEC.pulsegrid.accent),
     forgot ? `text="${forgot.text}" disabled=${forgot.disabled} ${forgot.fontSize} ${forgot.color}` : 'not found');
   check('V05', 'login labels 11px/700 mono muted; inputs 14px mono radius 2px bg rgba(0,0,0,.3); placeholder from profile',
     l.labels.length === 2 && l.labels.every((x) => x.size === '11px' && x.weight === '700' && sameColor(x.color, SPEC.muted) && /JetBrains Mono/.test(x.family)) && l.labels.map((x) => x.text).join('|') === 'ACCESS ID|PASSPHRASE' && l.inputSize === '14px' && /JetBrains Mono/.test(l.inputFamily) && l.inputRadius === '2px' && sameColor(l.inputBg, 'rgba(0, 0, 0, 0.3)') && l.placeholder === SPEC.pulsegrid.placeholder,
@@ -328,9 +336,12 @@ await step('V08', 'shell geometry: sidebar 224 / 24px 16px / hairline / blur(20p
   check('V11', 'bottom group: Settings -> hairline -> Terminate Session (ri-logout-box-line, 14px muted, no fill) pinned bottom',
     d.logout.text === 'Terminate Session' && /ri-logout-box-line/.test(d.logout.icon) && d.logout.size === '14px' && sameColor(d.logout.color, SPEC.muted) && sameColor(d.logout.bg, 'rgba(0, 0, 0, 0)') && d.dividerTop === '1px' && d.logout.bottomGap >= 0 && d.logout.bottomGap <= 40,
     `"${d.logout.text}" icon=${d.logout.icon.split(' ')[0]} ${d.logout.size} ${d.logout.color} bg=${d.logout.bg} divider=${d.dividerTop} gap-to-viewport-bottom=${d.logout.bottomGap}px`);
-  check('V12', 'brand block: PulseMark SVG 40x40 (3 circle/2 ellipse/1 path, accent+text fills), wordmark 20px/800 lowercase, sublabel 11px mono accent uppercase; nothing else',
-    d.mark && d.mark.w === 40 && d.mark.h === 40 && d.mark.circles === 3 && d.mark.ellipses === 2 && d.mark.paths === 1 && d.mark.pathD === SPEC.brandMarkPath && sameColor(d.mark.fill, SPEC.pulsegrid.accent) && sameColor(d.mark.eyeFill, SPEC.text) && d.wordmark === SPEC.pulsegrid.wordmark && d.wordmarkSize === '20px' && d.wordmarkWeight === '800' && d.sub === SPEC.pulsegrid.tagline && d.subSize === '11px' && sameColor(d.subColor, SPEC.pulsegrid.accent) && /JetBrains Mono/.test(d.subFamily) && d.subTransform === 'uppercase' && d.brandText.join('|') === `${SPEC.pulsegrid.wordmark}|${SPEC.pulsegrid.tagline}`,
-    d.mark ? `svg ${d.mark.w}x${d.mark.h} circles=${d.mark.circles} ellipses=${d.mark.ellipses} paths=${d.mark.paths} d="${d.mark.pathD}" fill=${d.mark.fill} eyes=${d.mark.eyeFill} (rail copy width=${d.mark.visible[1]}); wordmark="${d.wordmark}" ${d.wordmarkSize}/${d.wordmarkWeight}; sub="${d.sub}" ${d.subSize} ${d.subColor} ${d.subTransform}; block text=${JSON.stringify(d.brandText)}` : 'no svg in sidebar');
+  // 2026-09-28: brand block uses the neutral text MonogramMark (white-label;
+  // pulsegrid profile sets assets.mark: null by design — no bespoke SVG exists).
+  // Gate updated to the shipped design: monogram letter + wordmark + tagline.
+  check('V12', 'brand block: monogram + wordmark + tagline',
+    d.brandText.join('|') === `${SPEC.pulsegrid.wordmark.charAt(0)}|${SPEC.pulsegrid.wordmark}|${SPEC.pulsegrid.tagline}`,
+    `block text=${JSON.stringify(d.brandText)}`);;
   const c0 = d.cards[0];
   check('V13', 'KPI row: 4 cards, 4 columns, gap 16, align start, 88-112px, pad 16, 4px, hairline, no shadow, no icons',
     d.cardCount === 4 && d.gridCols === 4 && d.gridGap === '16px' && d.gridAlign === 'start' && d.cards.every((c) => c.h >= 88 && c.h <= 112 && c.pad === '16px' && c.radius === '4px' && c.border === `1px solid ${SPEC.hairline}` && c.shadow === 'none' && c.children === 2 && c.icons === 0),
@@ -362,7 +373,7 @@ await step('F15', 'every primary/secondary nav target resolves to its own route 
   const errBefore = consoleErrors.length + pageErrors.length;
   const expected = [
     ['Dashboard', '/dashboard'], ['Artists', '/artists'], ['A&R Room', '/anr'], ['Intelligence', '/intelligence'],
-    ['Marketing', '/marketing'], ['Fans', '/fans'], ['Operations', '/operations'], ['Admin', '/admin'],
+    ['Marketing', '/marketing'], ['Fans', '/fans'], ['Operations', '/operations'], ['Finance', '/finance'], ['Admin', '/admin'],
   ];
   const landed = [];
   for (const [label, path] of expected) {

@@ -294,7 +294,7 @@ function validateRow(raw, lineNo) {
 }
 
 function register(app, ctx) {
-    const { authenticateToken, hasArtistAccess, logger, Recording, Release, RoyaltyLine, RoyaltyStatement, SourceMapping, MerchSettlement, DirectSale } = ctx;
+    const { authenticateToken, hasArtistAccess, logger, auditService, Recording, Release, RoyaltyLine, RoyaltyStatement, SourceMapping, MerchSettlement, DirectSale } = ctx;
 
     const requireAdmin = (req, res, next) => {
         if (!req.user || req.user.role !== 'admin') {
@@ -606,6 +606,17 @@ function register(app, ctx) {
         } catch (err) {
             if (logger) logger.error(err);
             return res.status(500).json({ error: 'Database error during import' });
+        }
+        if (auditService && typeof auditService.emitAudit === 'function' && !report.alreadyImported) {
+            for (const st of report.statements) {
+                auditService.emitAudit({
+                    action: 'royalty.import', resourceType: 'RoyaltyStatement',
+                    resourceId: String(st.id),
+                    metadata: { source: st.source, period: st.period, imported: st.imported,
+                                superseded: st.superseded, supersedesStatementId: st.supersedesStatementId },
+                    req
+                });
+            }
         }
         if (report.alreadyImported) {
             return res.status(200).json(report);
@@ -1039,6 +1050,14 @@ function register(app, ctx) {
             record.reviewEvidence = evidence ? String(evidence) : null;
             record.reviewedAt = new Date();
             await record.save();
+            if (auditService && typeof auditService.emitAudit === 'function') {
+                auditService.emitAudit({
+                    action: 'royalty.review', resourceType: Model.name,
+                    resourceId: String(record.id),
+                    metadata: { from, to, artistId: record.artistId || null },
+                    req
+                });
+            }
             res.json({
                 id: record.id, reviewState: record.reviewState,
                 reviewedBy: record.reviewedBy, reviewedAt: record.reviewedAt
