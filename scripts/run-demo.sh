@@ -4,6 +4,10 @@
 # Usage: ./scripts/run-demo.sh        (from the repo root)
 # Stop:  ./scripts/stop-demo.sh
 #
+# Demo credentials: the API JWT_SECRET is demo-only. It is generated on first
+# launch into .demo-data/.env (gitignored) -- never hardcoded in this script and
+# never to be copied to a production environment. See "Demo-only credentials".
+#
 # Process management uses PID files (logs/*.pid) and exact-PID termination.
 # No broad pkill/pgrep patterns — the stop script kills only the recorded PIDs.
 set -euo pipefail
@@ -25,13 +29,39 @@ alive() { # alive <pidfile> — true if the recorded PID is our node process
   ps -p "$pid" -o args= 2>/dev/null | grep -q "node" || return 1
 }
 
+# --- Demo-only credentials ---
+# JWT_SECRET is demo-only and is NEVER hardcoded in this script. On first launch
+# a random 256-bit secret is generated into .demo-data/.env (gitignored, mode 600);
+# that file is the only place a demo secret lives on disk. It signs session tokens
+# for the throwaway demo database only: it must never be copied to a production
+# environment, and rotating or losing it only invalidates demo sessions (users
+# simply log in again). server.js refuses to start without a JWT_SECRET
+# (fail-closed CRITICAL-2 check in src/config/index.js).
+DEMO_ENV="$DATA/.env"
+if [ ! -f "$DEMO_ENV" ]; then
+  if ! command -v openssl >/dev/null 2>&1; then
+    echo "ERROR: openssl is required to generate the demo JWT_SECRET." >&2
+    exit 1
+  fi
+  _new_secret="$(openssl rand -hex 32)"
+  ( umask 077; printf 'JWT_SECRET=%s\n' "$_new_secret" > "$DEMO_ENV" )
+  unset _new_secret
+  echo "Created $DEMO_ENV with a fresh random demo-only JWT_SECRET (gitignored)."
+fi
+# Load the demo-only secret into the environment; fail closed when absent.
+set -a
+# shellcheck disable=SC1090
+. "$DEMO_ENV"
+set +a
+: "${JWT_SECRET:?JWT_SECRET is not set in $DEMO_ENV}"
+
 # --- API ---
 if alive "$API_PID"; then
   echo "API already running (pid $(cat "$API_PID"))."
 else
   (cd "$ROOT" && PORT="$API_PORT" NODE_ENV=development \
     DB_STORAGE="$DATA/demo.sqlite" \
-    JWT_SECRET="${JWT_SECRET:-demo-jwt-secret-not-for-production}" \
+    JWT_SECRET="$JWT_SECRET" \
     SCHEDULE_JOBS=false \
     nohup node server.js >"$ROOT/logs/api.log" 2>&1 &
    echo $! > "$API_PID")

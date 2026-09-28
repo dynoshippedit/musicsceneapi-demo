@@ -1,5 +1,8 @@
 // Phase 4B acceptance gate (PHASE_4A_HANDOFF.md §15 functional + mechanical + portability boxes).
-// Runs headless against ALREADY-RUNNING servers and prints one line per check.
+// Preferred: node scripts/run-visual-gate.js — self-hosts a scratch API + Vite on
+// ephemeral ports with a throwaway database (deterministic; no contention with the
+// shared demo server's /v3/ rate limiter). The raw form below runs against
+// ALREADY-RUNNING servers and prints one line per check.
 //
 //   cd web && npm run gate                  full run (static S-checks first, then the browser checks)
 //   node validation/gate.mjs --static-only  only the static brand-portability checks (no servers, no browser)
@@ -107,7 +110,14 @@ async function apiOverview(token) {
 }
 function expectedKpis(overview, locale, currency) {
   const f = fmt(locale, currency);
-  return [f.money(overview.monthlyRevenue), f.money(overview.quarterlyProjection), f.money(overview.annualProjection), f.integer(overview.activeArtists)];
+  // 2026-09-28: /v3/label/overview serves reviewed-income cents maps (monthlyRevenueCents
+  // etc.), not scalar monthlyRevenue fields. The gate follows the shipped contract; the /100
+  // is display-only, matching DashboardPage. The VALUE is looked up by the payload's
+  // primaryCurrency while the profile supplies the display currency/locale (a GBP profile
+  // over USD data renders the USD value with GBP formatting — no FX is invented).
+  const pc = overview.primaryCurrency || 'USD';
+  const display = (map) => (map && typeof map[pc] === 'number' ? map[pc] / 100 : null);
+  return [f.money(display(overview.monthlyRevenueCents)), f.money(display(overview.quarterlyProjectionCents)), f.money(display(overview.annualProjectionCents)), f.integer(overview.activeArtists)];
 }
 // Primary nav a user should see, derived from the API payload only (4A §10 + nav.js adminOnly rule for Admin).
 function expectedNav(user) {
@@ -320,7 +330,7 @@ await step('V08', 'shell geometry: sidebar 224 / 24px 16px / hairline / blur(20p
       logout: { text: logout.textContent, size: getComputedStyle(logout).fontSize, color: getComputedStyle(logout).color, bg: getComputedStyle(logout).backgroundColor, icon: logout.querySelector('i').className, bottomGap: innerHeight - logout.getBoundingClientRect().bottom }, dividerTop: getComputedStyle(divider).borderTopWidth,
       gridCols: getComputedStyle(grid).gridTemplateColumns.split(' ').length, gridGap: getComputedStyle(grid).gap, gridAlign: getComputedStyle(grid).alignItems, cardCount: cards.length,
       cards: cards.map((c) => { const cs = getComputedStyle(c); const b = getComputedStyle(c, '::before'); const k = c.querySelector('.kpi'); const kcs = getComputedStyle(k); const lb = getComputedStyle(c.querySelector('.label')); return { h: c.getBoundingClientRect().height, pad: cs.padding, radius: cs.borderRadius, border: `${cs.borderTopWidth} ${cs.borderTopStyle} ${cs.borderTopColor}`, shadow: cs.boxShadow, ruleW: b.width, ruleBg: b.backgroundColor, ruleOp: b.opacity, ruleH: b.height, clientH: c.clientHeight, kpiSize: kcs.fontSize, kpiWeight: kcs.fontWeight, kpiFamily: kcs.fontFamily, kpiColor: kcs.color, kpiNum: kcs.fontVariantNumeric, labelSize: lb.fontSize, labelColor: lb.color, labelTransform: lb.textTransform, children: c.children.length, icons: c.querySelectorAll('i, svg, a').length }; }),
-      mainChildren: [...main.children].map((c) => c.tagName), overlay: !!document.querySelector('vite-error-overlay'),
+      mainChildren: [...main.children].map((c) => (c.tagName === 'P' ? `P:${c.textContent.trim().replace(/\s+/g, ' ').slice(0, 80)}` : c.tagName)), overlay: !!document.querySelector('vite-error-overlay'),
     };
   });
   const d = dash;
@@ -354,7 +364,12 @@ await step('V08', 'shell geometry: sidebar 224 / 24px 16px / hairline / blur(20p
   // matrix row 7 (revenue forecast + log sale), row 8 (global heatmap), row 21 (console rail)
   // and row 31 (exports). So the box now asserts the KPI row is still FIRST and that everything
   // below it is one of those specified surfaces, rather than asserting emptiness.
-  check('V16', 'KPI row is first under the header; everything below it is a specified 4C surface (no filler)', d.mainChildren[0] === 'HEADER' && d.mainChildren[1] === 'DIV' && d.mainChildren.slice(2).every((tag) => tag === 'DIV' || tag === 'SECTION') && d.mainChildren.length <= 4 && !d.overlay, `main children=[${d.mainChildren.join(', ')}] (expected HEADER, KPI DIV, then the 4C forecast/console row and the map section) overlay=${d.overlay}`);
+  // AMENDED 2026-09-28: the reconciliation work added three specified provenance <p> lines
+  // between the KPI row and the panels (REVIEWED INCOME header, trusted/disputed/estimated
+  // split, basis note). Those are specified financial-honesty surfaces, not filler, so the
+  // check accepts them by content instead of rejecting every <p>.
+  const specifiedBelow = (tag) => tag === 'DIV' || tag === 'SECTION' || (tag.startsWith('P:') && /REVIEWED INCOME|Trusted \(reported|Counted review/i.test(tag));
+  check('V16', 'KPI row is first under the header; everything below it is a specified 4C/finance surface (no filler)', d.mainChildren[0] === 'HEADER' && d.mainChildren[1] === 'DIV' && d.mainChildren.slice(2).every(specifiedBelow) && d.mainChildren.length <= 7 && !d.overlay, `main children=[${d.mainChildren.join(', ')}] (expected HEADER, KPI DIV, then provenance lines + the 4C forecast/console row and the map section) overlay=${d.overlay}`);
 });
 await shot('phase4b-pulsegrid-dashboard.png');
 
@@ -506,14 +521,30 @@ await step('F10', 'seeded artist: primary nav === pageAccess-derived items (Deci
 
 setPhase('me-404', true);
 await step('F19', 'intercepted 404 on /v3/auth/me keeps the stored session (Decision 5): still /dashboard, authToken/userData intact', async () => {
+  // 2026-09-28: the shipped behaviour for a non-401/403 /me failure is the fullscreen
+  // CONNECTION FAILURE ErrorState with RETRY (ProtectedRoute: "protected UI waits for
+  // verified user data"), not a KPI dashboard. Decision 5's contract is that the stored
+  // session is kept and the user is NOT bounced to /login — so the harness waits for the
+  // settled state (alert or KPIs) instead of demanding KPIs, and always unroutes.
   await uiLogin(ADMIN);
   const before = await readSession();
   await context.route('**/v3/auth/me', (route) => route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: 'User not found' }) }));
+  try {
+    await page.reload();
+    await page.waitForSelector('[role=alert], .kpi', { timeout: T });
+    await page.waitForTimeout(300);
+    const s = await readSession();
+    const settled = await page.evaluate(() => {
+      const el = document.querySelector('[role=alert]');
+      return { alert: el ? `${el.querySelector('.label')?.textContent}/${el.querySelector('button')?.textContent}` : null, kpis: document.querySelectorAll('.kpi').length };
+    });
+    check('F19', 'intercepted 404 on /v3/auth/me keeps the stored session (Decision 5): still /dashboard, authToken/userData intact', new URL(page.url()).pathname === '/dashboard' && s.authToken === before.authToken && s.userData !== null && JSON.parse(s.userData).email === ADMIN.email && (settled.alert !== null || settled.kpis > 0), `path=${new URL(page.url()).pathname} token-unchanged=${s.authToken === before.authToken} userData-kept=${s.userData !== null} settled=${settled.alert ?? `kpis:${settled.kpis}`}`);
+  } finally {
+    await context.unroute('**/v3/auth/me');
+  }
+  // Leave the next step a logged-out login page (F11 starts from uiLogin): with the
+  // intercept gone /me verifies again, the KPIs render, and Terminate Session works.
   await page.reload(); await page.waitForSelector('.kpi', { timeout: T });
-  await page.waitForTimeout(300);
-  const s = await readSession();
-  await context.unroute('**/v3/auth/me');
-  check('F19', 'intercepted 404 on /v3/auth/me keeps the stored session (Decision 5): still /dashboard, authToken/userData intact', new URL(page.url()).pathname === '/dashboard' && s.authToken === before.authToken && s.userData !== null && JSON.parse(s.userData).email === ADMIN.email, `path=${new URL(page.url()).pathname} token-unchanged=${s.authToken === before.authToken} userData-kept=${s.userData !== null}`);
   await page.click('aside button:has-text("Terminate Session")'); await page.waitForURL('**/login', { timeout: T });
 });
 
@@ -530,8 +561,11 @@ setPhase('intercepted-401', true);
 await step('F12', 'intercepted 401 on overview -> session cleared -> /login', async () => {
   await uiLogin(ADMIN);
   await context.route('**/v3/label/overview', (route) => route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: 'Authentication required' }) }));
-  await page.reload(); await page.waitForURL('**/login', { timeout: T });
-  await context.unroute('**/v3/label/overview');
+  try {
+    await page.reload(); await page.waitForURL('**/login', { timeout: T });
+  } finally {
+    await context.unroute('**/v3/label/overview');
+  }
   const s = await readSession();
   check('F12', 'intercepted 401 on overview -> session cleared -> /login', new URL(page.url()).pathname === '/login' && s.authToken === null && s.userData === null, `path=${new URL(page.url()).pathname} authToken=${s.authToken} userData=${s.userData}`);
 });
@@ -539,22 +573,31 @@ setPhase('intercepted-403', true);
 await step('F13', 'intercepted 403 on overview -> fullscreen ACCESS DENIED, no retry, session kept', async () => {
   await uiLogin(ADMIN);
   await context.route('**/v3/label/overview', (route) => route.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ error: 'Access denied: insufficient permissions' }) }));
-  await page.reload(); await page.waitForSelector('[role=alert]', { timeout: T });
-  await page.waitForTimeout(300);
-  const a = await page.evaluate(() => { const el = document.querySelector('[role=alert]'); return { kicker: el.querySelector('.label')?.textContent, message: el.querySelector('p')?.textContent, buttons: [...el.querySelectorAll('button')].map((b) => b.textContent), pos: getComputedStyle(el).position, path: location.pathname, kpis: document.querySelectorAll('.kpi').length }; });
-  const s = await readSession();
-  await context.unroute('**/v3/label/overview');
-  check('F13', 'intercepted 403 on overview -> fullscreen ACCESS DENIED, no retry, session kept', a.kicker === 'ACCESS DENIED' && a.buttons.length === 0 && a.pos === 'fixed' && a.path === '/dashboard' && a.kpis === 0 && s.authToken !== null, `kicker="${a.kicker}" message="${a.message}" buttons=${JSON.stringify(a.buttons)} ${a.pos} path=${a.path} kpis=${a.kpis} token-kept=${s.authToken !== null}`);
+  try {
+    await page.reload(); await page.waitForSelector('[role=alert]', { timeout: T });
+    await page.waitForTimeout(300);
+    const a = await page.evaluate(() => { const el = document.querySelector('[role=alert]'); return { kicker: el.querySelector('.label')?.textContent, message: el.querySelector('p')?.textContent, buttons: [...el.querySelectorAll('button')].map((b) => b.textContent), pos: getComputedStyle(el).position, path: location.pathname, kpis: document.querySelectorAll('.kpi').length }; });
+    const s = await readSession();
+    check('F13', 'intercepted 403 on overview -> fullscreen ACCESS DENIED, no retry, session kept', a.kicker === 'ACCESS DENIED' && a.buttons.length === 0 && a.pos === 'fixed' && a.path === '/dashboard' && a.kpis === 0 && s.authToken !== null, `kicker="${a.kicker}" message="${a.message}" buttons=${JSON.stringify(a.buttons)} ${a.pos} path=${a.path} kpis=${a.kpis} token-kept=${s.authToken !== null}`);
+  } finally {
+    await context.unroute('**/v3/label/overview');
+  }
+  // Leave a clean authenticated dashboard for the next step.
+  await page.reload(); await page.waitForSelector('.kpi', { timeout: T });
 });
 
 setPhase('network-failure', true);
 await step('F14', 'API unreachable on reload -> CONNECTION FAILURE fullscreen; RETRY CONNECTION renders KPIs without reload', async () => {
   await context.route('**/v3/**', (route) => route.abort('connectionrefused'));
-  await page.reload(); await page.waitForSelector('[role=alert]', { timeout: T });
-  await page.waitForTimeout(300);
-  const e = await page.evaluate(() => { const el = document.querySelector('[role=alert]'); const cs = getComputedStyle(el); const icon = el.querySelector('i'); const k = el.querySelector('.label'); const p = el.querySelector('p'); const b = el.querySelector('button'); const bcs = b ? getComputedStyle(b) : null; window.__gateNoReload = 'kept'; return { pos: cs.position, inset: `${cs.top} ${cs.right} ${cs.bottom} ${cs.left}`, bg: cs.backgroundColor, icon: icon?.className, iconSize: icon ? getComputedStyle(icon).fontSize : null, iconColor: icon ? getComputedStyle(icon).color : null, kicker: k?.textContent, kickerSize: k ? getComputedStyle(k).fontSize : null, kickerColor: k ? getComputedStyle(k).color : null, kickerFamily: k ? getComputedStyle(k).fontFamily : null, message: p?.textContent, msgSize: p ? getComputedStyle(p).fontSize : null, msgColor: p ? getComputedStyle(p).color : null, button: b?.textContent, btnBg: bcs?.backgroundColor, btnColor: bcs?.color, btnRadius: bcs?.borderRadius, btnH: b?.getBoundingClientRect().height, btnFamily: bcs?.fontFamily, btnTransform: bcs?.textTransform, rootEmpty: document.getElementById('root').children.length === 0, overlay: !!document.querySelector('vite-error-overlay'), session: !!localStorage.getItem('authToken') }; });
-  await shot('phase4b-error.png');
-  await context.unroute('**/v3/**');
+  let e;
+  try {
+    await page.reload(); await page.waitForSelector('[role=alert]', { timeout: T });
+    await page.waitForTimeout(300);
+    e = await page.evaluate(() => { const el = document.querySelector('[role=alert]'); const cs = getComputedStyle(el); const icon = el.querySelector('i'); const k = el.querySelector('.label'); const p = el.querySelector('p'); const b = el.querySelector('button'); const bcs = b ? getComputedStyle(b) : null; window.__gateNoReload = 'kept'; return { pos: cs.position, inset: `${cs.top} ${cs.right} ${cs.bottom} ${cs.left}`, bg: cs.backgroundColor, icon: icon?.className, iconSize: icon ? getComputedStyle(icon).fontSize : null, iconColor: icon ? getComputedStyle(icon).color : null, kicker: k?.textContent, kickerSize: k ? getComputedStyle(k).fontSize : null, kickerColor: k ? getComputedStyle(k).color : null, kickerFamily: k ? getComputedStyle(k).fontFamily : null, message: p?.textContent, msgSize: p ? getComputedStyle(p).fontSize : null, msgColor: p ? getComputedStyle(p).color : null, button: b?.textContent, btnBg: bcs?.backgroundColor, btnColor: bcs?.color, btnRadius: bcs?.borderRadius, btnH: b?.getBoundingClientRect().height, btnFamily: bcs?.fontFamily, btnTransform: bcs?.textTransform, rootEmpty: document.getElementById('root').children.length === 0, overlay: !!document.querySelector('vite-error-overlay'), session: !!localStorage.getItem('authToken') }; });
+    await shot('phase4b-error.png');
+  } finally {
+    await context.unroute('**/v3/**');
+  }
   setPhase('network-recovery');
   await page.click('[role=alert] button:has-text("RETRY CONNECTION")');
   await page.waitForSelector('.kpi', { timeout: T });
@@ -571,9 +614,13 @@ await step('R01', '1280x800: 4 KPI columns, full 224px sidebar', async () => {
   check('R01', '1280x800: 4 KPI columns, full 224px sidebar', r.cols === 4 && r.sidebar === 224 && r.scrollW <= 1280, `cols=${r.cols} sidebar=${r.sidebar} scrollWidth=${r.scrollW}`);
 });
 await step('R02', '1024x768: 56px icon rail (24px mark only), KPIs 2x2, no horizontal overflow', async () => {
+  // 2026-09-28: the brand mark is a MonogramMark <span>, not an SVG (white-label; the
+  // pulsegrid profile sets assets.mark: null by design). In rail mode the sidebar shows
+  // only the 24px rail mark — fullMark and brandText are display:none. Class names are
+  // CSS-module hashed, so the harness reads the brand block's children positionally.
   await page.setViewportSize({ width: 1024, height: 768 }); await page.waitForTimeout(200);
-  const r = await page.evaluate(() => { const aside = document.querySelector('aside'); const svgs = [...aside.querySelectorAll('svg')].map((s) => s.getBoundingClientRect().width); return { cols: getComputedStyle(document.querySelector('.kpi').closest('section').parentElement).gridTemplateColumns.split(' ').length, sidebar: aside.getBoundingClientRect().width, marks: svgs, labelsVisible: [...aside.querySelectorAll('nav span')].filter((s) => s.getBoundingClientRect().width > 0).length, wordmarkVisible: aside.querySelector('strong').getBoundingClientRect().width > 0, mainMl: getComputedStyle(document.querySelector('main')).marginLeft, scrollW: document.documentElement.scrollWidth, cards: document.querySelectorAll('.kpi').length }; });
-  check('R02', '1024x768: 56px icon rail (24px mark only), KPIs 2x2, no horizontal overflow', r.cols === 2 && r.sidebar === 56 && r.marks.filter((w) => w > 0).join('|') === '24' && r.labelsVisible === 0 && !r.wordmarkVisible && r.mainMl === '56px' && r.scrollW <= 1024 && r.cards === 4, `cols=${r.cols} sidebar=${r.sidebar} visibleMarks=[${r.marks.filter((w) => w > 0).join(',')}] navLabelsVisible=${r.labelsVisible} wordmarkVisible=${r.wordmarkVisible} main-ml=${r.mainMl} scrollWidth=${r.scrollW}`);
+  const r = await page.evaluate(() => { const aside = document.querySelector('aside'); const brand = [...aside.firstElementChild.children].map((s) => s.getBoundingClientRect().width); return { cols: getComputedStyle(document.querySelector('.kpi').closest('section').parentElement).gridTemplateColumns.split(' ').length, sidebar: aside.getBoundingClientRect().width, fullMark: brand[0] ?? 0, railMark: brand[1] ?? 0, labelsVisible: [...aside.querySelectorAll('nav span')].filter((s) => s.getBoundingClientRect().width > 0).length, wordmarkVisible: aside.querySelector('strong').getBoundingClientRect().width > 0, mainMl: getComputedStyle(document.querySelector('main')).marginLeft, scrollW: document.documentElement.scrollWidth, cards: document.querySelectorAll('.kpi').length }; });
+  check('R02', '1024x768: 56px icon rail (24px mark only), KPIs 2x2, no horizontal overflow', r.cols === 2 && r.sidebar === 56 && r.railMark === 24 && r.fullMark === 0 && r.labelsVisible === 0 && !r.wordmarkVisible && r.mainMl === '56px' && r.scrollW <= 1024 && r.cards === 4, `cols=${r.cols} sidebar=${r.sidebar} railMark=${r.railMark} fullMark=${r.fullMark} navLabelsVisible=${r.labelsVisible} wordmarkVisible=${r.wordmarkVisible} main-ml=${r.mainMl} scrollWidth=${r.scrollW}`);
   await page.setViewportSize(VIEWPORT);
 });
 
@@ -595,8 +642,10 @@ await step('P02', 'example login: wordmark/sublabel/placeholder/3rd footer line;
   check('P02', 'example login: wordmark/sublabel/placeholder/3rd footer line; platform voice unchanged', l.wordmark === SPEC.example.wordmark && l.tagline === SPEC.example.tagline && l.placeholder === SPEC.example.placeholder && l.footer.length === 3 && l.footer[2] === SPEC.example.footer3 && voiceOk, `wordmark="${l.wordmark}" tagline="${l.tagline}" placeholder=${l.placeholder} footer=${JSON.stringify(l.footer)} voice-present=${voiceOk}`);
 });
 await step('P03', 'example login: card border, button fill, Forgot link are magenta; card geometry unchanged', async () => {
-  const l = await page.evaluate(() => { const card = document.querySelector('form'); const cs = getComputedStyle(card); const b = [...card.querySelectorAll('button')]; const submit = b.find((x) => x.type === 'submit'); const forgot = b.find((x) => x.disabled); return { width: card.getBoundingClientRect().width, padding: cs.padding, border: cs.borderTopColor, btnBg: getComputedStyle(submit).backgroundColor, btnColor: getComputedStyle(submit).color, forgot: getComputedStyle(forgot).color, radial: getComputedStyle(card.parentElement).backgroundImage }; });
-  check('P03', 'example login: card border, button fill, Forgot link are magenta; card geometry unchanged', l.width === 420 && l.padding === '48px' && sameColor(l.border, SPEC.example.accent35) && sameColor(l.btnBg, SPEC.example.accent) && sameColor(l.btnColor, SPEC.onAccent) && sameColor(l.forgot, SPEC.example.accent), `width=${l.width} pad=${l.padding} border=${l.border} button=${l.btnBg}/${l.btnColor} forgot=${l.forgot}`);
+  // 2026-09-28: forgot-password is a working flow, not a disabled placeholder (see F16),
+  // so the harness finds the link by its text instead of by `disabled`.
+  const l = await page.evaluate(() => { const card = document.querySelector('form'); if (!card) return null; const cs = getComputedStyle(card); const b = [...card.querySelectorAll('button')]; const submit = b.find((x) => x.type === 'submit'); const forgot = b.find((x) => /forgot/i.test(x.textContent)); return { width: card.getBoundingClientRect().width, padding: cs.padding, border: cs.borderTopColor, btnBg: submit ? getComputedStyle(submit).backgroundColor : null, btnColor: submit ? getComputedStyle(submit).color : null, forgot: forgot ? getComputedStyle(forgot).color : null, radial: getComputedStyle(card.parentElement).backgroundImage }; });
+  check('P03', 'example login: card border, button fill, Forgot link are magenta; card geometry unchanged', !!l && l.width === 420 && l.padding === '48px' && sameColor(l.border, SPEC.example.accent35) && sameColor(l.btnBg, SPEC.example.accent) && sameColor(l.btnColor, SPEC.onAccent) && sameColor(l.forgot, SPEC.example.accent), l ? `width=${l.width} pad=${l.padding} border=${l.border} button=${l.btnBg}/${l.btnColor} forgot=${l.forgot}` : 'login form not found');
 });
 let exampleNav;
 await step('P04', 'example dashboard: admin KPI === live API formatted en-GB/GBP (lowercase m)', async () => {
@@ -624,17 +673,26 @@ await step('P07', 'example: no "pulsegrid" in body text (/login + /dashboard), n
 await step('P08', 'example: full-page loader is the RingLoader (80px ring, pulse, no ears)', async () => {
   await uiLogin(ADMIN);
   await context.route('**/v3/label/overview', (route) => setTimeout(() => route.continue().catch(() => {}), 1500));
-  await page.goto(`${BASE}/dashboard`); await page.waitForSelector('[role=status]', { timeout: T });
-  const l = await page.evaluate(() => { const s = document.querySelector('[role=status]'); const ring = s.firstElementChild; const cs = getComputedStyle(ring); return { w: ring.getBoundingClientRect().width, h: ring.getBoundingClientRect().height, border: `${cs.borderTopWidth} ${cs.borderTopStyle} ${cs.borderTopColor}`, radius: cs.borderRadius, anim: cs.animationName, running: ring.getAnimations().length, ears: (getComputedStyle(ring, '::before').content !== 'none' ? 1 : 0) + (getComputedStyle(ring, '::after').content !== 'none' ? 1 : 0), bg: getComputedStyle(s).backgroundColor }; });
-  await context.unroute('**/v3/label/overview'); await page.waitForSelector('.kpi', { timeout: T });
-  check('P08', 'example: full-page loader is the RingLoader (80px ring, pulse, no ears)', l.w === 80 && l.h === 80 && sameColor(l.border.replace(/^4px solid /, ''), SPEC.example.accent) && l.border.startsWith('4px solid') && l.anim === 'pulse' && l.running >= 1 && l.ears === 0 && sameColor(l.bg, SPEC.bg), `ring=${l.w}x${l.h} border=${l.border} anim=${l.anim} running=${l.running} ears=${l.ears} bg=${l.bg}`);
+  let l;
+  try {
+    await page.goto(`${BASE}/dashboard`); await page.waitForSelector('[role=status]', { timeout: T });
+    l = await page.evaluate(() => { const s = document.querySelector('[role=status]'); const ring = s.firstElementChild; const cs = getComputedStyle(ring); return { w: ring.getBoundingClientRect().width, h: ring.getBoundingClientRect().height, border: `${cs.borderTopWidth} ${cs.borderTopStyle} ${cs.borderTopColor}`, radius: cs.borderRadius, anim: cs.animationName, running: ring.getAnimations().length, ears: (getComputedStyle(ring, '::before').content !== 'none' ? 1 : 0) + (getComputedStyle(ring, '::after').content !== 'none' ? 1 : 0), bg: getComputedStyle(s).backgroundColor }; });
+    await page.waitForSelector('.kpi', { timeout: T });
+    check('P08', 'example: full-page loader is the RingLoader (80px ring, pulse, no ears)', l.w === 80 && l.h === 80 && sameColor(l.border.replace(/^4px solid /, ''), SPEC.example.accent) && l.border.startsWith('4px solid') && l.anim === 'pulse' && l.running >= 1 && l.ears === 0 && sameColor(l.bg, SPEC.bg), `ring=${l.w}x${l.h} border=${l.border} anim=${l.anim} running=${l.running} ears=${l.ears} bg=${l.bg}`);
+  } finally {
+    await context.unroute('**/v3/label/overview');
+  }
 });
 await step('P09', 'example: fullscreen ErrorState unchanged except hue (kicker/button copy identical, button magenta-free danger)', async () => {
   setPhase('example-network-failure', true);
   await context.route('**/v3/**', (route) => route.abort('connectionrefused'));
-  await page.reload(); await page.waitForSelector('[role=alert]', { timeout: T }); await page.waitForTimeout(200);
-  const e = await page.evaluate(() => { const el = document.querySelector('[role=alert]'); const b = el.querySelector('button'); return { kicker: el.querySelector('.label')?.textContent, button: b?.textContent, btnBg: getComputedStyle(b).backgroundColor, btnColor: getComputedStyle(b).color, bg: getComputedStyle(el).backgroundColor }; });
-  await context.unroute('**/v3/**'); setPhase('example-records');
+  let e;
+  try {
+    await page.reload(); await page.waitForSelector('[role=alert]', { timeout: T }); await page.waitForTimeout(200);
+    e = await page.evaluate(() => { const el = document.querySelector('[role=alert]'); const b = el.querySelector('button'); return { kicker: el.querySelector('.label')?.textContent, button: b?.textContent, btnBg: getComputedStyle(b).backgroundColor, btnColor: getComputedStyle(b).color, bg: getComputedStyle(el).backgroundColor }; });
+  } finally {
+    await context.unroute('**/v3/**'); setPhase('example-records');
+  }
   await page.click('[role=alert] button'); await page.waitForSelector('.kpi', { timeout: T });
   check('P09', 'example: fullscreen ErrorState unchanged except hue (kicker/button copy identical, button magenta-free danger)', e.kicker === 'CONNECTION FAILURE' && e.button === 'RETRY CONNECTION' && sameColor(e.btnBg, SPEC.dangerDim) && sameColor(e.btnColor, SPEC.danger) && sameColor(e.bg, SPEC.bg), `kicker="${e.kicker}" button="${e.button}" btn=${e.btnBg}/${e.btnColor} bg=${e.bg}`);
 });
@@ -662,8 +720,11 @@ await step('P10', 'remove override -> pulsegrid identity, accent, mark, wordmark
   await page.evaluate(() => localStorage.removeItem('platform.brandProfile'));
   await page.reload(); await page.waitForSelector('.kpi', { timeout: T });
   const b = await brandState(); const values = await kpiTexts();
-  const s = await page.evaluate(() => { const aside = document.querySelector('aside'); const sub = aside.querySelector('.label--accent'); const svg = aside.querySelector('svg'); return { wordmark: aside.querySelector('strong').textContent, sub: sub.textContent, subColor: getComputedStyle(sub).color, svg: svg ? `${svg.getBoundingClientRect().width}x${svg.getBoundingClientRect().height} circles=${svg.querySelectorAll('circle').length}` : null, keys: Object.keys(localStorage) }; });
-  check('P10', 'remove override -> pulsegrid identity, accent, mark, wordmark and $ KPIs return with no edits', b.title === SPEC.pulsegrid.title && b.favicon?.endsWith(SPEC.pulsegrid.favicon) && b.bodyTheme === SPEC.pulsegrid.theme && s.wordmark === SPEC.pulsegrid.wordmark && s.sub === SPEC.pulsegrid.tagline && sameColor(s.subColor, SPEC.pulsegrid.accent) && s.svg === '40x40 circles=3' && values.join('|') === expAdminUsd.join('|') && !s.keys.includes('platform.brandProfile'), `title="${b.title}" theme=${b.bodyTheme} favicon=${b.favicon} wordmark="${s.wordmark}" sub="${s.sub}" ${s.subColor} mark=${s.svg} kpi=${values.join(' · ')} keys=[${s.keys.join(', ')}]`);
+  // 2026-09-28: the brand mark is a MonogramMark <span> (40px, monogram letter), not an
+  // SVG — same shipped design V12 pins. Class names are CSS-module hashed, so read the
+  // brand block's first child positionally.
+  const s = await page.evaluate(() => { const aside = document.querySelector('aside'); const sub = aside.querySelector('.label--accent'); const mark = aside.firstElementChild.children[0]; const mr = mark.getBoundingClientRect(); return { wordmark: aside.querySelector('strong').textContent, sub: sub.textContent, subColor: getComputedStyle(sub).color, mark: `${mr.width}x${mr.height}:${mark.textContent.trim()}`, keys: Object.keys(localStorage) }; });
+  check('P10', 'remove override -> pulsegrid identity, accent, mark, wordmark and $ KPIs return with no edits', b.title === SPEC.pulsegrid.title && b.favicon?.endsWith(SPEC.pulsegrid.favicon) && b.bodyTheme === SPEC.pulsegrid.theme && s.wordmark === SPEC.pulsegrid.wordmark && s.sub === SPEC.pulsegrid.tagline && sameColor(s.subColor, SPEC.pulsegrid.accent) && s.mark === `40x40:${SPEC.pulsegrid.wordmark.charAt(0)}` && values.join('|') === expAdminUsd.join('|') && !s.keys.includes('platform.brandProfile'), `title="${b.title}" theme=${b.bodyTheme} favicon=${b.favicon} wordmark="${s.wordmark}" sub="${s.sub}" ${s.subColor} mark=${s.mark} kpi=${values.join(' · ')} keys=[${s.keys.join(', ')}]`);
   await page.click('aside button:has-text("Terminate Session")'); await page.waitForURL('**/login', { timeout: T });
 });
 

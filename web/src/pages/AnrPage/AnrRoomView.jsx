@@ -34,8 +34,8 @@ export function AnrRoomView() {
           <RoomEditor key={data?.whiteboard} label="Whiteboard" initial={data?.whiteboard || ''} multiline onSave={value => saveWhiteboard(token, value)} onDone={refetch} />
         </Section>
         <Section title={text.anrNowListening} note={data?.nowListening?.updatedBy}>
-          <RoomEditor key={data?.nowListening?.url} label="Listening URL" initial={data?.nowListening?.url || ''} onSave={value => saveListening(token, value)} onDone={refetch} />
-          {data?.nowListening?.url && <MediaPlayer key={data.nowListening.url} url={data.nowListening.url} title="now listening" />}
+          <RoomEditor key={'listening-editor:' + data?.nowListening?.url} label="Listening URL" initial={data?.nowListening?.url || ''} onSave={value => saveListening(token, value)} onDone={refetch} />
+          {data?.nowListening?.url && <MediaPlayer key={'listening-player:' + data.nowListening.url} url={data.nowListening.url} title="now listening" />}
         </Section>
       </div>
 
