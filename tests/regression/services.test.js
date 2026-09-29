@@ -165,14 +165,43 @@ describe('src/ai/aiService', () => {
     test('analyzeEntityHealth never throws when the transport fails', async () => {
         const svc = createAiService({ client: fakeClient('', true), cacheService: createCacheService() });
         const out = await svc.analyzeEntityHealth({ artistName: 'A', healthScore: 1 });
+        assert.strictEqual(out.status, 'unavailable');
         assert.strictEqual(out.summary, 'AI analysis unavailable');
+        assert.deepStrictEqual(out.criticalActions, []);
     });
 
-    test('PINS: analyzeByKeyword is NOT AI and keeps its hardcoded strings', () => {
+    test('analyzeEntityHealth fails closed when the provider is not configured', async () => {
+        const unconfigured = { isConfigured: () => false, complete: async () => { throw new Error('must not be called'); } };
+        const svc = createAiService({ client: unconfigured, cacheService: createCacheService() });
+        const out = await svc.analyzeEntityHealth({ artistName: 'A', healthScore: 1 });
+        assert.strictEqual(out.status, 'not_configured');
+        assert.strictEqual(out.summary, 'AI analysis not configured');
+    });
+
+    test('analyzeEntityHealth returns status ok on a successful provider call', async () => {
+        const payload = JSON.stringify({ summary: 'Looks healthy', criticalActions: ['Review metadata'], correlationInsight: 'Strong correlation' });
+        const svc = createAiService({ client: fakeClient(payload), cacheService: createCacheService() });
+        const out = await svc.analyzeEntityHealth({ artistName: 'A', healthScore: 1 });
+        assert.strictEqual(out.status, 'ok');
+        assert.strictEqual(out.summary, 'Looks healthy');
+    });
+
+    // Audit gap 6: the legacy canned-answer helper is GONE. There is no
+    // mock AI analysis anywhere in the service; absent a configured
+    // provider the entity audit fails closed with an explicit status.
+    test('REMOVED: analyzeByKeyword no longer exists on the AI service', () => {
         const svc = createAiService({ client: fakeClient('unused'), cacheService: createCacheService() });
-        assert.match(svc.analyzeByKeyword('what about roi').response, /highest ROI at .*NOVAKIN is second at 8\.7x\./);
-        assert.match(svc.analyzeByKeyword('growth please').response, /fastest growing artist/);
-        assert.match(svc.analyzeByKeyword('nothing relevant').response, /Overall revenue is up 15% YoY/);
+        assert.strictEqual(typeof svc.analyzeByKeyword, 'undefined');
+        assert.ok(!('analyzeByKeyword' in svc));
+    });
+
+    test('reportInsight throws (fail-closed) when the provider is not configured', async () => {
+        const unconfigured = { isConfigured: () => false, complete: async () => { throw new Error('must not be called'); } };
+        const svc = createAiService({ client: unconfigured, cacheService: createCacheService() });
+        await assert.rejects(
+            svc.reportInsight({ artist: { id: 'a', name: 'A' }, month: '2026-07', totalRevenue: 1 }),
+            /not configured/
+        );
     });
 });
 
@@ -387,6 +416,31 @@ describe('src/services/entityAuditService', () => {
         await svc.audit('art_x', true); // forceRefresh
         assert.strictEqual(facade.record.genius, 1, 'PINNED: genius stays cached across refresh');
         assert.strictEqual(facade.record.kg, 2, 'other providers DO re-run on refresh');
+    });
+
+    // Audit gap 6: AI usage is recorded ONLY when the provider call
+    // actually succeeded (aiAnalysis.status === 'ok'). not_configured /
+    // unavailable audits cost nothing and produce no AI usage event.
+    test('ai_call usage recorded only when the AI provider call succeeded', async () => {
+        const recorded = [];
+        const usageSvc = { recordUsage: (kind, amount, meta) => recorded.push({ kind, amount, meta }) };
+        const svcOk = createEntityAuditService({
+            cacheService: createCacheService(), integrationFacade: fakeFacade(),
+            ai: { analyzeEntityHealth: async () => ({ status: 'ok', summary: 'fine' }) },
+            repo: fakeRepo, usageService: usageSvc
+        });
+        await svcOk.audit('art_x', false);
+        assert.ok(recorded.some((r) => r.kind === 'ai_call'), 'ai_call recorded on provider success');
+
+        const recorded2 = [];
+        const usageSvc2 = { recordUsage: (kind, amount, meta) => recorded2.push({ kind, amount, meta }) };
+        const svcDown = createEntityAuditService({
+            cacheService: createCacheService(), integrationFacade: fakeFacade(),
+            ai: { analyzeEntityHealth: async () => ({ status: 'unavailable', summary: 'AI analysis unavailable' }) },
+            repo: fakeRepo, usageService: usageSvc2
+        });
+        await svcDown.audit('art_x', false);
+        assert.ok(!recorded2.some((r) => r.kind === 'ai_call'), 'no ai_call when the provider failed');
     });
 });
 

@@ -106,7 +106,7 @@ function createEntityAuditService({
         const inconsistencies = integrationFacade.detectInconsistencies(auditResults, artist);
         const schemaLD = integrationFacade.generateSchemaLD(artist, auditResults);
 
-        // --- AI analysis (never throws; returns the original fallback shape) ---
+        // --- AI analysis (never throws; fails closed, audit gap 6) ---
         const aiAnalysis = await ai.analyzeEntityHealth({
             artistName: artist.name,
             googleKgStatus: googleKG.status,
@@ -115,12 +115,17 @@ function createEntityAuditService({
         });
 
         // PHASE 4CF: the LLM call above is a paid-provider spend point.
-        usageService.recordUsage('ai_call', 1, {
-            artistId,
-            userId: actor?.id ?? null,
-            provider: 'groq',
-            purpose: 'entity_audit_analysis'
-        });
+        // Audit gap 6: an AI usage event is recorded ONLY when the provider
+        // call actually succeeded (status 'ok'). not_configured /
+        // unavailable cost nothing and must not be billed as AI events.
+        if (aiAnalysis && aiAnalysis.status === 'ok') {
+            usageService.recordUsage('ai_call', 1, {
+                artistId,
+                userId: actor?.id ?? null,
+                provider: 'groq',
+                purpose: 'entity_audit_analysis'
+            });
+        }
 
         const issues = inconsistencies.map((inc) => ({
             severity: inc.severity || 'medium',

@@ -5,7 +5,7 @@ const config = require('../config');
 const cache = require('../services/cacheService');
 const groqClient = require('./groqClient');
 const prompts = require('./prompts');
-const { validateEntityAudit, ENTITY_AUDIT_FALLBACK } = require('./responseParser');
+const { validateEntityAudit } = require('./responseParser');
 const artistRepo = require('../repositories/artistRepository');
 const { calculateTotalRevenue } = require('../utils/dataShape');
 const { hasArtistAccess } = require('../auth');
@@ -90,10 +90,28 @@ function createAiService({ client = groqClient, cacheService = cache, repo = art
     }
 
     /**
-     * Entity-audit AI analysis. NEVER throws and ALWAYS returns an object with
-     * the same shape the original produced.
+    /**
+     * Entity-audit AI analysis. NEVER throws. FAILS CLOSED (2026-09-28,
+     * audit gap 6):
+     *   - provider not configured -> { status: 'not_configured', ... }
+     *   - provider call fails     -> { status: 'unavailable', ... }
+     *   - provider succeeds       -> { status: 'ok', ...validated fields }
+     *
+     * There are no canned roster claims and no fake analysis: without a
+     * successful provider call the UI receives an explicit status, never
+     * mock insights. entityAuditService records AI usage ONLY on
+     * status 'ok' (a failed or unconfigured provider call is not a
+     * billable AI event).
      */
     async function analyzeEntityHealth({ artistName, googleKgStatus, wikipediaStatus, healthScore }) {
+        if (typeof client.isConfigured === 'function' && !client.isConfigured()) {
+            return {
+                status: 'not_configured',
+                summary: 'AI analysis not configured',
+                criticalActions: [],
+                correlationInsight: 'Configure an AI provider to enable entity analysis.'
+            };
+        }
         try {
             const promptText = prompts.buildEntityAuditPrompt({
                 artistName, googleKgStatus, wikipediaStatus, healthScore
@@ -104,42 +122,26 @@ function createAiService({ client = groqClient, cacheService = cache, repo = art
                 temperature: 0.7,
                 maxTokens: 400
             });
-            return validateEntityAudit(content);
+            const validated = validateEntityAudit(content);
+            if (validated && validated._meta && validated._meta.ok) {
+                return { status: 'ok', ...validated };
+            }
+            // Provider answered but the output was unusable: the call still
+            // happened (usage counts), but no analysis is presented.
+            return {
+                status: 'unavailable',
+                summary: 'AI analysis unavailable',
+                criticalActions: [],
+                correlationInsight: 'Manual review needed'
+            };
         } catch (err) {
-            // Original catch produced this literal object.
-            return { ...ENTITY_AUDIT_FALLBACK };
+            return {
+                status: 'unavailable',
+                summary: 'AI analysis unavailable',
+                criticalActions: [],
+                correlationInsight: 'Manual review needed'
+            };
         }
-    }
-
-    /**
-     * Legacy offline helper (not exposed by /v3/ai/analyze). Retained for old consumers from
-     * the original handler including the hardcoded "Novakin is second at 6.5x"
-     * and confidence 0.98.
-     *
-     * @returns {{response:string}}
-     */
-    function analyzeByKeyword(query) {
-        const lowerQuery = String(query).toLowerCase();
-        let response = "I'm analyzing your request...";
-
-        // PHASE 4CF: keyword-path canned copy is label intelligence, now
-        // sourced from the profile. pulsegrid strings and the roster-order
-        // dependent {artist} read compose byte-identically to the originals.
-        if (lowerQuery.includes('roi')) {
-            const bestRoi = repo.topByRoi();
-            response = `Based on current data, ${bestRoi.name} has the highest ROI at ${bestRoi.roi}x. ${profile.ai.keywordInsights.roiSecondPlace}`;
-        } else if (lowerQuery.includes('tour') || lowerQuery.includes('revenue')) {
-            const topTouring = repo.topByTouringRevenue();
-            const artists = repo.getMockArtists();
-            response = `${topTouring.name} is leading touring revenue with $${topTouring.revenue.touring.toLocaleString()}. ${profile.ai.keywordInsights.touringAdvice.replace('{artist}', artists[1].name)}`;
-        } else if (lowerQuery.includes('growth') || lowerQuery.includes('trend')) {
-            const topGrower = repo.topByGrowthRate();
-            response = `${topGrower.name} is the fastest growing artist (${topGrower.growthRate}%). ${profile.ai.keywordInsights.growthContext}`;
-        } else {
-            response = profile.ai.keywordInsights.defaultInsight;
-        }
-
-        return { response };
     }
 
     /**
@@ -154,9 +156,16 @@ function createAiService({ client = groqClient, cacheService = cache, repo = art
      * the PDF builder's own catch which writes
      * "AI Insights unavailable at this time (Service Offline)." into the doc.
      *
+     * Fail-closed (2026-09-28, audit gap 6): THROWS 'AI provider is not
+     * configured' when the provider is absent, so no report is ever
+     * assembled with fabricated AI insights.
+     *
      * @returns {Promise<string>}
      */
     async function reportInsight({ artist, month, totalRevenue }) {
+        if (typeof client.isConfigured === 'function' && !client.isConfigured()) {
+            throw new Error('AI provider is not configured');
+        }
         const reportCacheKey = `report_ai_${artist.id}_${month}`;
         const cached = cacheService.get(reportCacheKey);
         if (cached) return cached;
@@ -180,7 +189,7 @@ function createAiService({ client = groqClient, cacheService = cache, repo = art
         return insightText;
     }
 
-    return { query, analyzeEntityHealth, analyzeByKeyword, reportInsight };
+    return { query, analyzeEntityHealth, reportInsight };
 }
 
 module.exports = createAiService();
