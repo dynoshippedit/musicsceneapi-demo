@@ -84,3 +84,15 @@
   #16 fixed, #17 confirmed. Remaining: #1,2,3,4,5,6,8,11,13 → assigned to Phase 2/3 lanes.
 - Notes updated: STATUS.md (Phase 2).
 - Next: 6 Phase 2 specialists dispatched (BUG, SEC, ARC, DAT, MUS, AIX).
+
+## 2026-09-29 02:55 UTC · Tech Lead (LEAD) · Phase 2
+- Did: verified AIX deliverables (findings/aix.md 8 findings C12 headers, notes/ai-integration.md).
+  Spot-checked AIX-001..003 paths — accepted.
+- INCIDENT: AIX's repro accidentally reached live Groq API twice (401 invalid_api_key, zero spend).
+  Cause: Threadripper runtime env carries a GROQ_API_KEY that dotenv loads; AIX's `env -u`
+  did not clear it. No completion generated, no spend, key value never read/recorded,
+  no further live calls. Treating as a procedural lesson: repros touching AI clients must
+  sanitize env first (added to DEV_NOTES as a lane-briefing rule for future agents).
+- P1 lead #5 → FIXED (cache now keyed per user/role/access). Gap-6 fail-closed VERIFIED by AIX.
+- Notes updated: STATUS.md.
+- Next: BUG, SEC, ARC, DAT, MUS still running.
