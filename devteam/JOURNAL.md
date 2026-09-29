@@ -69,3 +69,18 @@
   #17 confirmed (simulations de-mocked; disclaimers missing from product).
 - Notes updated: STATUS.md.
 - Next: BLD is the last Phase 1 lane; then the P1 gate.
+
+## 2026-09-29 02:45 UTC · Tech Lead (LEAD) · Phase 1→2
+- Did: verified BLD deliverables (BASELINE.md real outputs, env-inventory 73 vars,
+  dependencies.md, findings/bld.md 12 findings with C12 headers). Ran PHASE 1 GATE:
+  PASS — 431 files tiered, BASELINE real, crown jewels + 9 flows set.
+- BLD root-caused the flaky suite: BLD-002 (duplicate fixed port 32193 in directsales +
+  financials test files; sync SIGKILL without exit-wait lets a stale server squat the
+  port, so the second file's tests run against the WRONG server/DB) explains the serial
+  5-fails; BLD-003 (parallel contention: ~10 heavy server instances on 32 cores)
+  explains the parallel blowups. Serial honest baseline: 356/361.
+- P1 lead dispositions now: #7 fixed (8d1a6ac), #9 fixed (d8a7b5f), #10 obsolete,
+  #12 fixed, #14 partial (localStorage token confirmed → SEC), #15 confirmed,
+  #16 fixed, #17 confirmed. Remaining: #1,2,3,4,5,6,8,11,13 → assigned to Phase 2/3 lanes.
+- Notes updated: STATUS.md (Phase 2).
+- Next: 6 Phase 2 specialists dispatched (BUG, SEC, ARC, DAT, MUS, AIX).
