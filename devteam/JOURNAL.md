@@ -197,3 +197,13 @@
   devteam/cycles/ms-cycle-01.json (cycle result per schema).
 - Recommended next task: MUS-001 (float royalty estimate) — needs owner sign-off on the
   response-shape change (QUESTIONS.md B1); otherwise SEC-001 (CSV formula injection, S2).
+
+## 2026-09-29 02:26 UTC · ms-cycle-01 worker · live demo validation (post-commit)
+- Ran ./scripts/run-demo.sh: API now healthy on :4000 (DEMO_MODE=true, demo-only JWT),
+  frontend already up on :5173 (pid 398048, untouched). Stale :3001/:3002 PIDs left alone.
+- Live end-to-end against the demo API: login 200, seeded one payout row directly in the
+  throwaway demo sqlite (sync providers unconfigured in this demo; PAYMENTS_STUB not set),
+  deposit create 201, POST /v3/financials/matches 201, re-match 409, both sides linked,
+  DELETE /v3/financials/matches 200, both sides cleared. Seed rows removed afterwards.
+- Result: LIVE DEMO ALL OK (9/9 checks). The transactional match/unmatch holds on the
+  running service, not just in the test harness.
