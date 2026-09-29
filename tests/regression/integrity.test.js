@@ -123,13 +123,13 @@ async function login(email = 'admin@pulsegrid.fm', password = 'admin123') {
     return r.body.token;
 }
 
-async function sql(statement) {
+async function sql(statement, params = []) {
     const db = await new Promise((resolve, reject) => {
         const d = new sqlite3.Database(dbFile, (e) => (e ? reject(e) : resolve(d)));
     });
     try {
         return await new Promise((resolve, reject) => {
-            db.all(statement, (e, rows) => (e ? reject(e) : resolve(rows)));
+            db.all(statement, params, (e, rows) => (e ? reject(e) : resolve(rows)));
         });
     } finally {
         await new Promise((resolve, reject) => db.close((e) => (e ? reject(e) : resolve())));
@@ -247,4 +247,137 @@ test('rejected writes, concurrent votes, royalties and sales contract hold on di
     assert.equal(health.status, 200, `API died after malformed royalties: ${JSON.stringify(health)}`);
     assert.equal(child.exitCode, null);
     assert.equal(output.includes('[unhandledRejection]'), false);
+});
+
+// MUS-001: integer-cents royalty split. Legs must always sum exactly to the
+// total (no ±1c drift) across uneven splits; the NOVAKIN default figures are
+// pinned; float and non-summing splits are rejected.
+test('MUS-001: royalty legs sum exactly to the total across uneven splits', async () => {
+    await boot();
+    let token = await login();
+
+    // Default 70/30 on art_novakin: exact pinned figures.
+    const d = await api('POST', '/v3/royalties/calculate', token, { artistId: 'art_novakin' });
+    assert.equal(d.status, 200, `default split status ${d.status}`);
+    assert.equal(d.body.totalRevenueCents, 744251600);
+    assert.equal(d.body.payoutCents.artist, 520976120);
+    assert.equal(d.body.payoutCents.label, 223275480);
+    assert.equal(d.body.payoutCents.artist + d.body.payoutCents.label, d.body.totalRevenueCents);
+
+    // Uneven splits: exact sum, integer legs, echoed bps.
+    for (const [a, l] of [[7001, 2999], [3333, 6667], [1, 9999], [9999, 1], [5000, 5000]]) {
+        const r = await api('POST', '/v3/royalties/calculate', token, {
+            artistId: 'art_novakin', splits: { artist: a, label: l }
+        });
+        assert.equal(r.status, 200, `split ${a}/${l} status ${r.status}`);
+        assert.ok(Number.isInteger(r.body.payoutCents.artist), `artist leg not integer at ${a}/${l}`);
+        assert.ok(Number.isInteger(r.body.payoutCents.label), `label leg not integer at ${a}/${l}`);
+        assert.equal(r.body.payoutCents.artist + r.body.payoutCents.label, r.body.totalRevenueCents,
+            `legs drift from total at split ${a}/${l}`);
+        assert.deepEqual(r.body.splitsBps, { artist: a, label: l });
+    }
+
+    // Legacy float splits and non-summing bps are rejected.
+    const f1 = await api('POST', '/v3/royalties/calculate', token, {
+        artistId: 'art_novakin', splits: { artist: 0.7, label: 0.3 }
+    });
+    assert.equal(f1.status, 400, 'float splits must be rejected');
+    const f2 = await api('POST', '/v3/royalties/calculate', token, {
+        artistId: 'art_novakin', splits: { artist: 7000, label: 2000 }
+    });
+    assert.equal(f2.status, 400, 'non-summing bps must be rejected');
+});
+
+// SI-01: a bare non-number/non-object revenue value must be rejected with 400,
+// never silently coerced to 0 (pre-fix it returned 200 with the stream at 0).
+test('SI-01: bare invalid revenue value is rejected, not coerced to 0', async () => {
+    await boot();
+    const token = await login();
+    const created = await api('POST', '/v3/artists', token, { name: 'Si01Invalid', tier: 'test' });
+    assert.equal(created.status, 200, `create artist ${JSON.stringify(created.body)}`);
+    const artistId = created.body.artist.id;
+    const rows = await sql('SELECT data FROM Artists WHERE id = ?', [artistId]);
+    const data = JSON.parse(rows[0].data);
+    data.revenue.streaming = 'abc';
+    await sql('UPDATE Artists SET data = ? WHERE id = ?', [JSON.stringify(data), artistId]);
+
+    const r = await api('POST', '/v3/royalties/calculate', token, {
+        artistId, revenueSources: ['streaming']
+    });
+    assert.equal(r.status, 400, `bare invalid revenue must 400, got ${r.status}: ${JSON.stringify(r.body)}`);
+    assert.match(r.body.error, /invalid amount/);
+
+    // A bare numeric string is likewise neither a dollar number nor an
+    // { amount, currency } object, so it must also be rejected.
+    data.revenue.streaming = '12.34';
+    await sql('UPDATE Artists SET data = ? WHERE id = ?', [JSON.stringify(data), artistId]);
+    const r2 = await api('POST', '/v3/royalties/calculate', token, {
+        artistId, revenueSources: ['streaming']
+    });
+    assert.equal(r2.status, 400, `numeric-string revenue must 400, got ${r2.status}: ${JSON.stringify(r2.body)}`);
+});
+
+// SI-01: non-USD streams are flagged and excluded from the USD totals
+// (flaggedStreams existed but had no regression coverage until now).
+test('SI-01: non-USD revenue streams are flagged and excluded from USD totals', async () => {
+    await boot();
+    const token = await login();
+    const created = await api('POST', '/v3/artists', token, { name: 'Si01Flagged', tier: 'test' });
+    assert.equal(created.status, 200, `create artist ${JSON.stringify(created.body)}`);
+    const artistId = created.body.artist.id;
+    const rows = await sql('SELECT data FROM Artists WHERE id = ?', [artistId]);
+    const data = JSON.parse(rows[0].data);
+    data.revenue.streaming = { amount: 100, currency: 'EUR' };
+    data.revenue.merch = 50;
+    await sql('UPDATE Artists SET data = ? WHERE id = ?', [JSON.stringify(data), artistId]);
+
+    const r = await api('POST', '/v3/royalties/calculate', token, {
+        artistId, revenueSources: ['streaming', 'merch']
+    });
+    assert.equal(r.status, 200, `flagged-stream calc status ${r.status}: ${JSON.stringify(r.body)}`);
+    assert.equal(r.body.totalRevenueCents, 5000, 'EUR stream must be excluded from the USD total');
+    assert.deepEqual(r.body.flaggedStreams, [{ source: 'streaming', currency: 'EUR', amount: 100 }]);
+    assert.ok(!('streaming' in r.body.breakdownCents), 'flagged stream must not appear in breakdownCents');
+    assert.equal(r.body.payoutCents.artist + r.body.payoutCents.label, r.body.totalRevenueCents);
+});
+
+// SI-01 extension: negative revenue values must be rejected with 400, never
+// summed into the total.
+test('SI-01: negative revenue value is rejected with 400', async () => {
+    await boot();
+    const token = await login();
+    const created = await api('POST', '/v3/artists', token, { name: 'Si01Negative', tier: 'test' });
+    assert.equal(created.status, 200, `create artist ${JSON.stringify(created.body)}`);
+    const artistId = created.body.artist.id;
+    const rows = await sql('SELECT data FROM Artists WHERE id = ?', [artistId]);
+    const data = JSON.parse(rows[0].data);
+    data.revenue.streaming = -12.34;
+    await sql('UPDATE Artists SET data = ? WHERE id = ?', [JSON.stringify(data), artistId]);
+
+    const r = await api('POST', '/v3/royalties/calculate', token, {
+        artistId, revenueSources: ['streaming']
+    });
+    assert.equal(r.status, 400, `negative revenue must 400, got ${r.status}: ${JSON.stringify(r.body)}`);
+    assert.match(r.body.error, /invalid amount/);
+});
+
+// SI-01 extension: a missing amount (null/undefined) is "no data" and
+// legitimately stays 0 with a 200. (NaN/Infinity cannot round-trip through the
+// JSON persistence layer, so they are covered by direct handler tests in
+// tests/regression/si01-ext.test.js.)
+test('SI-01: missing revenue amount stays 0 with a 200', async () => {
+    await boot();
+    const token = await login();
+    const created = await api('POST', '/v3/artists', token, { name: 'Si01MissingAmount', tier: 'test' });
+    assert.equal(created.status, 200, `create artist ${JSON.stringify(created.body)}`);
+    const artistId = created.body.artist.id;
+    const rows = await sql('SELECT data FROM Artists WHERE id = ?', [artistId]);
+    const data = JSON.parse(rows[0].data);
+    data.revenue.streaming = { currency: 'USD' };
+    await sql('UPDATE Artists SET data = ? WHERE id = ?', [JSON.stringify(data), artistId]);
+    const r = await api('POST', '/v3/royalties/calculate', token, {
+        artistId, revenueSources: ['streaming']
+    });
+    assert.equal(r.status, 200, `missing amount must stay 200, got ${r.status}: ${JSON.stringify(r.body)}`);
+    assert.equal(r.body.breakdownCents.streaming, 0);
 });
