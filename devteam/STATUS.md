@@ -1,6 +1,6 @@
 # STATUS — resume here
-Updated: 2026-09-29 03:30 UTC by Tech Lead (LEAD)
-Phase: 3 — Deep review (pattern sweeps) · Mode: A multi-agent · Branch: devteam/review-2026-09-29
+Updated: 2026-09-29 02:26 UTC by ms-cycle-01 worker
+Phase: 4 — Triage/fix (BUG-001 implemented) · Mode: Engineering Kit v3.0 cycle ms-cycle-01 · Branch: devteam/review-2026-09-29
 
 ## Progress
 - P0/P1/P2 gates: PASS. Findings so far: MAP 7×S4 · TST 5×S2+3×S3+2×S4 · DOC 4×S2+7×S3 ·
@@ -8,7 +8,12 @@ Phase: 3 — Deep review (pattern sweeps) · Mode: A multi-agent · Branch: devt
   DAT 5×S2+9×S3+2×S4 · SEC 2×S2+3×S3+5×S4 · BUG 1×S1+2×S2+5×S3.
 - S1s: MUS-001 (live float-split payout math), BUG-001 (non-atomic payout/deposit match,
   API-unrepairable half-write). No S0 found to date.
-- All 17 P1 leads dispositioned (see known-leads-verification.md — Lead to write).
+- All 17 P1 leads dispositioned (see devteam/notes/known-leads-verification.md, committed).
+- BUG-001 IMPLEMENTED: match/unmatch in src/routes/monthlyclose.js are now atomic
+  (sequelize transactions + UPDATE row locks; expected 404/409 translated after commit;
+  audit fires post-commit; response shapes unchanged). 3 new regression tests;
+  full suite 364/364 green (was 361/361 baseline). SWEEP-001 (S3, cron overlap guard)
+  recorded in TASKS.md backlog.
 - Gates passed: P0 ✔ P1 ✔ P2 ✔
 
 ## In progress (Phase 3 — all running)

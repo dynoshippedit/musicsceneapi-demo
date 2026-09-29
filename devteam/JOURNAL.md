@@ -175,3 +175,25 @@
   integrations + ai-integration notes all present.
 - Next: Phase 3 deep review — 5 pattern sweep lanes (async/promise, injection/validation,
   money/finance, React frontend, jobs/sync) dispatched in parallel.
+
+## 2026-09-29 02:26 UTC · ms-cycle-01 worker · BUG-001 implemented
+- Did: wrapped POST /v3/financials/matches and DELETE /v3/financials/matches in
+  `ctx.sequelize.transaction(...)`; both rows read with `lock: t.LOCK.UPDATE` inside the
+  tx; both saves pass `{ transaction: t }`; expected 404/409 rejections thrown as
+  Error+statusCode inside the tx and translated to HTTP after it; auditService.emitAudit
+  fires after successful commit; response JSON shapes unchanged.
+- Deferred (per plan): partial unique indexes on (matchedDepositId/matchedPayoutId) as a
+  separate migration task — not bundled into this repair for existing-DB compatibility.
+- Tests added to tests/regression/monthlyclose.test.js: (20) fault-injection rollback —
+  a SQLite trigger makes the deposit-side UPDATE fail; the payout-side write must roll
+  back (no half-written match); trigger always dropped in `finally`. (21) double-match
+  409 keeps the first link intact. (22) currency-mismatch 409 writes nothing.
+- Verified the regression test is real: stashed the src fix, ran the file — tests 20-22
+  failed on the old tree (20 on the half-write itself; 21/22 cascaded from the leftover
+  trigger, which is why the `finally` cleanup was added); popped the stash, all green.
+- Checks: node --check on both files; focused file 23/23; full suite
+  `node --test --test-concurrency=1 "tests/**/*.test.js"`: 364 tests / 60 suites / 364 pass / 0 fail.
+- Records: TASKS.md (BUG-001 -> IMPLEMENTED), STATUS.md, LESSONS.md (new), this journal,
+  devteam/cycles/ms-cycle-01.json (cycle result per schema).
+- Recommended next task: MUS-001 (float royalty estimate) — needs owner sign-off on the
+  response-shape change (QUESTIONS.md B1); otherwise SEC-001 (CSV formula injection, S2).

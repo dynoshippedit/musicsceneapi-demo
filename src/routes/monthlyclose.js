@@ -184,44 +184,62 @@ function register(app, ctx) {
             if (!Number.isInteger(pid) || pid <= 0 || !Number.isInteger(did) || did <= 0) {
                 return res.status(400).json({ error: 'payoutId and depositId must be positive integer IDs' });
             }
-            const payout = await Payout.findByPk(pid);
-            const deposit = await BankDeposit.findByPk(did);
-            if (!payout || !deposit) return res.status(404).json({ error: 'Payout or deposit not found' });
-            if (payout.matchedDepositId) return res.status(409).json({ error: 'Payout is already matched' });
-            if (deposit.matchedPayoutId) return res.status(409).json({ error: 'Deposit is already matched' });
-            if (payout.currency !== deposit.currency) {
-                return res.status(409).json({ error: `Currency mismatch: payout ${payout.currency}, deposit ${deposit.currency}` });
-            }
-            const amountDiffCents = Math.abs(payout.amountCents - deposit.amountCents);
-            const now = new Date();
-            const who = req.user.email || null;
-            payout.matchedDepositId = deposit.id;
-            payout.matchedAt = now;
-            payout.matchedBy = who;
-            payout.matchNote = note ? String(note) : (amountDiffCents === 0 ? 'Amounts agree exactly' : `Amount differs by ${amountDiffCents} cents (fees/fx?)`);
-            await payout.save();
-            deposit.matchedPayoutId = payout.id;
-            deposit.matchedAt = now;
-            deposit.matchedBy = who;
-            deposit.matchNote = payout.matchNote;
-            await deposit.save();
+            // BUG-001 fix (2026-09-29): the two link writes are one atomic unit.
+            // Both rows are read with row locks inside the transaction, so the
+            // already-matched 409 checks cannot be raced by a concurrent match;
+            // both saves commit together or both roll back, so a half-written
+            // match (payout linked, deposit not) is no longer representable.
+            const matched = await ctx.sequelize.transaction(async (t) => {
+                const payout = await Payout.findByPk(pid, { transaction: t, lock: t.LOCK.UPDATE });
+                const deposit = await BankDeposit.findByPk(did, { transaction: t, lock: t.LOCK.UPDATE });
+                if (!payout || !deposit) {
+                    const err = new Error('Payout or deposit not found'); err.statusCode = 404; throw err;
+                }
+                if (payout.matchedDepositId) {
+                    const err = new Error('Payout is already matched'); err.statusCode = 409; throw err;
+                }
+                if (deposit.matchedPayoutId) {
+                    const err = new Error('Deposit is already matched'); err.statusCode = 409; throw err;
+                }
+                if (payout.currency !== deposit.currency) {
+                    const err = new Error(`Currency mismatch: payout ${payout.currency}, deposit ${deposit.currency}`);
+                    err.statusCode = 409; throw err;
+                }
+                const amountDiffCents = Math.abs(payout.amountCents - deposit.amountCents);
+                const now = new Date();
+                const who = req.user.email || null;
+                payout.matchedDepositId = deposit.id;
+                payout.matchedAt = now;
+                payout.matchedBy = who;
+                payout.matchNote = note ? String(note) : (amountDiffCents === 0 ? 'Amounts agree exactly' : `Amount differs by ${amountDiffCents} cents (fees/fx?)`);
+                await payout.save({ transaction: t });
+                deposit.matchedPayoutId = payout.id;
+                deposit.matchedAt = now;
+                deposit.matchedBy = who;
+                deposit.matchNote = payout.matchNote;
+                await deposit.save({ transaction: t });
+                return { payoutId: payout.id, depositId: deposit.id, amountDiffCents, matchedAt: now, matchedBy: who };
+            });
             if (auditService && typeof auditService.emitAudit === 'function') {
                 auditService.emitAudit({
-                    action: 'cash.match', resourceType: 'CashMatch', resourceId: String(deposit.id),
-                    metadata: { payoutId: payout.id, depositId: deposit.id, amountDiffCents }, req
+                    action: 'cash.match', resourceType: 'CashMatch', resourceId: String(matched.depositId),
+                    metadata: { payoutId: matched.payoutId, depositId: matched.depositId, amountDiffCents: matched.amountDiffCents }, req
                 });
             }
             res.status(201).json({
                 match: {
-                    payoutId: payout.id, depositId: deposit.id,
-                    amountDiffCents,
-                    matchedAt: iso(now), matchedBy: who,
-                    note: amountDiffCents === 0
+                    payoutId: matched.payoutId, depositId: matched.depositId,
+                    amountDiffCents: matched.amountDiffCents,
+                    matchedAt: iso(matched.matchedAt), matchedBy: matched.matchedBy,
+                    note: matched.amountDiffCents === 0
                         ? 'Amounts agree exactly.'
-                        : `Amount differs by ${amountDiffCents} cents. This is flagged, not auto-resolved — the difference needs an owner and a next action.`
+                        : `Amount differs by ${matched.amountDiffCents} cents. This is flagged, not auto-resolved — the difference needs an owner and a next action.`
                 }
             });
         } catch (err) {
+            // BUG-001: expected rejections (404/409) thrown inside the
+            // transaction carry statusCode; anything else is a real failure.
+            if (err && err.statusCode) return res.status(err.statusCode).json({ error: err.message });
             if (logger) logger.error(err);
             res.status(500).json({ error: 'Database error' });
         }
@@ -230,18 +248,27 @@ function register(app, ctx) {
     app.delete('/v3/financials/matches', authenticateToken, requireAdmin, async (req, res) => {
         try {
             const { payoutId, depositId } = req.body || {};
-            const payout = await Payout.findByPk(Number(payoutId));
-            const deposit = await BankDeposit.findByPk(Number(depositId));
-            if (!payout || !deposit) return res.status(404).json({ error: 'Payout or deposit not found' });
-            if (payout.matchedDepositId !== deposit.id || deposit.matchedPayoutId !== payout.id) {
-                return res.status(409).json({ error: 'This payout and deposit are not matched to each other' });
-            }
-            payout.matchedDepositId = null; payout.matchedAt = null; payout.matchedBy = null; payout.matchNote = null;
-            await payout.save();
-            deposit.matchedPayoutId = null; deposit.matchedAt = null; deposit.matchedBy = null; deposit.matchNote = null;
-            await deposit.save();
-            res.json({ unmatched: true, payoutId: payout.id, depositId: deposit.id });
+            // BUG-001 fix (2026-09-29): unlink is atomic too - a half-cleared
+            // match can no longer strand one side linked while the other is
+            // cleared.
+            const unlinked = await ctx.sequelize.transaction(async (t) => {
+                const payout = await Payout.findByPk(Number(payoutId), { transaction: t, lock: t.LOCK.UPDATE });
+                const deposit = await BankDeposit.findByPk(Number(depositId), { transaction: t, lock: t.LOCK.UPDATE });
+                if (!payout || !deposit) {
+                    const err = new Error('Payout or deposit not found'); err.statusCode = 404; throw err;
+                }
+                if (payout.matchedDepositId !== deposit.id || deposit.matchedPayoutId !== payout.id) {
+                    const err = new Error('This payout and deposit are not matched to each other'); err.statusCode = 409; throw err;
+                }
+                payout.matchedDepositId = null; payout.matchedAt = null; payout.matchedBy = null; payout.matchNote = null;
+                await payout.save({ transaction: t });
+                deposit.matchedPayoutId = null; deposit.matchedAt = null; deposit.matchedBy = null; deposit.matchNote = null;
+                await deposit.save({ transaction: t });
+                return { payoutId: payout.id, depositId: deposit.id };
+            });
+            res.json({ unmatched: true, payoutId: unlinked.payoutId, depositId: unlinked.depositId });
         } catch (err) {
+            if (err && err.statusCode) return res.status(err.statusCode).json({ error: err.message });
             if (logger) logger.error(err);
             res.status(500).json({ error: 'Database error' });
         }
