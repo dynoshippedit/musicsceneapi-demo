@@ -36,6 +36,7 @@ const ENV = {
     ...process.env,
     PORT,
     NODE_ENV: 'test',
+    DEMO_MODE: 'true', // demo-seeded path (audit gap 2)
     JWT_SECRET: 'durability-probe-secret-1234567890',
     // Hermetic: an ambient ADMIN_EMAIL/ADMIN_PASS would flip login to the
     // override branch, mint id-less tokens, and break the audit-actor

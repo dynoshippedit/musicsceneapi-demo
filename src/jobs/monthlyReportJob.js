@@ -120,7 +120,11 @@ async function generateMonthlyReports(month) {
             fs.mkdirSync(reportsDir, { recursive: true });
         }
 
-        for (const artist of artistRepo.getMockArtists()) {
+        // Gap 2 (2026-09-28): the report roster is the DB-first hybrid list, so
+        // a customer instance generates reports for ITS artists, never the
+        // fictional demo roster. In demo mode the hybrid list still covers
+        // the full Pulsegrid roster.
+        for (const artist of await artistRepo.findAllHybrid()) {
             const pdfBuffer = await generateMonthlyReport(artist, month, { aiInsights: false });
             const filename = buildReportFilename(artist, month);
             const filepath = path.join(reportsDir, filename);

@@ -14,6 +14,7 @@ function baseEnv(port, scratch) {
         ...process.env,
         PORT: port,
         NODE_ENV: 'test',
+        DEMO_MODE: 'true', // demo-seeded path (audit gap 2)
         JWT_SECRET: 'test-secret-atvenu',
         USE_REAL_DATA: 'false',
         DB_DIALECT: 'sqlite',

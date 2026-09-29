@@ -30,6 +30,7 @@ const ENV = {
     ...process.env,
     PORT,
     NODE_ENV: 'test',
+    DEMO_MODE: 'true', // demo-seeded path (audit gap 2)
     JWT_SECRET: 'probe-fixed-secret-for-snapshot-determinism',
     ADMIN_EMAIL: '', ADMIN_PASS: '', DATABASE_URL: '', SCHEDULE_JOBS: 'false',
     USE_REAL_DATA: 'false',

@@ -97,6 +97,15 @@ const config = {
     // api L280
     useRealData: process.env.USE_REAL_DATA === 'true',
 
+    // DEMO_MODE (2026-09-28, audit gap 2): fictional demo data (Pulsegrid
+    // users, artists, catalog, A&R seeds, room demos) is seeded ONLY when
+    // this is explicitly 'true'. A fresh customer database boots with zero
+    // fictional records and no known demo logins; the operator bootstraps
+    // the first admin via ADMIN_EMAIL/ADMIN_PASS (created on first login).
+    // scripts/run-demo.sh sets DEMO_MODE=true; tests that exercise the
+    // demo-seeded path set it in their spawn env.
+    demoMode: process.env.DEMO_MODE === 'true',
+
     // api L24
     groqApiKey: process.env.GROQ_API_KEY,
     // GROQ_MODEL env override (added Phase 3). Default is a model currently

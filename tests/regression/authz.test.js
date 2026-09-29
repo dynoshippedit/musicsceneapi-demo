@@ -37,6 +37,7 @@ const ENV = {
     ...process.env,
     PORT,
     NODE_ENV: 'test',
+    DEMO_MODE: 'true', // demo-seeded path (audit gap 2)
     JWT_SECRET: 'test-secret-0123456789-min16chars',
     USE_REAL_DATA: 'false',
     DB_DIALECT: 'sqlite',

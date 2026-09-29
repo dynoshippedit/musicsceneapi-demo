@@ -4,6 +4,10 @@
 # Usage: ./scripts/run-demo.sh        (from the repo root)
 # Stop:  ./scripts/stop-demo.sh
 #
+# DEMO_MODE=true is set for the API: the fictional Pulsegrid demo dataset is
+# seeded into the throwaway demo database (.demo-data/demo.sqlite). Customer
+# instances must NOT set DEMO_MODE — they boot with an empty database.
+#
 # Demo credentials: the API JWT_SECRET is demo-only. It is generated on first
 # launch into .demo-data/.env (gitignored) -- never hardcoded in this script and
 # never to be copied to a production environment. See "Demo-only credentials".
@@ -61,6 +65,7 @@ if alive "$API_PID"; then
 else
   (cd "$ROOT" && PORT="$API_PORT" NODE_ENV=development \
     DB_STORAGE="$DATA/demo.sqlite" \
+    DEMO_MODE=true \
     JWT_SECRET="$JWT_SECRET" \
     SCHEDULE_JOBS=false \
     nohup node server.js >"$ROOT/logs/api.log" 2>&1 &

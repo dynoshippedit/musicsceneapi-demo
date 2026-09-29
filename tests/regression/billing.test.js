@@ -35,6 +35,7 @@ function baseEnv(port, scratch, stripeEnv) {
         ...process.env,
         PORT: port,
         NODE_ENV: 'test',
+        DEMO_MODE: 'true', // demo-seeded path (audit gap 2)
         JWT_SECRET: 'test-jwt-secret-for-billing-suite',
         USE_REAL_DATA: 'false',
         DB_DIALECT: 'sqlite',

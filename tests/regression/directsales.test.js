@@ -205,6 +205,7 @@ function baseEnv(port, scratch, fixturesFile) {
         ...process.env,
         PORT: String(port),
         NODE_ENV: 'test',
+        DEMO_MODE: 'true', // demo-seeded path (audit gap 2)
         JWT_SECRET: 'directsales-test-jwt-secret',
         USE_REAL_DATA: 'false',
         DB_DIALECT: 'sqlite',
@@ -537,6 +538,7 @@ describe('direct-sales connect: unconfigured states (no keys, no stub)', () => {
             ...process.env,
             PORT: '32193',
             NODE_ENV: 'test',
+            DEMO_MODE: 'true', // demo-seeded path (audit gap 2)
             JWT_SECRET: 'directsales-test-jwt-secret',
             USE_REAL_DATA: 'false',
             DB_DIALECT: 'sqlite',

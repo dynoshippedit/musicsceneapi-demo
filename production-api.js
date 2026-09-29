@@ -71,7 +71,9 @@ applyErrorHandlers(app);
 //    (measured: 1 of 6 cold starts returned 401 for admin@pulsegrid.fm).
 // ---------------------------------------------------------------------------
 function initializeDatabase() {
-    return initDB({ logger, labelData: artistRepo.labelData });
+    // DEMO_MODE (2026-09-28, audit gap 2): fictional demo seeding is opt-in.
+    // Customer boots (DEMO_MODE unset) get an empty database.
+    return initDB({ logger, labelData: artistRepo.labelData, demoMode: config.demoMode });
 }
 
 module.exports = app;

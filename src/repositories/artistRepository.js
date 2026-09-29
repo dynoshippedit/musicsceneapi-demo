@@ -60,6 +60,20 @@ const config = require('../config');
  */
 const labelData = profile.datasets.roster;
 
+/**
+ * Customer/demo separation gate (2026-09-28, audit gap 2).
+ *
+ * The in-memory profile roster (`labelData.artists`) is FICTIONAL demo
+ * content. User-visible repository reads may merge it in ONLY when the
+ * server booted with DEMO_MODE=true. On a customer boot the database is
+ * the sole source of truth: no fictional artists leak through list/detail
+ * reads, the memory mirror is not polluted by customer writes, and a
+ * corrupt/empty DB read fails to an empty list rather than the demo roster.
+ */
+function demoMemoryAllowed() {
+    return config.demoMode === true;
+}
+
 /** Read-only list of mock artists. */
 function getMockArtists() {
     return labelData.artists;
@@ -93,6 +107,8 @@ async function findById(artistId) {
     } catch (err) {
         console.error('Artist DB read failed, falling back to memory:', err.message);
     }
+    // Gap 2: on a customer boot the fictional memory roster is invisible.
+    if (!demoMemoryAllowed()) return null;
     return findMockById(artistId) || null;
 }
 
@@ -179,11 +195,14 @@ async function findAllHybrid() {
         // list, overview, demographics or report generation — mirror
         // findById's fail-soft fallback.
         console.error('Artist DB read failed, using memory list:', e.message);
-        return [...labelData.artists];
+        // Gap 2: on a customer boot the fictional roster is never the fallback.
+        return demoMemoryAllowed() ? [...labelData.artists] : [];
     }
     let fullList = dbArtists.map((a) => ({ ...a.data, id: a.id, name: a.name }));
 
-    // HYBRID MERGE: add roster artists absent from the DB (seed path).
+    // HYBRID MERGE: add roster artists absent from the DB (demo seed path).
+    // Gap 2: on a customer boot the DB is the whole list.
+    if (!demoMemoryAllowed()) return fullList;
     const dbIds = new Set(fullList.map((a) => a.id));
     const memoryArtists = labelData.artists.filter((a) => !dbIds.has(a.id));
     return [...fullList, ...memoryArtists];
@@ -191,6 +210,9 @@ async function findAllHybrid() {
 
 /** Keep the in-memory mirror consistent with a DB write (idempotent). */
 function syncMemoryMirror(artist) {
+    // Gap 2: customer writes stay in the customer DB; the demo profile is
+    // not polluted by customer data.
+    if (!demoMemoryAllowed()) return artist;
     const index = labelData.artists.findIndex((a) => a.id === artist.id);
     if (index === -1) {
         labelData.artists.push(artist);

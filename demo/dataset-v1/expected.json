@@ -1,0 +1,72 @@
+{
+  "activeLines": {
+    "2026-07": 3,
+    "2026-08": 2
+  },
+  "dataset": "demo/dataset-v1",
+  "imports": {
+    "statement-2026-07-initial.csv": {
+      "imported": 3,
+      "received": 4,
+      "rejected": 1,
+      "rejectedReasons": [
+        "unmatched_catalog"
+      ]
+    },
+    "statement-2026-07-revised.csv": {
+      "imported": 3,
+      "received": 3,
+      "superseded": 3
+    },
+    "statement-2026-08.csv": {
+      "imported": 2,
+      "received": 4,
+      "rejected": 2,
+      "rejectedReasons": [
+        "unmatched_catalog",
+        "amount"
+      ]
+    }
+  },
+  "notes": [
+    "Unmatched rows (ZZAAA2699999) are REJECTED by the import workflow and never persisted \u2014 they appear only in the import report's rejected list.",
+    "The revised July statement supersedes the initial July statement as a unit (3 lines superseded, 3 imported).",
+    "The disputed July line (140.00) is excluded from trusted reconciliation totals; disputed and estimated amounts are never summed into trusted totals.",
+    "Trusted July total = 87.50 + 203.25 = 290.75 USD. Trusted August total = 95.00 + 210.00 = 305.00 USD.",
+    "Trusted August total = 305.00 (dataset: 95.00 + 210.00 approved) + 125.00 (the pre-existing DEMO_MODE seed royalty line for art_novakin, period 2026-08, source demo seed). The dataset requires DEMO_MODE, so the seed line is always present."
+  ],
+  "provenance": "Fictional fixture. All artists, ISRCs, UPCs, amounts, and periods are invented for testing the royalty pipeline. Demo ISRCs use the unassigned ZZ country code; the demo UPC uses an 88888 prefix. No real distributor, label, or financial data is represented.",
+  "requires": "server booted with DEMO_MODE=true (the demo catalog ZZAAA2600001/ZZAAA2600002/ZZBAA2600001/888880000001 must exist)",
+  "review": {
+    "approved": [
+      {
+        "amountCents": 9500,
+        "catalogKey": "ZZAAA2600001",
+        "period": "2026-08"
+      },
+      {
+        "amountCents": 21000,
+        "catalogKey": "888880000001",
+        "period": "2026-08"
+      }
+    ],
+    "disputed": [
+      {
+        "amountCents": 14000,
+        "catalogKey": "ZZAAA2600001",
+        "period": "2026-07"
+      }
+    ]
+  },
+  "trustedTotalsCents": {
+    "2026-07": {
+      "USD": 29075
+    },
+    "2026-08": {
+      "USD": 43000
+    }
+  },
+  "unmatchedIsrc": "ZZAAA2699999",
+  "unmatchedPersisted": false,
+  "version": 1
+}

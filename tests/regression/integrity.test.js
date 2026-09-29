@@ -50,6 +50,7 @@ async function boot() {
         PATH: process.env.PATH,
         HOME: process.env.HOME,
         NODE_ENV: 'test',
+        DEMO_MODE: 'true', // demo-seeded path (audit gap 2)
         PORT: String(port),
         DB_DIALECT: 'sqlite',
         DB_STORAGE: dbFile,

@@ -28,6 +28,7 @@ async function boot() {
     base = `http://127.0.0.1:${port}`;
     child = spawn(process.execPath, [path.join(ROOT, 'server.js')], { cwd: scratch, stdio: ['ignore', 'pipe', 'pipe'], env: {
         PATH: process.env.PATH, HOME: process.env.HOME, PORT: String(port), NODE_ENV: 'development',
+        DEMO_MODE: 'true', // demo-seeded path (audit gap 2)
         JWT_SECRET: process.env.JWT_SECRET, DB_DIALECT: 'sqlite', DB_STORAGE: path.join(scratch, 'test.sqlite'),
         DATABASE_URL: '', ADMIN_EMAIL: '', ADMIN_PASS: '', SCHEDULE_JOBS: 'false', USE_REAL_DATA: 'false', GROQ_API_KEY: '',
         SMTP_HOST: '', SMTP_PASS: '', SENDGRID_API_KEY: '', AUTO_PRINT: 'false'
@@ -111,7 +112,7 @@ test('report batch distinguishes total failure, partial success and empty roster
     const handlers = new Map(); const app = { get() {}, post(route, ...middleware) { handlers.set(route, middleware.at(-1)); } };
     let roster = [{ id: 'a', name: 'Artist A' }, { id: 'b', name: 'Artist B' }], fail = true;
     require('../../src/routes/reports').register(app, { authenticateToken() {}, path, logger: { error() {} },
-        fs: { existsSync: () => true, writeFileSync: file => { if (fail || file.includes('Artist B')) throw new Error('injected write failure'); } },
+        fs: { existsSync: () => true, writeFileSync: file => { if (fail || file.includes('Artist_B')) throw new Error('injected write failure'); } },
         artistRepo: { findAllHybrid: async () => roster }, generateMonthlyReport: async () => Buffer.from('pdf') });
     async function run() {
         let result; const res = { code: 200, status(code) { this.code = code; return this; }, json(body) { result = { status: this.code, body }; } };

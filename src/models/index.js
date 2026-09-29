@@ -60,6 +60,7 @@ const Stats = sequelize.define('Stats', {
 });
 
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // PHASE 4CF — persist-or-demo contract (Objective 4): A&R submissions (store
 // #1, incl. shortlist entries) and sales entries become DURABLE PRODUCT STATE.
 // They were process-memory arrays that silently lost every customer write on
@@ -180,10 +181,18 @@ const AuditEvent = sequelize.define('AuditEvent', {
  * @param {object} deps.logger    winston logger (was a module-scope TDZ read)
  * @param {object} deps.labelData mock label data used for artist seeding
  *                                (was a module-scope TDZ read at L194-196)
+ * @param {boolean} deps.demoMode when true, seed the fictional Pulsegrid
+ *                                demo data (users, artists, catalog, A&R,
+ *                                room demos). When false/omitted, a fresh
+ *                                database boots with ZERO fictional records
+ *                                and no known demo logins — the operator
+ *                                bootstraps the first admin via
+ *                                ADMIN_EMAIL/ADMIN_PASS. (2026-09-28, audit
+ *                                gap 2: customer/demo mode separation.)
  * @returns {Promise<boolean>} true if init completed, false if it errored
  *                             (original swallowed the error and continued)
  */
-async function initDB({ logger, labelData } = {}) {
+async function initDB({ logger, labelData, demoMode = false } = {}) {
     try {
         await sequelize.authenticate();
         if (logger) logger.info('Database connection established.');
@@ -193,6 +202,17 @@ async function initDB({ logger, labelData } = {}) {
         await require('./migrations').addMonthlyCloseColumns(sequelize);
         await sequelize.sync(); // Create absent tables; existing schema changes use explicit migrations.
 
+        // ------------------------------------------------------------------
+        // DEMO SEEDING GATE (2026-09-28, audit gap 2). Everything below this
+        // line is FICTIONAL demo content (Pulsegrid users, artists, catalog,
+        // A&R seeds, room demos). It runs ONLY when demoMode is explicitly
+        // true (DEMO_MODE=true). A customer boot (demoMode false) leaves a
+        // fresh database completely empty: no fictional users, artists, or
+        // catalog rows, and no known demo logins. The operator's first admin
+        // is bootstrapped via ADMIN_EMAIL/ADMIN_PASS at first login
+        // (src/routes/auth.js), not via seeded credentials.
+        // ------------------------------------------------------------------
+        if (demoMode) {
         // SEED USERS IF EMPTY — api L182-190
         // PHASE 4CF: seed identities moved to the Label Intelligence Profile
         // (profile.seedUsers). Values for the pulsegrid profile are verbatim
@@ -303,6 +323,7 @@ async function initDB({ logger, labelData } = {}) {
                 await RoomSetting.create({ key: 'initialized', value: true }, { transaction });
             });
         }
+        } // end demoMode seeding gate
 
         return true;
     } catch (error) {

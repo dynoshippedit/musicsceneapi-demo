@@ -1,107 +1,144 @@
-# The Music Scene — Label Intelligence Platform (Demo)
+# The Music Scene — Label Intelligence Platform
 
-Demo distribution of The Music Scene codebase (Pulsegrid is the fictional demo label): a Node.js/Express label-management API + two frontend dashboards, refactored into `src/` modules with a security-hardened Phase 3.
+A Node.js/Express label-management API with a React/Vite frontend: royalty
+ingestion and reconciliation, catalog, A&R, campaigns, scheduled PDF
+reporting, RBAC authentication, and opt-in AI insights.
 
-> [!CAUTION]
-> **UNOFFICIAL FAN PROJECT**: This is a concept application created for educational and portfolio purposes only. It is **NOT** affiliated with, endorsed by, or connected to **pulsegrid** or **Seven20** management. All trademarks, artist names, and logos belong to their respective owners.
+**The Music Scene** is the product. **Pulsegrid** is the fictional demo label
+used by the demo dataset — any resemblance to real artists, labels, or
+companies is coincidental. Nothing in this repository is affiliated with or
+endorsed by any real-world artist or management company.
 
-> **A Conceptual Operating System for Modern Record Label Management.**
+Each deployment is a **dedicated instance** with its own database. There is
+no shared multi-tenant service here: you run one instance per label, with
+that label's own data.
 
-This platform demonstrates a theoretical "nerve center" for an electronic music label, providing revenue analytics, artist scouting, and automation tools.
+## Quick start
 
-## 🚀 Two Interfaces, One Core
-The system consists of a robust Node.js API backend powering two distinct frontend experiences:
+Prerequisites: Node.js 18+, npm.
 
-1.  **Workstation (`pulsegrid-frontend-connected.html`)**
-    *   *Purpose*: Full Operational Control.
-    *   *Role*: Managers & A&R teams.
-    *   *Features*: Scouting Network, Royalties Calculator, Campaign Manager, Artist Deep-Dives.
-
-2.  **Command Center (`pulsegrid-terminal-dashboard.html`)**
-    *   *Purpose*: Executive Overview.
-    *   *Role*: Executives & LUMEN VEIL.
-    *   *Features*: "Hoarde Terminal" aesthetic, High-level KPI monitoring, AI Query Terminal, One-click PDF Reports.
-
----
-
-## ✅ Core Features (v5.0)
-*   **Intelligence Engine**: Real-time revenue aggregation and opt-in AI integration for querying data. AI financial analysis is strictly user-initiated and opt-in — see [FINANCIAL_DATA_POLICY.md](FINANCIAL_DATA_POLICY.md).
-*   **Direct Sales**: Optional Stripe Connect integration for the label's own sales (test mode), attributed per managed artist and included in the income and cash reconciliation. Read-only; the platform is a lens on the label's sales, not a financial custodian — see [FINANCIAL_DATA_POLICY.md](FINANCIAL_DATA_POLICY.md).
-*   **A&R Scouting**: Automated genre scanning and prospect scoring (Scouting Tab).
-*   **Operations**: Batch royalty calculations and contract generation (Operations Tab).
-*   **Marketing Automator**: One-click campaign generation for "Playlist Push", "TikTok Growth", etc.
-*   **Data Export**: Unified PDF & CSV export engine accessible from all dashboards.
-*   **Security**: Role-Based Access Control (RBAC) with JWT authentication.
-
-## 🎯 New Analytics Modules (v5.1)
-
-### 1. Fan Heatmap Visualization
-*   **Goal**: Visualize the global distribution of the label's fanbase and revenue sources.
-*   **How the Flow Works**:
-    1.  **Frontend Request**: The dashboard component requests `GET /v3/analytics/geography`.
-    2.  **Backend Aggregation**: The API iterates through all artists (e.g., lumenveil, Novakin) and extracts `revenue.streamingBreakdown.byLocation` data.
-    3.  **Data Processing**: Regions are mapped to geospatial coordinates (e.g., North America → `[40, -100]`).
-    4.  **Rendering**: Leaflet.js renders these points as weighted "heat clusters" on the map.
-*   **Future Upgrades (Phase 2)**:
-    *   Once external sources are connected, the system can replace mock aggregation with real-time fetches:
-    *   `GET /v3/artists/:id/analytics/geo` -> Returns precise city-level listener data.
-
-### 2. Predictive Revenue Analytics
-*   **Goal**: Forecast future revenue trends using linear regression.
-*   **How the Flow Works**:
-    1.  **Frontend Request**: `ForecastChart` requests `GET /v3/analytics/projections`.
-    2.  **Math Engine**: The backend uses `math.js` to perform linear regression (`y = mx + b`) on 12 months of historical revenue data.
-    3.  **Visualization**: Chart.js renders the historical trend (solid line) and the 6-month AI projection (dashed green line).
-
----
-
-## ⚡ Quick Start
-
-**Prerequisites**:
-*   Node.js (v18+)
-*   npm
-
-### 1. Installation
 ```bash
-# Install backend dependencies
+# Backend dependencies
 npm install
 
-# Install HTTP server for frontend (global or npx)
-npm install -g http-server 
-# OR just use npx later
+# Frontend dependencies
+cd web && npm install && cd ..
 ```
 
-### 2. Run the System
-**Terminal 1 (Backend API):**
+### One-command demo
+
 ```bash
+./scripts/run-demo.sh     # API on :4000, frontend on :5173 (backgrounded)
+./scripts/stop-demo.sh    # stop both
+```
+
+`run-demo.sh` boots the API with `DEMO_MODE=true` against a throwaway SQLite
+database (`.demo-data/demo.sqlite`) and seeds the fictional Pulsegrid demo
+dataset. Demo logins (demo mode only):
+
+- Admin: `admin@pulsegrid.fm` / `admin123`
+- Artist (Novakin): `tours@novakin.band` / `novakin123`
+
+### Customer mode (no demo data)
+
+Without `DEMO_MODE`, a fresh database boots **empty**: no fictional users,
+artists, catalog, or royalty rows, and no known demo logins. The operator
+bootstraps the first administrator via environment variables — the first
+login with these credentials creates the admin account:
+
+```bash
+JWT_SECRET=<redacted>   # required, ≥ 16 chars; server refuses to start without it
+ADMIN_EMAIL=you@example.com
+ADMIN_PASS=<redacted>
+DEMO_MODE=false                               # the default; demo seeding is opt-in
 node server.js
-# Runs on Port 3000
 ```
 
-**Terminal 2 (Frontend):**
+See `.env.example` for the full documented variable list.
+
+## What the platform does
+
+- **Financial ingestion** — import royalty statements (CSV) keyed by
+  ISRC/UPC/catalog key, with import history, row-level provenance, dedup
+  hashing, and rejected-row reporting. Amounts are stored as integer cents
+  with decimal audit fields; the pipeline never double-counts deposits or
+  payouts as income.
+- **Reconciliation & monthly close** — cash-evidence vs. income comparison,
+  unmatched/difference review states, and a guarded month-close workflow
+  (`docs/audit/05-reconciliation-provenance.md`).
+- **Catalog** — recordings, releases, and works with ISRC/UPC keys and
+  writer/producer credits; import-matching against statement rows.
+- **A&R** — submissions with voting, and a listening-room whiteboard.
+- **Campaigns & direct sales** — campaign manager; optional Stripe Connect
+  (test mode) for the label's own sales, attributed per artist. The platform
+  is a lens on the label's sales, not a financial custodian.
+- **Reporting** — scheduled monthly PDF reports per artist
+  (`src/jobs/monthlyReportJob.js`), generated with `execFile` (no shell)
+  and hardened filename handling.
+- **Auth & permissions** — JWT auth, role-based access control
+  (admin / artist / A&R), per-artist data grants, page-level nav visibility.
+  Every request is authorized server-side.
+- **AI insights (opt-in)** — strategic Q&A and entity health analysis only
+  when `GROQ_API_KEY` is set. AI analysis is user-initiated; a provider
+  failure returns an explicit `unavailable`/`not_configured` state, never a
+  canned answer.
+- **Integrations** — Spotify OAuth connection + token storage; AtVenu and
+  direct-sale importers. Live provider calls require real credentials (see
+  below); without them the relevant paths are disabled or fixture-backed.
+
+## Honest integration status
+
+| Integration | Without credentials | With credentials |
+|---|---|---|
+| Spotify | connection UI present; sync runs are fixture-labeled, no live calls | OAuth flow + token refresh; sync adapters wired |
+| Stripe | direct-sales paths inert | Connect test-mode sales attributed per artist |
+| Groq (AI) | AI endpoints return `not_configured` | user-initiated insights; failures are explicit `unavailable` |
+| Wikipedia (artist bios) | fixture-backed (`FIXTURE_WIKIPEDIA=1`); non-music matches rejected | live lookup with music-relevance gating |
+
+There is no live-provider success to report beyond what your own credentials
+enable. Test suites never touch the network: they inject fixtures and assert
+retry, failure-visibility, and idempotency behavior deterministically.
+
+## Tests
+
 ```bash
-npx http-server . -p 8080 --cors
-# Runs on Port 8080
+npm test                          # backend regression suite (node:test)
+node scripts/run-visual-gate.js   # Phase 4B visual gate, self-hosted stack
 ```
 
-### 3. Access
-Open your browser to:
-*   **Workstation**: [http://localhost:8080/pulsegrid-frontend-connected.html](http://localhost:8080/pulsegrid-frontend-connected.html)
-*   **Command Center**: [http://localhost:8080/pulsegrid-terminal-dashboard.html](http://localhost:8080/pulsegrid-terminal-dashboard.html)
+`npm test` runs `tests/regression/*.test.js`. The visual gate spins up its
+own scratch API + Vite on ephemeral ports with a throwaway database, so it
+never depends on (or disturbs) a running demo instance.
 
-**Credentials**:
-*   **Admin**: `admin@pulsegrid.fm` / `admin123`
-*   **Artist (Novakin)**: `tours@novakin.band` / `novakin123`
+## Project layout
 
----
+```
+server.js                 Express entrypoint (delegates to production-api.js)
+production-api.js         app wiring, DB init, route mounting
+src/
+  config/                 env-driven configuration (DEMO_MODE, JWT, limits)
+  routes/                 /v3 API routes (auth, artists, royalties, A&R, …)
+  models/                 Sequelize models + initDB (demo seeding is opt-in)
+  repositories/           DB-first data access (artist hybrid read, …)
+  services/               ingestion, reconciliation, close, export, …
+  jobs/                   scheduled jobs (monthly PDF reports, provider sync)
+  ai/                     opt-in AI service (fail-closed without a provider)
+  utils/                  safeFilename, money math, csv parsing, …
+web/                      React/Vite frontend (index.html, src/, validation/)
+tests/regression/         node:test suites; snapshots/ holds API contracts
+docs/audit/               design & audit notes (01–07) for changed behavior
+scripts/                  run-demo.sh, stop-demo.sh, run-visual-gate.js, …
+demo/dataset-v1/          versioned deterministic demo dataset + loader
+```
 
-## 📂 Project Structure
-*   `server.js`: The main Express server file.
-*   `pulsegrid-frontend-connected.html`: The Data-Rich React Application.
-*   `pulsegrid-terminal-dashboard.html`: The "Hacker" Aesthetic Dashboard.
-*   `/reports`: Directory where PDF reports are generated auto-magically.
+## Docs
 
----
+- `docs/audit/01-two-repo-audit.md` — repo lineage and audit scope
+- `docs/audit/02-domain-auth-persistence.md` — domain model, auth, persistence
+- `docs/audit/03-financial-ingestion.md` — ingestion pipeline and money rules
+- `docs/audit/04-react-workflows.md` — frontend workflows
+- `docs/audit/05-reconciliation-provenance.md` — reconciliation & provenance
+- `docs/audit/06-ai-analytics-automation-billing.md` — AI, automation, billing
 
-## 🛠 Deployment
-For production deployment info, see `PRODUCTION_DEPLOYMENT.md`.
+Behavior changes land with their audit notes: if a fix changes behavior,
+its note is updated in `docs/audit/` in the same commit.
