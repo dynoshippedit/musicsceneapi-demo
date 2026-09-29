@@ -75,7 +75,12 @@ async function main() {
             PORT: String(apiPort), NODE_ENV: 'development', DB_DIALECT: 'sqlite', DB_STORAGE: path.join(scratch, 'gate.sqlite'),
             JWT_SECRET: require('node:crypto').randomBytes(32).toString('hex'), DATABASE_URL: '',
             ADMIN_EMAIL: '', ADMIN_PASS: '', GROQ_API_KEY: '', SCHEDULE_JOBS: 'false', USE_REAL_DATA: 'false',
-            SMTP_HOST: '', SMTP_PASS: '', SENDGRID_API_KEY: '', AUTO_PRINT: 'false'
+            SMTP_HOST: '', SMTP_PASS: '', SENDGRID_API_KEY: '', AUTO_PRINT: 'false',
+            // DEMO_MODE (2026-09-29, audit gap 2): the gate exercises the
+            // demo journey (demo logins, seeded artists), so the scratch API
+            // must boot with the fictional demo dataset seeded. Without this
+            // the scratch database boots empty and every demo login 401s.
+            DEMO_MODE: 'true'
         }, `Server: http://localhost:${apiPort}`);
         await start([path.join(ROOT, 'web/node_modules/vite/bin/vite.js'), '--host', '127.0.0.1', '--port', String(uiPort), '--strictPort'], path.join(ROOT, 'web'), {
             VITE_API_BASE_URL: `http://127.0.0.1:${apiPort}`
