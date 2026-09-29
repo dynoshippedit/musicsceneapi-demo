@@ -143,3 +143,19 @@
   royalty-csv — visible in notes/flows/); BUG still running.
 - Notes updated: STATUS.md.
 - Next: BUG + SEC reports; then Phase 2 gate.
+
+## 2026-09-29 03:20 UTC · Tech Lead (LEAD) · Phase 2
+- Did: verified SEC deliverables (findings/sec.md 10 findings C12, notes/security/threat-model.md,
+  notes/security/authz-matrix.md 128 bound routes all tiered, 5 flow notes). All spot-checked.
+- Big result: P1 leads #1 (admin-override when unset), #2 (fallback secrets), #3 (token id claim),
+  #4 (royalty-calculate authz), #8 (password reset) ALL DISMISSED-fixed against current code.
+  Six of the scariest auth leads are dead. Remaining P1 leads: #6 (duplicate routes — BUG's lane),
+  #13 (scripts w/o assertions — largely TST's, BUG to confirm).
+- Routed items resolved: secret-shaped JWT_SECRET in scripts/run-browser-workflows.js is a
+  freshly-generated random 32-byte test value (sec.md:236) — not a leak. localStorage JWT →
+  SEC-006 (S4, trade-off accepted with mitigations documented).
+- Top SEC findings: SEC-001 (S2) CSV formula injection in financial export (attacker-influenced
+  Stripe descriptions + atVenu venue names flow into exported CSV unneutralized). SEC-002 (S2)
+  payment-matching rules visible to any authed user, no artist scoping.
+- Notes updated: STATUS.md.
+- Next: BUG only. Then Phase 2 gate.
