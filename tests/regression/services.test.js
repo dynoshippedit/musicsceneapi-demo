@@ -525,6 +525,75 @@ describe('src/jobs', () => {
         assert.ok(src.includes('execFile(command, args'), 'uses execFile with an args array');
         assert.ok(!src.includes('exec(printCommand'), 'no shell-string exec() remains');
     });
+
+    test('HIGH-6 regression: malicious artist names cannot escape the reports dir', () => {
+        // Filenames are built by src/utils/safeFilename.js (strict whitelist).
+        // A hostile name must never produce `..`, separators, or shell syntax,
+        // and the joined path must stay inside REPORTS_ROOT.
+        const path = require('path');
+        const { buildReportFilename, REPORTS_ROOT } = monthlyReportJob;
+        const evil = [
+            'a"; touch /tmp/pwned; echo "',
+            '$(rm -rf ~)',
+            '../../etc/cron.d/evil',
+            '/abs/path/evil',
+            '-rf',
+            '..',
+            '',
+            'a`id`b',
+            'x\n/etc/passwd',
+            '.../...//',
+        ];
+        const root = path.resolve(REPORTS_ROOT);
+        for (const name of evil) {
+            const fn = buildReportFilename({ id: 'art_x', name }, '2026-08');
+            assert.match(fn, /^[A-Za-z0-9_][A-Za-z0-9._-]*_2026-08_report\.pdf$/,
+                `sanitized filename for ${JSON.stringify(name)}: ${fn}`);
+            assert.ok(!fn.includes('..'), 'no parent traversal');
+            const full = path.resolve(root, '2026-08', fn);
+            assert.ok(full.startsWith(root + path.sep), 'stays inside REPORTS_ROOT');
+        }
+        // Month is validated too: no `../` smuggling via the month segment.
+        assert.throws(() => buildReportFilename({ id: 'a', name: 'b' }, '2026-13'), /invalid month/);
+        assert.throws(() => buildReportFilename({ id: 'a', name: 'b' }, '../x'), /invalid month/);
+        assert.throws(() => buildReportFilename({ id: 'a', name: 'b' }, ''), /invalid month/);
+    });
+
+    test('HIGH-6 regression: autoPrintReport passes the path as argv, never a shell string', () => {
+        // Swap child_process in the require cache so the internal
+        // require('child_process') inside autoPrintReport gets a spy.
+        const path = require('path');
+        const cpPath = require.resolve('child_process');
+        const real = require.cache[cpPath];
+        const calls = [];
+        require.cache[cpPath] = {
+            id: cpPath, filename: cpPath, loaded: true,
+            exports: { execFile: (cmd, args, cb) => { calls.push([cmd, args]); cb(null, '', ''); } }
+        };
+        try {
+            const hostile = path.join(
+                monthlyReportJob.REPORTS_ROOT, '2026-08',
+                'evil_$(touch_/tmp/pwned)_2026-08_report.pdf');
+            monthlyReportJob.autoPrintReport(hostile);
+            assert.strictEqual(calls.length, 1, 'printer invoked once');
+            assert.strictEqual(typeof calls[0][0], 'string', 'command is a plain program name');
+            assert.ok(Array.isArray(calls[0][1]), 'path travels as an argv array, not a shell string');
+            assert.ok(calls[0][1].includes(hostile), 'hostile path passed verbatim as argv (no shell to interpret it)');
+
+            // Leading-dash basenames are refused (option injection vs lp/lpr).
+            calls.length = 0;
+            monthlyReportJob.autoPrintReport(path.join(monthlyReportJob.REPORTS_ROOT, '-rf'));
+            assert.strictEqual(calls.length, 0, 'leading-dash filename refused');
+
+            // Paths outside REPORTS_ROOT are refused.
+            calls.length = 0;
+            monthlyReportJob.autoPrintReport('/tmp/evil.pdf');
+            assert.strictEqual(calls.length, 0, 'outside-root path refused');
+        } finally {
+            if (real) require.cache[cpPath] = real;
+            else delete require.cache[cpPath];
+        }
+    });
 });
 
 // ---------------------------------------------------------------------------

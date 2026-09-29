@@ -5,30 +5,24 @@
  * from production-api.js (cron.schedule at Phase 1 L1888-1918 and
  * autoPrintReport at L1921-1945).
  *
- * ============================================================================
- * IMPORTANT CHANGE IN REGISTRATION, NOT IN BEHAVIOR
- * ============================================================================
- * The original registered the cron job as a SIDE EFFECT of requiring the API
- * module. That meant:
- *   - every `require('./production-api')` in a test started a timer,
- *     which is why tests had to run with --test-force-exit
- *   - the schedule could not be disabled for a test run
- *
- * Registration is now explicit: server.js calls registerJobs(). The schedule
+ * Registration is explicit: server.js calls registerJobs(). The schedule
  * ('0 3 1 * *'), the directory layout (reports/<YYYY-MM>/), the filename
  * pattern and the AUTO_PRINT gate are all unchanged.
  *
  * ============================================================================
- * PRESERVED SECURITY ISSUE (audit HIGH-6) — COMMAND INJECTION
+ * HIGH-6 COMMAND INJECTION — FIXED (2026-09-28)
  * ============================================================================
- * autoPrintReport() interpolates `filepath` into a shell string and passes it
- * to exec(). `filepath` embeds `artist.name`, which is client-controllable via
- * POST /v3/artists. A name containing shell metacharacters reaches the shell.
- *
- * Reachability requires AUTO_PRINT=true AND admin (or the CRITICAL-1 empty-body
- * login). Left UNCHANGED in Phase 2 because fixing it alters process-spawn
- * behavior; it is listed as the top remediation item in REFACTOR_PROGRESS.md.
- * The unsafe interpolation is kept verbatim below and clearly marked.
+ * autoPrintReport() used to interpolate `filepath` (which embeds the
+ * client-controllable artist.name) into a shell STRING passed to exec().
+ * Two fixes, defense in depth:
+ *   1. Filenames are built by src/utils/safeFilename.js (strict whitelist;
+ *      no `..`, no separators, no leading dashes, no shell metacharacters).
+ *   2. The printer uses execFile() with an ARGUMENTS ARRAY — no shell ever
+ *      interprets the path. autoPrintReport() additionally refuses
+ *      non-string paths, leading-dash basenames (option injection against
+ *      lp/lpr), and any path outside REPORTS_ROOT.
+ * The stale "PRESERVED SECURITY ISSUE" header from Phase 2 is removed; the
+ * fix is covered by regression tests in tests/regression/services.test.js.
  */
 
 'use strict';
@@ -39,6 +33,7 @@ const cron = require('node-cron');
 const config = require('../config');
 const artistRepo = require('../repositories/artistRepository');
 const { generateMonthlyReport } = require('../reports/monthlyReport');
+const { reportFilename, assertValidMonth } = require('../utils/safeFilename');
 
 /** Cron expression from the original: 1st of each month at 03:00. */
 const SCHEDULE = '0 3 1 * *';
@@ -47,14 +42,36 @@ const SCHEDULE = '0 3 1 * *';
 const REPORTS_ROOT = path.join(__dirname, '..', '..', 'reports');
 
 /**
+ * Build the on-disk filename for an artist's monthly report.
+ * Exported for tests. See src/utils/safeFilename.js for the rules.
+ */
+function buildReportFilename(artist, month) {
+    return reportFilename(artist, month);
+}
+
+/**
  * Send a generated PDF to the system printer.
  *
- * HIGH-6 FIX (Phase 3): the previous implementation interpolated `filepath`
- * into a shell STRING and passed it to exec(), which is a command-injection
- * surface (filepath embeds the client-controllable artist.name). It now uses
- * execFile() with an ARGUMENTS ARRAY, so no shell interprets the path.
+ * Uses execFile() with an arguments array — no shell interprets the path.
+ * Fail-closed guards: the path must resolve inside REPORTS_ROOT and its
+ * basename must not start with `-` (option injection against lp/lpr).
  */
 function autoPrintReport(filepath) {
+    if (typeof filepath !== 'string' || filepath.length === 0) {
+        console.error('Print refused: filepath must be a non-empty string');
+        return;
+    }
+    const resolved = path.resolve(filepath);
+    const root = path.resolve(REPORTS_ROOT);
+    if (resolved !== root && !resolved.startsWith(root + path.sep)) {
+        console.error('Print refused: path is outside the reports directory');
+        return;
+    }
+    if (path.basename(resolved).startsWith('-')) {
+        console.error('Print refused: unsafe filename');
+        return;
+    }
+
     const { execFile } = require('child_process');
     const platform = process.platform;
 
@@ -63,13 +80,13 @@ function autoPrintReport(filepath) {
 
     if (platform === 'win32') {
         command = 'powershell';
-        args = ['-Command', 'Start-Process', '-FilePath', filepath, '-Verb', 'Print'];
+        args = ['-Command', 'Start-Process', '-FilePath', resolved, '-Verb', 'Print'];
     } else if (platform === 'darwin') {
         command = 'lpr';
-        args = [filepath];
+        args = [resolved];
     } else {
         command = 'lp';
-        args = [filepath];
+        args = [resolved];
     }
 
     execFile(command, args, (error, stdout, stderr) => {
@@ -77,7 +94,7 @@ function autoPrintReport(filepath) {
             console.error(`Print error: ${error.message}`);
             return;
         }
-        console.log(`Report printed: ${filepath}`);
+        console.log(`Report printed: ${resolved}`);
     });
 }
 
@@ -94,6 +111,7 @@ function autoPrintReport(filepath) {
  * @param {string} month YYYY-MM
  */
 async function generateMonthlyReports(month) {
+    assertValidMonth(month);
     console.log('Running scheduled monthly report generation...');
 
     try {
@@ -104,14 +122,22 @@ async function generateMonthlyReports(month) {
 
         for (const artist of artistRepo.getMockArtists()) {
             const pdfBuffer = await generateMonthlyReport(artist, month, { aiInsights: false });
-            const filename = `${artist.name}_${month}_report.pdf`;
+            const filename = buildReportFilename(artist, month);
             const filepath = path.join(reportsDir, filename);
 
-            fs.writeFileSync(filepath, pdfBuffer);
+            // Defense in depth: even though the filename is sanitized, never
+            // let a report escape its month directory.
+            const resolved = path.resolve(filepath);
+            if (!resolved.startsWith(path.resolve(reportsDir) + path.sep)) {
+                console.error(`Refusing to write report outside its directory: ${filename}`);
+                continue;
+            }
+
+            fs.writeFileSync(resolved, pdfBuffer);
 
             // Auto-print to home PC
             if (config.autoPrint) {
-                autoPrintReport(filepath);
+                autoPrintReport(resolved);
             }
         }
 
@@ -142,6 +168,7 @@ module.exports = {
     register,
     generateMonthlyReports,
     autoPrintReport,
+    buildReportFilename,
     previousMonth,
     SCHEDULE,
     REPORTS_ROOT

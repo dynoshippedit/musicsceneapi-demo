@@ -21,6 +21,9 @@
 // but lost the import, so GET /v3/exports?format=pdf threw
 // "PDFDocument is not defined" -> 500. Restored here (Phase 3).
 const PDFDocument = require('pdfkit-table');
+// HIGH-6 (2026-09-28): strict filename sanitization for client-controllable
+// artist names (replaces the old inline Windows-reserved-chars regex).
+const { reportFilename } = require('../utils/safeFilename');
 
 /**
  * @param {object} app Express application
@@ -84,7 +87,13 @@ function register(app, ctx) {
             const pdfBuffer = await generateMonthlyReport(artist, month, { aiInsights });
 
             res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', `attachment; filename="${artist.name.replace(/[\\/:*?"<>|]/g, '_')}_${month}_report.pdf"`);
+            // HIGH-6 (2026-09-28): the download filename embeds the
+            // client-controllable artist.name. The old inline regex only
+            // stripped Windows-reserved characters, leaving `../`, shell
+            // metacharacters, and newlines (response-header injection).
+            // Filenames now go through the strict whitelist in
+            // src/utils/safeFilename.js.
+            res.setHeader('Content-Disposition', `attachment; filename="${reportFilename(artist, month)}"`);
             res.send(pdfBuffer);
         } catch (error) {
             logger.error('Report generation failed:', error);
@@ -122,7 +131,10 @@ function register(app, ctx) {
             for (const artist of roster) {
                 try {
                     const pdfBuffer = await generateMonthlyReport(artist, month, { aiInsights });
-                    const filename = `${artist.name.replace(/[\\/:*?"<>|]/g, '_')}_${month}_report.pdf`;
+                    // HIGH-6 (2026-09-28): same sanitization as the download
+                    // path above — the old inline regex allowed `../` and
+                    // absolute paths at writeFileSync time.
+                    const filename = reportFilename(artist, month);
                     const filepath = path.join(reportsDir, filename);
 
                     fs.writeFileSync(filepath, pdfBuffer);
