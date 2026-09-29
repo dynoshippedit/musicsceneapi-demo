@@ -1,0 +1,26 @@
+{
+  "task_id": "MS-002",
+  "cycle": "ms-cycle-02",
+  "date": "2026-09-29",
+  "objective": "BUG-001: exact 17-lead accounting — all rows, verified/dismissed/remaining counts, one-line evidence per obsolete lead, genuine retest per live lead",
+  "worker_commit": "793805e",
+  "branch": "devteam/bug001-leads-accounting",
+  "base": "728c4e5",
+  "deliverable": "devteam/notes/known-leads-verification.md",
+  "counts": {"dismissed": 13, "verified": 3, "remaining": 1},
+  "worker_checks": "full suite 364/364 green (JWT_SECRET=test-secret-0123456789 npm test)",
+  "controller_verification": {
+    "date": "2026-09-29",
+    "source_identity": "793805e on devteam/bug001-leads-accounting, tree clean, nothing pushed",
+    "checks": [
+      "all 17 rows present with current-code evidence or live exercise; counts 13/3/1",
+      "spot-check #6: users.js header lists POST /v3/users x3 — duplicate registration corroborated",
+      "spot-check #11: finance.js payout.artist = totalRevenue * targetSplits.artist, unrounded — fractional-cents claim corroborated in code",
+      "full suite independently re-run: 364/364 pass, 0 fail",
+      "no snapshot files touched (phase2_baseline.json intact)"
+    ],
+    "result": "VERIFIED"
+  },
+  "proposed_status": "VERIFIED",
+  "notes": "Worker did not write a cycle JSON; controller created this record at acceptance. Residuals (MUS-001 S1 float payout, MAP-001 dup-route cleanup, DOC-004..008, SEC-003/006/007, ARC-004, TST-006, DAT-001) remain tracked, out of scope for this cycle."
+}
