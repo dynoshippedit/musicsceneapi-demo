@@ -96,3 +96,16 @@
 - P1 lead #5 → FIXED (cache now keyed per user/role/access). Gap-6 fail-closed VERIFIED by AIX.
 - Notes updated: STATUS.md.
 - Next: BUG, SEC, ARC, DAT, MUS still running.
+
+## 2026-09-29 03:00 UTC · Tech Lead (LEAD) · Phase 2
+- Did: verified ARC deliverables: devteam/ARCHITECTURE.md (5 sections: as-is, B9.3 assessment,
+  target structure, 14-step migration plan with needs-owner flags on steps 3,7-12, open design
+  questions), findings/arc.md (10 findings: ARC-001..010 = 2×S2 + 7×S3 + 1×S4), plus
+  notes/architecture-notes-2026-09-29.md. ARC appended 6 questions (Q-ARC-1..6, status OPEN)
+  directly to devteam/QUESTIONS.md itself — acceptable deviation, recorded.
+- Notable: ARC-002 (S2) money domains have no service layer — business logic + data access inline
+  in route handlers. ARC-004 (S2) in-memory state assumes single instance. ARC-007 (S3)
+  demo-vs-real separation is by convention, not construction — this is the gap-2
+  remediation's weakest structural guarantee; BUG/DAT findings will sharpen it in Phase 3.
+- Notes updated: STATUS.md.
+- Next: BUG, SEC, DAT, MUS still running.
