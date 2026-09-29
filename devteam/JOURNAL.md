@@ -109,3 +109,18 @@
   remediation's weakest structural guarantee; BUG/DAT findings will sharpen it in Phase 3.
 - Notes updated: STATUS.md.
 - Next: BUG, SEC, DAT, MUS still running.
+
+## 2026-09-29 03:05 UTC · Tech Lead (LEAD) · Phase 2
+- Did: verified MUS deliverables (findings/mus.md 11 findings C12, notes/music-rights.md PII
+  inventory). Independently read src/routes/finance.js:55-82 to confirm MUS-001: payout math is
+  `totalRevenue * targetSplits.artist` float multiply with no cent rounding, and the split-sum
+  check uses epsilon tolerance 0.000001. Accepted at S1 (live float-money surface; what-if
+  calculator on mock revenue, not the settlement path).
+- Key: settlement money is EXACT per MUS (BigInt cents / exact-decimal, round-half-up once per
+  aggregate). Float exists in: projections (rounded, floored, labeled — acceptable), dead
+  SalesEntry.revenue FLOAT (zero callers), and two live user-facing surfaces (MUS-001, MUS-004).
+  DOC-002's whitepaper overreach stands. MUS-004 (mock revenue as $... in scheduled PDFs, no
+  provenance label) is money-lens evidence for DOC-003/004. MUS-007 strengthens TST-003
+  (delete is DB-row only; PII persists in AuditEvent/logs/PDFs).
+- Notes updated: STATUS.md.
+- Next: BUG, SEC, DAT still running.
