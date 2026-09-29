@@ -33,3 +33,21 @@
   (418 @ 89e222e + devteam/ workspace = 431 on this branch); B17 changelog.
 - Commands: verification via threadripper-ssh (grep/wc/head on devteam files)
 - Next: BLD/TST/DOC reports pending; then Phase 1 gate, commit, Phase 2 lanes.
+
+## 2026-09-29 02:20 UTC · Tech Lead (LEAD) · Phase 1
+- Did: verified TST deliverables: notes/testing.md (160 lines, inventory + flake analysis +
+  crown-jewel map + Phase 5 test plan), findings/tst.md (10 findings TST-001..010).
+  Independently reproduced the headline: my own back-to-back `npm test` runs gave
+  357 pass/4 fail, then 361/361 pass — suite is load-flaky under parallel execution.
+  TST-001 (S2) CONFIRMED by Lead with own evidence.
+- Baseline correction: the "361/361 green" claim (reported to parent 2026-09-29 from a
+  single green run) is not reliably true. B3 Test line amended: "361 tests, flaky under
+  parallel load (observed 361/361, 357/4, 290/64f/7c)". This matters: no fix can be
+  verified against an unreliable gate — stabilizing the harness is Phase 5 priority #1
+  (after blockers).
+- TST questions triaged: Q1 (concurrency cap / serial heavy lane) = PRE-APPROVED test
+  harness work, default YES, no owner question. Q2 (GDPR export endpoint) = new API =
+  NEEDS APPROVAL → QUESTIONS.md in Phase 4, default = document absence + test delete.
+  Q3 (delete gitignored pulsegrid_v5.sqlite residue) = deletion → QUESTIONS.md Phase 4.
+- Notes updated: STATUS.md; PLAYBOOK.md B3 test line amended + B17 changelog.
+- Next: BLD/DOC reports pending; then Phase 1 gate.

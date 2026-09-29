@@ -91,7 +91,9 @@ Entry points:        server.js (canonical entrypoint: secret guard -> DB init ->
                      throwaway SQLite .demo-data/demo.sqlite).
 Install:             npm install (+ cd web && npm install)            verified: no (BLD Phase 1)
 Run:                 npm start (server.js) | ./scripts/run-demo.sh    verified: no (BLD Phase 1)
-Test:                npm test (node:test tests/regression/*.test.js) verified: yes (own run 361/361, 2026-09-29)
+Test:                npm test (node:test tests/regression/*.test.js) verified: PARTIAL — 361 tests exist;
+                     suite is LOAD-FLAKY under parallel execution (Lead observed 361/361, 357/4,
+                     TST observed 290/64f/7c and 356/5f). TST-001 (S2). Stabilize harness in Phase 5.
 Lint / typecheck:    none configured                                 (unverified)
 Config & env:        .env.example, .env.prod.template; full inventory in notes/env-inventory.md.
                      Key: DEMO_MODE, JWT_SECRET (required, no fallback), DATABASE_URL,
