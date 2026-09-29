@@ -37,7 +37,7 @@ NEEDS APPROVAL:  deleting, renaming or moving files; changing public APIs, URLs,
                  (roles, token format, sessions); major dependency upgrades or new frameworks; CI/CD,
                  deploy or infrastructure changes; rotating secrets or rewriting git history; license
                  changes; anything irreversible
-IN SCOPE:        all tracked files (418 files @ 89e222e)
+IN SCOPE:        all tracked files (418 @ 89e222e; 431 incl. devteam/ workspace on this branch)
 OUT OF SCOPE:    dependency folders (node_modules, venv, vendor, Library, target, …), build output,
                  generated or minified files, binary assets (review whether they belong, not their
                  contents), devteam/, ai-dev-team/
