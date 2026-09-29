@@ -48,7 +48,7 @@ never float (per model headers; `SalesEntry.revenue` is FLOAT — DAT/BUG lane t
 │   ├── middleware/      request pipeline: helmet→compression→cors→json→req-id→rate-limit; error/404
 │   ├── auth/            JWT verify + hasArtistAccess/normalizeArtistAccess (index.js)
 │   ├── oauth/           OAuth providers + tokenCrypto (artist OAuth tokens encrypted at rest)
-│   ├── models/          Sequelize: index.js (31 models) + migrations.js (explicit repair migrations)
+│   ├── models/          Sequelize: index.js (30 models) + migrations.js (explicit repair migrations)
 │   ├── repositories/    artistRepository, inMemoryStores (process-memory stores), operationsRepository
 │   ├── services/        cacheService, emailService, entityAuditService, provenance,
 │   │                    salesService, catalogIntegrityService, auditService, usageService
@@ -177,7 +177,7 @@ not a double-bind). No file requires `src/routes/*` from outside the routes tree
   (`repairSalesSchema` w/ `VACUUM INTO` backup, `addUserSecurityColumns`, `addRoyaltyDedupColumns`,
   `addMonthlyCloseColumns`); `sync()` creates absent tables. `scripts/repair-sales-schema.js` is the
   standalone CLI for the same repair.
-- **31 models** (`src/models/index.js` exports): User, Artist, Stats, ProviderSyncExecution, AuditEvent,
+- **30 models** (`src/models/index.js` exports — DAT verified 30 define calls; cartographer miscounted 31): User, Artist, Stats, ProviderSyncExecution, AuditEvent,
   AnrSubmission, SalesEntry, RoomDemo, RoomVote, RoomSetting, Campaign, Subscription, ArtistOAuth,
   Recording, Release, Work, WorkRecording, **RoyaltyLine**, RoyaltyStatement, MerchSettlement,
   PaymentConnection, DirectSale, ArtistPaymentMapping, ManualAdjustment, Payout, BankDeposit,

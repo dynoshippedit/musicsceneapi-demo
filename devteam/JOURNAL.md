@@ -124,3 +124,22 @@
   (delete is DB-row only; PII persists in AuditEvent/logs/PDFs).
 - Notes updated: STATUS.md.
 - Next: BUG, SEC, DAT still running.
+
+## 2026-09-29 03:15 UTC · Tech Lead (LEAD) · Phase 2
+- Did: verified DAT deliverables (findings/dat.md 16 findings C12, notes/data-model.md,
+  notes/integrations.md 19 rows, notes/flows/2-dat.md, 3-dat.md, 6-dat.md). All spot-checked.
+- Correction: MAP said 31 models; DAT counted 30 verified define calls (confirmed independently
+  by grep: exactly 30 `sequelize.define` calls). Fixed MAP.md in both places, attribution noted.
+- Notable DAT findings: DAT-002 (S2) migrations are ad-hoc SQLite-only repairs — Postgres
+  upgrades silently skip schema evolution (DAT's Q2 recommends versioned migrations; the repo
+  supports Postgres via DATABASE_URL, so this is real). DAT-003/004 (S2) non-atomic payout
+  match/unmatch and direct-sales sync (stale payout rows on rerun). DAT-005 (S2) Stripe lists
+  stop at first 100 records (no pagination). DAT-006 (S2) OAuth refresh tokens stored but never
+  used. DAT-009 (S3) billing webhook lacks event-id idempotency. DAT-010 (S3) legacy NULL
+  amountDecimal crashes reconciliation — escalates to S1 if any deployed DB has NULLs (Q1).
+  P1 lead #11: CONFIRMED but narrowed — settlement exact; float only in projections (labeled),
+  display percentages, dead SalesEntry.revenue, and mock roster revenue.
+- SEC is writing its flow notes concurrently (ai-query, login, oauth, password-reset,
+  royalty-csv — visible in notes/flows/); BUG still running.
+- Notes updated: STATUS.md.
+- Next: BUG + SEC reports; then Phase 2 gate.
