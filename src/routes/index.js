@@ -60,7 +60,11 @@ const DOMAIN_ORDER = [
     // statements. No path collides with existing routes (verified:
     // /v3/financials/* except reconciliation+export, which live in
     // directsales).
-    'monthlyclose'
+    'monthlyclose',
+    // Provider sync (2026-09-28, audit gap 5): appended, never reordered.
+    // POST /v3/sync/run, GET /v3/sync/executions. No path collides with
+    // existing routes (verified: no other /v3/sync/* routes exist).
+    'sync'
 ];
 
 /**

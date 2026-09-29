@@ -77,8 +77,10 @@ describe('route table — registration invariants', () => {
         //   payouts, deposits, matches, gap annotations, adjustments, commission
         //   contracts/worksheet, expected reports, mapping history/approval,
         //   statement listing). All authenticated; writes are admin-gated.
-        assert.strictEqual(TABLE.length, 126,
-            `expected 126 registered routes, found ${TABLE.length}`);
+        // Provider sync (2026-09-29, audit gap 5): +2 routes
+        //   (POST /v3/sync/run, GET /v3/sync/executions). Both admin-only.
+        assert.strictEqual(TABLE.length, 128,
+            `expected 128 registered routes, found ${TABLE.length}`);
     });
 
     test('PINS: the known shadowed duplicate routes are still present', () => {

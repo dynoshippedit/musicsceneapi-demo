@@ -60,6 +60,36 @@ const Stats = sequelize.define('Stats', {
 });
 
 // ---------------------------------------------------------------------------
+// Provider sync executions (2026-09-28, audit gap 5): durable history for
+// every provider synchronization run — idempotency key (unique),
+// duplicate-execution protection, per-attempt history, bounded retries,
+// terminal status (running|succeeded|failed|blocked|fixture), timestamps,
+// and a SANITIZED error summary (sanitizeErrorSummary in
+// src/jobs/providerSync.js strips credential-shaped text before
+// persistence; tokens must never land in this table).
+// ---------------------------------------------------------------------------
+const ProviderSyncExecution = sequelize.define('ProviderSyncExecution', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    idempotencyKey: { type: DataTypes.STRING, allowNull: false, unique: true },
+    provider: { type: DataTypes.STRING, allowNull: false }, // spotify|stripe
+    kind: { type: DataTypes.STRING, allowNull: false }, // artist-stats|sales-pull
+    status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'running' },
+    attempt: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    maxAttempts: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 3 },
+    triggeredBy: { type: DataTypes.STRING, allowNull: true },
+    startedAt: { type: DataTypes.DATE, allowNull: true },
+    finishedAt: { type: DataTypes.DATE, allowNull: true },
+    errorSummary: { type: DataTypes.TEXT, allowNull: true },
+    attempts: { type: DataTypes.JSON, allowNull: false, defaultValue: [] },
+    fixture: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    resultSummary: { type: DataTypes.JSON, allowNull: true }
+}, {
+    indexes: [
+        { fields: ['provider', 'status'] },
+        { fields: ['startedAt'] }
+    ]
+});
+
 // ---------------------------------------------------------------------------
 // PHASE 4CF — persist-or-demo contract (Objective 4): A&R submissions (store
 // #1, incl. shortlist entries) and sales entries become DURABLE PRODUCT STATE.
@@ -728,4 +758,4 @@ const SourceMapping = sequelize.define('SourceMapping', {
     ]
 });
 
-module.exports = { sequelize, User, Artist, Stats, AuditEvent, AnrSubmission, SalesEntry, RoomDemo, RoomVote, RoomSetting, Campaign, Subscription, ArtistOAuth, Recording, Release, Work, WorkRecording, RoyaltyLine, RoyaltyStatement, MerchSettlement, PaymentConnection, DirectSale, ArtistPaymentMapping, ManualAdjustment, Payout, BankDeposit, CashGapAnnotation, CommissionContract, ExpectedReport, SourceMapping, initDB };
+module.exports = { sequelize, User, Artist, Stats, ProviderSyncExecution, AuditEvent, AnrSubmission, SalesEntry, RoomDemo, RoomVote, RoomSetting, Campaign, Subscription, ArtistOAuth, Recording, Release, Work, WorkRecording, RoyaltyLine, RoyaltyStatement, MerchSettlement, PaymentConnection, DirectSale, ArtistPaymentMapping, ManualAdjustment, Payout, BankDeposit, CashGapAnnotation, CommissionContract, ExpectedReport, SourceMapping, initDB };

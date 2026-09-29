@@ -15,6 +15,7 @@
 'use strict';
 
 const monthlyReportJob = require('./monthlyReportJob');
+const providerSync = require('./providerSync');
 const logger = require('../config/logger');
 
 /**
@@ -29,7 +30,23 @@ function registerJobs({ enabled = true } = {}) {
 
     const tasks = [monthlyReportJob.register()];
     logger.info(`[jobs] registered ${tasks.length} scheduled job(s): monthly reports (${monthlyReportJob.SCHEDULE})`);
+
+    // Provider sync (2026-09-28, audit gap 5): explicit opt-in. The master
+    // SCHEDULE_JOBS switch still governs, but the sync does not run on a
+    // schedule unless PROVIDER_SYNC_ENABLED=true — an unattended provider
+    // poll is a behavior and cost decision the operator must make
+    // deliberately. Without credentials the scheduled run would only ever
+    // produce fixture executions, so the default is off.
+    if (process.env.PROVIDER_SYNC_ENABLED === 'true') {
+        const models = require('../models');
+        const task = providerSync.register({ models, triggeredBy: 'scheduler' });
+        tasks.push(task);
+        logger.info(`[jobs] provider sync scheduled (${providerSync.SCHEDULE})`);
+    } else {
+        logger.info('[jobs] provider sync schedule disabled (set PROVIDER_SYNC_ENABLED=true to enable)');
+    }
+
     return tasks;
 }
 
-module.exports = { registerJobs, monthlyReportJob };
+module.exports = { registerJobs, monthlyReportJob, providerSync };

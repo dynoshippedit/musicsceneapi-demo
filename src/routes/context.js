@@ -138,6 +138,8 @@ function buildContext() {
         CommissionContract: models.CommissionContract,
         ExpectedReport: models.ExpectedReport,
         SourceMapping: models.SourceMapping,
+        // Provider sync (2026-09-28, audit gap 5): execution history.
+        ProviderSyncExecution: models.ProviderSyncExecution,
 
         // auth
         authenticateToken,
