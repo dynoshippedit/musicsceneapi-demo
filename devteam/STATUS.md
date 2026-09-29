@@ -1,23 +1,28 @@
 # STATUS — resume here
-Updated: 2026-09-29 02:20 UTC by Tech Lead (LEAD)
+Updated: 2026-09-29 02:30 UTC by Tech Lead (LEAD)
 Phase: 1 — Recon and baseline · Mode: A multi-agent · Branch: devteam/review-2026-09-29
 
 ## Progress
-- Coverage: Cartographer done — 431 files tiered (H 68 / M 113 / L 250), 1,239 required cells open. Gate P1 pending BLD/DOC.
-- TST done (verified by Lead): notes/testing.md (160 lines) + findings/tst.md (10 findings). KEY: suite is
-  load-flaky — TST saw 290/64f/7c, 361/361, 356/5f across 3 runs; Lead's own runs: 357/4f then
-  361/361. TST-001 (S2) CONFIRMED by Lead. B3 "361/361 green" amended to "flaky under parallel load".
-- Issues: S2 2 (TST-001,003,004,007,010 = 5×S2) · S3 4 · S4 2 + MAP S4 7 — all in findings/, merge at Phase 4.
+- Coverage: 431 files tiered (H 68 / M 113 / L 250), 1,239 required cells open. Gate P1 pending BLD only.
+- MAP done ✔ (7 S4 findings). TST done ✔ (10 findings; TST-001 suite flakiness Lead-confirmed).
+- DOC done (verified by Lead): notes/claims-audit.md (61 claims: 51 TRUE / 6 FALSE / 1 PARTIAL /
+  3 UNVERIFIABLE) + findings/doc.md (11 findings: 4×S2, 7×S3). DOC's own npm test run: 356/5 fail
+  — further TST-001 evidence. P1 leads: #14 partial (Babel/CDN/innerHTML stale; localStorage token
+  CONFIRMED at web/src/auth/AuthContext.jsx → routed to SEC); #15 confirmed (mojibake + stale refs);
+  #17 confirmed (disclaimers missing from product).
+- Routed to later lanes: localStorage/JWT persistence → SEC; secret-shaped JWT_SECRET test value in
+  scripts/run-browser-workflows.js → SEC; float-in-money-path (DOC-002 + SalesEntry.revenue FLOAT) → DAT/BUG;
+  fixture-label UI visibility → UIX; DOC-004 disclaimer UI work = user-visible → QUESTIONS.md in Phase 4.
+- Issues in findings/ (merge at Phase 4): MAP 7×S4 · TST 5×S2+3×S3+2×S4 · DOC 4×S2+7×S3.
 - Gates passed: P0 ✔
 
 ## In progress
-- BLD: BASELINE.md + env/dependency inventory (running)
-- DOC: claims audit (running)
+- BLD: BASELINE.md + env/dependency inventory (running — last lane for the P1 gate)
 
 ## Next actions (in order)
-1. Receive BLD/DOC reports; verify; run Phase 1 gate; commit
-2. Phase 2: spawn BUG, SEC, ARC, DAT, MUS, AIX on the 9 critical flows
-3. Phase 5 note: TST Q1 (concurrency cap / serial heavy lane) is PRE-APPROVED test-harness work — default YES, no owner question needed. TST Q2 (GDPR export endpoint) → QUESTIONS.md in Phase 4 (new API = NEEDS APPROVAL). TST Q3 (gitignored sqlite residue) → QUESTIONS.md in Phase 4 (deletion needs approval).
+1. Receive BLD report; verify; run Phase 1 gate (COVERAGE tiers ✔ / BASELINE real outputs / crown jewels+flows confirmed); commit
+2. Phase 2: spawn BUG, SEC, ARC, DAT, MUS, AIX on the 9 critical flows (MAP's list)
+3. Remember: DOC-004 disclaimer-in-UI/PDF is user-visible → NEEDS-OWNER question in Phase 4
 
 ## Fix queue (from Phase 4)
 - (empty — built in Phase 4)

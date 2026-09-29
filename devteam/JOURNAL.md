@@ -51,3 +51,21 @@
   Q3 (delete gitignored pulsegrid_v5.sqlite residue) = deletion → QUESTIONS.md Phase 4.
 - Notes updated: STATUS.md; PLAYBOOK.md B3 test line amended + B17 changelog.
 - Next: BLD/DOC reports pending; then Phase 1 gate.
+
+## 2026-09-29 02:30 UTC · Tech Lead (LEAD) · Phase 1
+- Did: verified DOC deliverables: notes/claims-audit.md (61-claim table:
+  51 TRUE / 6 FALSE / 1 PARTIAL / 3 UNVERIFIABLE — README itself is accurate),
+  findings/doc.md (11 findings DOC-001..011, all with path:line evidence).
+  Spot checks passed — accepted.
+- Notable: DOC-002 (whitepaper "no float in money path" vs float projections in
+  src/services/salesService.js + src/analytics/regression.js) joins MAP's
+  SalesEntry.revenue FLOAT note and P1 lead #11 (float money math) — all routed
+  to DAT/BUG lanes in Phase 2/3. DOC-004 (no fan-project disclaimer in UI/PDFs)
+  is user-visible → NEEDS-OWNER question in Phase 4. DOC's npm test run (356/5 fail)
+  is further TST-001 evidence. DOC flagged a secret-shaped JWT_SECRET test value
+  in scripts/run-browser-workflows.js → routed to SEC (not reproduced by DOC).
+- P1 lead dispositions recorded: #14 partial-stale (Babel/CDN/innerHTML gone;
+  localStorage token CONFIRMED → SEC), #15 confirmed (mojibake + stale refs),
+  #17 confirmed (simulations de-mocked; disclaimers missing from product).
+- Notes updated: STATUS.md.
+- Next: BLD is the last Phase 1 lane; then the P1 gate.
