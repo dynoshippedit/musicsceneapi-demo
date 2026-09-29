@@ -2311,20 +2311,21 @@
     "contentType": "application/json",
     "body": {
       "artistName": "LUMEN VEIL",
-      "breakdown": {
-        "merch": 428693,
-        "streaming": 1426368,
-        "touring": 8718096
+      "breakdownCents": {
+        "merch": 42869300,
+        "streaming": 142636800,
+        "touring": 871809600
       },
-      "payout": {
-        "artist": 7401209.899999999,
-        "label": 3171947.1
+      "currency": "USD",
+      "payoutCents": {
+        "artist": 740120990,
+        "label": 317194710
       },
-      "splits": {
-        "artist": 0.7,
-        "label": 0.3
+      "splitsBps": {
+        "artist": 7000,
+        "label": 3000
       },
-      "totalRevenue": 10573157
+      "totalRevenueCents": 1057315700
     }
   },
   "royalties_calc_zero": {
@@ -2332,20 +2333,21 @@
     "contentType": "application/json",
     "body": {
       "artistName": "LUMEN VEIL",
-      "breakdown": {
-        "merch": 428693,
-        "streaming": 1426368,
-        "touring": 8718096
+      "breakdownCents": {
+        "merch": 42869300,
+        "streaming": 142636800,
+        "touring": 871809600
       },
-      "payout": {
-        "artist": 7401209.899999999,
-        "label": 3171947.1
+      "currency": "USD",
+      "payoutCents": {
+        "artist": 740120990,
+        "label": 317194710
       },
-      "splits": {
-        "artist": 0.7,
-        "label": 0.3
+      "splitsBps": {
+        "artist": 7000,
+        "label": 3000
       },
-      "totalRevenue": 10573157
+      "totalRevenueCents": 1057315700
     }
   },
   "users_list_admin": {

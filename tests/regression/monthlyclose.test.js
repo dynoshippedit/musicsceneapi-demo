@@ -583,4 +583,103 @@ describe('monthly close: spawned server', () => {
         assert.ok(json.coverage, 'coverage statement present');
         assert.ok(!/seed|sample/i.test(json.coverage.note || ''), 'coverage does not claim seeded data');
     });
+
+    // ---- 20. BUG-001: match is atomic under an injected second-write failure ----
+    test('BUG-001: injected deposit-write failure rolls back the payout write', async () => {
+        // Deterministic fault injection: a SQLite trigger makes the
+        // deposit-side UPDATE fail, simulating the crash between the two
+        // saves that the old code could not survive. The transaction must
+        // roll the payout-side write back: no half-written match may remain.
+        const sqlite3 = require('sqlite3');
+        const dbPath = path.join(srv.scratch, 'test.sqlite');
+        const payouts = await srv.api('GET', '/v3/financials/payouts', admin);
+        assert.strictEqual(payouts.status, 200);
+        const p = payouts.json.payouts.find((x) => x.matchedDepositId == null);
+        assert.ok(p, 'an unmatched payout exists for the atomicity probe');
+        const dr = await srv.api('POST', '/v3/financials/deposits', admin, {
+            amountCents: p.amountCents, currency: p.currency, bankRef: 'BANK-BUG001-001',
+            description: 'atomicity probe', depositAt: '2026-08-31'
+        });
+        assert.strictEqual(dr.status, 201, JSON.stringify(dr.json));
+        const depId = dr.json.deposit.id;
+
+        const db = new sqlite3.Database(dbPath);
+        const exec = (sql) => new Promise((res, rej) => db.exec(sql, (e) => (e ? rej(e) : res())));
+        try {
+            await exec('CREATE TRIGGER trg_bug001_abort BEFORE UPDATE ON BankDeposits ' +
+                "WHEN NEW.matchedPayoutId IS NOT NULL BEGIN SELECT RAISE(ABORT, 'injected fault'); END;");
+
+            const m = await srv.api('POST', '/v3/financials/matches', admin, { payoutId: p.id, depositId: depId });
+            assert.strictEqual(m.status, 500, 'injected failure surfaces as 500, not a silent half-write: ' + JSON.stringify(m.json));
+
+            const p2 = await srv.api('GET', '/v3/financials/payouts', admin);
+            const prow = p2.json.payouts.find((x) => x.id === p.id);
+            assert.strictEqual(prow.matchedDepositId, null, 'payout link rolled back — no half-written match');
+        } finally {
+            // Always remove the injected fault, even if an assertion above fails.
+            await exec('DROP TRIGGER IF EXISTS trg_bug001_abort');
+            await new Promise((r) => db.close(r));
+        }
+
+        // After the fault is removed the same match succeeds, both sides linked.
+        const m2 = await srv.api('POST', '/v3/financials/matches', admin, { payoutId: p.id, depositId: depId, note: 'post-fault match' });
+        assert.strictEqual(m2.status, 201, JSON.stringify(m2.json));
+        const p3 = await srv.api('GET', '/v3/financials/payouts', admin);
+        assert.strictEqual(p3.json.payouts.find((x) => x.id === p.id).matchedDepositId, depId, 'payout side linked');
+        const d3 = await srv.api('GET', '/v3/financials/deposits', admin);
+        assert.strictEqual(d3.json.deposits.find((x) => x.id === depId).matchedPayoutId, p.id, 'deposit side linked');
+
+        // Unmatch clears both sides — no half-cleared residue.
+        const u = await srv.api('DELETE', '/v3/financials/matches', admin, { payoutId: p.id, depositId: depId });
+        assert.strictEqual(u.status, 200, JSON.stringify(u.json));
+        const p4 = await srv.api('GET', '/v3/financials/payouts', admin);
+        assert.strictEqual(p4.json.payouts.find((x) => x.id === p.id).matchedDepositId, null, 'payout side cleared');
+        const d4 = await srv.api('GET', '/v3/financials/deposits', admin);
+        assert.strictEqual(d4.json.deposits.find((x) => x.id === depId).matchedPayoutId, null, 'deposit side cleared');
+    });
+
+    // ---- 21. BUG-001: double match is rejected and the first link survives ----
+    test('BUG-001: second match attempt is rejected; the first link is untouched', async () => {
+        const payouts = await srv.api('GET', '/v3/financials/payouts', admin);
+        const p = payouts.json.payouts.find((x) => x.matchedDepositId == null);
+        assert.ok(p, 'an unmatched payout exists');
+        const mk = async (ref) => {
+            const r = await srv.api('POST', '/v3/financials/deposits', admin, {
+                amountCents: p.amountCents, currency: p.currency, bankRef: ref, depositAt: '2026-08-31'
+            });
+            assert.strictEqual(r.status, 201, JSON.stringify(r.json));
+            return r.json.deposit.id;
+        };
+        const depA = await mk('BANK-BUG001-002');
+        const depB = await mk('BANK-BUG001-003');
+        const m1 = await srv.api('POST', '/v3/financials/matches', admin, { payoutId: p.id, depositId: depA });
+        assert.strictEqual(m1.status, 201, JSON.stringify(m1.json));
+        const m2 = await srv.api('POST', '/v3/financials/matches', admin, { payoutId: p.id, depositId: depB });
+        assert.strictEqual(m2.status, 409, 'second match on the same payout is rejected: ' + JSON.stringify(m2.json));
+        const p2 = await srv.api('GET', '/v3/financials/payouts', admin);
+        assert.strictEqual(p2.json.payouts.find((x) => x.id === p.id).matchedDepositId, depA, 'original payout link intact');
+        const d2 = await srv.api('GET', '/v3/financials/deposits', admin);
+        assert.strictEqual(d2.json.deposits.find((x) => x.id === depA).matchedPayoutId, p.id, 'original deposit link intact');
+        assert.strictEqual(d2.json.deposits.find((x) => x.id === depB).matchedPayoutId, null, 'rejected deposit never linked');
+        const u = await srv.api('DELETE', '/v3/financials/matches', admin, { payoutId: p.id, depositId: depA });
+        assert.strictEqual(u.status, 200, JSON.stringify(u.json));
+    });
+
+    // ---- 22. BUG-001: rejected match writes nothing ----
+    test('BUG-001: currency-mismatch rejection leaves both rows untouched', async () => {
+        const payouts = await srv.api('GET', '/v3/financials/payouts', admin);
+        const p = payouts.json.payouts.find((x) => x.matchedDepositId == null && x.currency === 'USD');
+        assert.ok(p, 'an unmatched USD payout exists');
+        const r = await srv.api('POST', '/v3/financials/deposits', admin, {
+            amountCents: p.amountCents, currency: 'EUR', bankRef: 'BANK-BUG001-004', depositAt: '2026-08-31'
+        });
+        assert.strictEqual(r.status, 201, JSON.stringify(r.json));
+        const depId = r.json.deposit.id;
+        const m = await srv.api('POST', '/v3/financials/matches', admin, { payoutId: p.id, depositId: depId });
+        assert.strictEqual(m.status, 409, JSON.stringify(m.json));
+        const p2 = await srv.api('GET', '/v3/financials/payouts', admin);
+        assert.strictEqual(p2.json.payouts.find((x) => x.id === p.id).matchedDepositId, null, 'payout untouched by rejected match');
+        const d2 = await srv.api('GET', '/v3/financials/deposits', admin);
+        assert.strictEqual(d2.json.deposits.find((x) => x.id === depId).matchedPayoutId, null, 'deposit untouched by rejected match');
+    });
 });
