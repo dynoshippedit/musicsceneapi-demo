@@ -159,3 +159,19 @@
   payment-matching rules visible to any authed user, no artist scoping.
 - Notes updated: STATUS.md.
 - Next: BUG only. Then Phase 2 gate.
+
+## 2026-09-29 03:25 UTC · Tech Lead (LEAD) · Phase 2→3
+- Did: verified BUG deliverables (findings/bug.md 8 findings C12, 5 flow notes). Independently
+  read src/routes/monthlyclose.js:190-250 to confirm BUG-001: `await payout.save()` then
+  `await deposit.save()` with no transaction; the DELETE guard requires both sides to agree
+  (409 otherwise), so a half-write is API-unrepairable. Accepted at S1.
+- P1 leads: #6 CONFIRMED (duplicate routes catalog complete: POST /v3/users x3, PUT x2,
+  DELETE x2 in users.js; stale comment in src/routes/index.js:9-13 claims 5 duplicates incl.
+  double POST /v3/ai/analyze — only 1 exists; flagged to DOC). #13 CONFIRMED-as-documented
+  (no bug; legacy scripts are explicitly non-assert manual). #11 PARTIALLY CONFIRMED, no live bug.
+  All 17 P1 leads are now dispositioned.
+- Ran PHASE 2 GATE: PASS — all 9 critical flows traced with notes (BUG 5, SEC 5, DAT 3, MUS/AIX
+  in findings), threat model + 128-route authz matrix done, ARCHITECTURE.md + data model +
+  integrations + ai-integration notes all present.
+- Next: Phase 3 deep review — 5 pattern sweep lanes (async/promise, injection/validation,
+  money/finance, React frontend, jobs/sync) dispatched in parallel.
